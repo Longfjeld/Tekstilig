@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3f0ea" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#171816" media="(prefers-color-scheme: dark)">
+  <title>Tekstilig – lagringstest</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Teknisk prototype 0001</p>
+      <h1>Tekstilig</h1>
+    </div>
+    <span id="statusPill" class="pill">Kontrollerer nettleser …</span>
+  </header>
+
+  <main class="layout">
+    <section class="hero card">
+      <div>
+        <p class="eyebrow">Lagring før resten av appen</p>
+        <h2>Test hvordan tekstildata kan lagres på denne enheten</h2>
+        <p class="lead">Prototypen skriver et ekte <code>tekstiler.json</code>, leser det tilbake og kan lagre et testbilde. Den velger automatisk den beste lagringsmetoden nettleseren støtter.</p>
+      </div>
+      <div class="fabric-placeholder" aria-hidden="true"><span>stoffprøve</span></div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">1 · Miljø</p>
+          <h2>Nettleserstøtte</h2>
+        </div>
+      </div>
+      <dl class="facts">
+        <div><dt>Direkte katalogtilgang</dt><dd id="directorySupport">–</dd></div>
+        <div><dt>Privat app-lager (OPFS)</dt><dd id="opfsSupport">–</dd></div>
+        <div><dt>Deling av filer</dt><dd id="shareSupport">–</dd></div>
+        <div><dt>Valgt modus</dt><dd id="storageMode">–</dd></div>
+      </dl>
+      <div id="modeExplanation" class="notice"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">2 · Dataområde</p>
+          <h2>Klargjør lagring</h2>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="connectButton" class="button primary">Klargjør lagring</button>
+        <button id="reloadButton" class="button secondary" disabled>Les tekstiler.json</button>
+      </div>
+      <p id="connectionInfo" class="muted">Ingen lagring er klargjort ennå.</p>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">3 · Skrivetest</p>
+          <h2>Opprett testdata</h2>
+        </div>
+      </div>
+      <div class="form-grid">
+        <label>Navn på testtekstil
+          <input id="testName" type="text" value="Marineblå ull – test" autocomplete="off">
+        </label>
+        <label>Bredde (cm)
+          <input id="testWidth" type="number" value="145" min="1" inputmode="decimal">
+        </label>
+        <label>Lengde (cm)
+          <input id="testLength" type="number" value="280" min="1" inputmode="decimal">
+        </label>
+      </div>
+      <div class="actions">
+        <button id="writeButton" class="button primary" disabled>Skriv testdata</button>
+      </div>
+      <pre id="jsonPreview" class="code-panel">Ingen data skrevet ennå.</pre>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">4 · Bildetest</p>
+          <h2>Fotografer eller velg et bilde</h2>
+        </div>
+      </div>
+      <label class="file-drop">
+        <input id="imageInput" type="file" accept="image/*" capture="environment">
+        <span>Velg bilde / åpne kamera</span>
+      </label>
+      <div id="imagePreviewWrap" class="image-preview-wrap" hidden>
+        <img id="imagePreview" alt="Forhåndsvisning av testbilde">
+        <div>
+          <p id="imageMeta" class="muted"></p>
+          <button id="saveImageButton" class="button primary" disabled>Lagre testbilde</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="portableSection" class="card" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Safari/iPhone/iPad</p>
+          <h2>Flytt data til eller fra iCloud Drive</h2>
+        </div>
+      </div>
+      <p class="muted">Safari kan ikke gi en webapp permanent direkte tilgang til en vilkårlig iCloud Drive-katalog. I denne prototypen lagres arbeidskopien i appens private lager og kan eksporteres/importeres som filer.</p>
+      <div class="actions">
+        <button id="exportButton" class="button secondary" disabled>Eksporter tekstiler.json</button>
+        <label class="button secondary file-button">Importer tekstiler.json
+          <input id="importInput" type="file" accept="application/json,.json" hidden>
+        </label>
+      </div>
+    </section>
+
+    <section class="card log-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Diagnostikk</p>
+          <h2>Testlogg</h2>
+        </div>
+        <button id="clearLogButton" class="button ghost">Tøm</button>
+      </div>
+      <ol id="log" class="log"></ol>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

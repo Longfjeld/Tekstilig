@@ -1,0 +1,13 @@
+{
+  "name": "Tekstilig",
+  "short_name": "Tekstilig",
+  "description": "Lokal-first tekstilregister for syprosjekter",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f0ea",
+  "theme_color": "#f3f0ea",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

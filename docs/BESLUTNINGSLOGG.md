@@ -252,3 +252,102 @@ Leveranser nummereres sekvensielt, eksempelvis `0001`, `0002`, `0003`.
 ### Begrunnelse
 
 Dette reduserer risikoen for å gjeninnføre gammel eller eksperimentell kode fra tidligere samtaler.
+
+
+---
+
+## B-017 – Fire hovedområder i navigasjonen
+
+**Dato:** 2026-09-13  
+**Status:** Besluttet
+
+### Beslutning
+
+Første versjon organiseres rundt Tekstiler, Finn til prosjekt, Nytt tekstil og Innstillinger. Stoffbiblioteket er primær startflate.
+
+### Begrunnelse
+
+Dette dekker de viktigste arbeidsmåtene uten å gjøre navigasjonen omfattende.
+
+---
+
+## B-018 – Stoffbiblioteket bruker store visuelle kort
+
+**Dato:** 2026-09-13  
+**Status:** Besluttet
+
+### Beslutning
+
+Standardvisningen bruker relativt store kort med hovedbilde, navn, materialinformasjon og tilgjengelig størrelse.
+
+### Begrunnelse
+
+Brukeren skal kunne kjenne igjen og bla i tekstiler visuelt. Stoffbildene prioriteres over maksimal informasjonstetthet.
+
+---
+
+## B-019 – Hurtigregistrering før fullstendig registrering
+
+**Dato:** 2026-09-13  
+**Status:** Besluttet
+
+### Beslutning
+
+Registrering starter med bilde, navn, første stoffstykke og sentrale klassifiseringsfelt. Øvrige detaljer ligger under «Flere detaljer» og kan kompletteres senere.
+
+### Begrunnelse
+
+Registrering ved stofflageret skal være rask nok til at datakvalitet ikke oppnås på bekostning av faktisk bruk.
+
+---
+
+## B-020 – Prosjektsøk bruker absolutte krav og forklarbare treff
+
+**Dato:** 2026-09-13  
+**Status:** Besluttet
+
+### Beslutning
+
+«Finn stoff til prosjekt» filtrerer på konkrete kriterier som nødvendig lengde, bredde, materiale, vekt og elastisitet. Resultater skal vise hvorfor stoffet passer.
+
+### Begrunnelse
+
+Første versjon skal være forutsigbar og forståelig fremfor å bruke en uklar anbefalingsalgoritme.
+
+---
+
+## B-021 – Første implementering angriper lagringsrisiko tidlig
+
+**Dato:** 2026-09-13  
+**Status:** Besluttet
+
+### Beslutning
+
+Valg/oppretting av lokal/iCloud-datakatalog og sikker lesing/skriving av `tekstiler.json` implementeres før omfattende UI-funksjonalitet.
+
+### Begrunnelse
+
+Filtilgang fra PWA/nettleser på de aktuelle Apple-enhetene er den viktigste tekniske usikkerheten og bør valideres tidlig.
+
+---
+
+## B-022 – Direkte iCloud-katalog kan ikke være eneste lagringsmekanisme i Safari
+
+**Dato:** 2026-09-13  
+**Status:** Teknisk avklaring – endelig lagringsstrategi avventer prototypetest
+
+### Funn
+
+Safari 26.6 på macOS og iOS/iPadOS støtter ikke `showDirectoryPicker()` fra File System Access API. En ren webapp kan derfor ikke få permanent direkte tilgang til en vilkårlig bruker-valgt iCloud Drive-katalog på samme måte som støttede desktop Chromium-nettlesere.
+
+Safari støtter Origin Private File System (OPFS), men dette lageret er privat for nettstedet og er ikke en vanlig synlig mappe i iCloud Drive.
+
+### Konsekvens
+
+Kodeleveranse 0001 implementerer et abstrahert lagringslag med:
+
+- direkte katalogmodus når nettleseren støtter dette
+- OPFS som Safari/iOS-prototype
+- eksplisitt eksport/import av `tekstiler.json` fra OPFS-modus
+
+Endelig beslutning om produksjonslagring tas etter testing på de faktiske Apple-enhetene.

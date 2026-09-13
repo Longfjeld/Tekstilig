@@ -26,8 +26,9 @@ Appen skal gjøre det enkelt å svare på spørsmål som:
 - `ARKITEKTUR.md` – teknisk arkitektur og lagringsprinsipper
 - `DATAMODELL.md` – autoritativ datamodell
 - `BESLUTNINGSLOGG.md` – beslutninger og begrunnelser
+- `UX-FLYTER.md` – hovedskjermer, navigasjon og brukerflyter
 - `ENDRINGSLOGG.md` – endringer mellom leveranser
 
 ## Status
 
-Dokumentasjon 0001 etablerer prosjektgrunnlaget. Applikasjonskode er ikke opprettet ennå.
+Dokumentasjon 0002 etablerer også UX-grunnlaget og hovedflytene. Applikasjonskode er ikke opprettet ennå.
