@@ -3,7 +3,9 @@
 **Status:** Datamodell v1  
 **Schema:** 1
 
-Dette dokumentet er den autoritative beskrivelsen av datamodellen for Tekstilig.
+Dette dokumentet er den autoritative beskrivelsen av den **logiske datamodellen** for Tekstilig.
+
+Produksjonslagring er fra beslutning B-023 planlagt i CloudKit. Strukturene i dette dokumentet beskriver derfor domenemodellen og eksportformatet; de trenger ikke lagres som ett fysisk JSON-dokument i CloudKit. `tekstiler.json` beholdes som portabelt eksport-/backupformat. Se `ARKITEKTUR.md` for CloudKit-mapping.
 
 ## 1. Toppnivå
 

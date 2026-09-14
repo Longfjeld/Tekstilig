@@ -32,3 +32,13 @@ Appen skal gjøre det enkelt å svare på spørsmål som:
 ## Status
 
 Dokumentasjon 0002 etablerer også UX-grunnlaget og hovedflytene. Applikasjonskode er ikke opprettet ennå.
+
+
+## CloudKit
+
+CloudKit er nå valgt som primær produksjonslagring. Se:
+
+- `CLOUDKIT-OPPSETT.md` – kontoer, tilganger, CloudKit Console, API-token, GitHub Pages og PoC-forberedelser
+- `ARKITEKTUR.md` – oppdatert arkitektur for PWA + mulig SwiftUI-klient mot samme CloudKit-container
+
+`tekstiler.json` er fortsatt del av datamodellens eksport-/backupformat, men er ikke lenger planlagt som primær produksjonsdatabase.

@@ -83,3 +83,24 @@ Første komplette kodeleveranse.
 ### Teknisk avklaring
 
 Direkte bruker-valgt iCloud Drive-katalog kan ikke være eneste lagringsmekanisme for Safari/iPhone/iPad. Dette testes videre før endelig produksjonsarkitektur låses.
+
+
+## Dokumentasjonsendring 0002 – 2026-09-14
+
+CloudKit er valgt som ny primær lagringsarkitektur etter at første PWA-prototype bekreftet begrensningene ved direkte iCloud Drive-katalogtilgang i Safari.
+
+### Ny fil
+
+- `CLOUDKIT-OPPSETT.md` – forutsetninger, Apple Developer/CloudKit-oppsett, API-token, GitHub Pages, development/production og PoC-sjekkliste
+
+### Endret
+
+- `ARKITEKTUR.md` – CloudKit som primærlager, lokal cache, eksport og gjenbruk mot SwiftUI
+- `DATAMODELL.md` – presisert at modellen er logisk og at JSON er eksport-/backupformat
+- `BESLUTNINGSLOGG.md` – lagt til B-023 til B-028 og oppdatert status for B-021/B-022
+- `README.md` – lagt til CloudKit-dokumentasjon og status
+- `ENDRINGSLOGG.md` – denne leveransen
+
+### Ingen kodeendring
+
+Eksisterende PWA-kode er ikke endret i denne leveransen. Neste kodeendring blir en CloudKit JS PoC når container, token og origin er klargjort.

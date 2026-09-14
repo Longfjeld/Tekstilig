@@ -319,7 +319,7 @@ Første versjon skal være forutsigbar og forståelig fremfor å bruke en uklar 
 ## B-021 – Første implementering angriper lagringsrisiko tidlig
 
 **Dato:** 2026-09-13  
-**Status:** Besluttet
+**Status:** Gjennomført – førte til B-022 og B-023
 
 ### Beslutning
 
@@ -334,7 +334,7 @@ Filtilgang fra PWA/nettleser på de aktuelle Apple-enhetene er den viktigste tek
 ## B-022 – Direkte iCloud-katalog kan ikke være eneste lagringsmekanisme i Safari
 
 **Dato:** 2026-09-13  
-**Status:** Teknisk avklaring – endelig lagringsstrategi avventer prototypetest
+**Status:** Bekreftet teknisk begrensning – produksjonsstrategi erstattet av B-023
 
 ### Funn
 
@@ -351,3 +351,107 @@ Kodeleveranse 0001 implementerer et abstrahert lagringslag med:
 - eksplisitt eksport/import av `tekstiler.json` fra OPFS-modus
 
 Endelig beslutning om produksjonslagring tas etter testing på de faktiske Apple-enhetene.
+
+
+---
+
+## B-023 – CloudKit blir primær produksjonslagring
+
+**Dato:** 2026-09-14  
+**Status:** Besluttet
+
+### Beslutning
+
+Tekstilig bruker CloudKit som primær produksjonslagring. Første implementering bruker brukerens private CloudKit database. iCloud Drive/`tekstiler.json` er ikke lenger primær produksjonsdatabase.
+
+### Begrunnelse
+
+Safari/iOS gir ikke PWA-en den permanente katalogtilgangen som den opprinnelige iCloud Drive-modellen krevde. CloudKit gir i stedet en Apple-native dataplattform som fungerer på tvers av web og native Apple-klienter, med private brukerdata, strukturert database og støtte for assets.
+
+### Konsekvens
+
+`tekstiler.json` går fra produksjonsdatabase til eksport-/backupformat. CloudKit-schemaet blir en sentral del av løsningen.
+
+---
+
+## B-024 – CloudKit-schemaet skal være klientuavhengig
+
+**Dato:** 2026-09-14  
+**Status:** Besluttet
+
+### Beslutning
+
+CloudKit-container, record-typer, felter og relasjoner skal utformes slik at samme backend kan brukes av både CloudKit JS/PWA og native CloudKit/SwiftUI.
+
+### Begrunnelse
+
+Dette gjør PWA-PoC-en verdifull selv om sluttproduktet senere flyttes til SwiftUI. Backend, schema, data og assets kan gjenbrukes.
+
+---
+
+## B-025 – CloudKit-records fremfor én stor JSON-record
+
+**Dato:** 2026-09-14  
+**Status:** Besluttet
+
+### Beslutning
+
+Produksjonsdata modelleres som separate CloudKit records, foreløpig med `Textile`, `Piece` og `TextileImage` som kjerne. Bilder lagres som Assets.
+
+### Begrunnelse
+
+Dette gir bedre oppdatering, søk, synkronisering og senere native gjenbruk enn å lagre hele samlingen som én JSON-fil eller én record.
+
+---
+
+## B-026 – Lokal cache beholdes
+
+**Dato:** 2026-09-14  
+**Status:** Besluttet
+
+### Beslutning
+
+CloudKit er autoritativ datakilde, men klientene skal bruke lokal cache der dette gir raskere oppstart, offline-egenskaper og bedre brukeropplevelse.
+
+### Konsekvens
+
+PWA-en kan bruke IndexedDB/OPFS. En eventuell SwiftUI-app velger en native cache-/persistensmekanisme. Cacheformatet er ikke autoritativt.
+
+---
+
+## B-027 – Eksport/import beholdes som portabilitetskrav
+
+**Dato:** 2026-09-14  
+**Status:** Besluttet
+
+### Beslutning
+
+Selv om CloudKit er primærlager, skal Tekstilig kunne eksportere data og bilder til et lesbart backupformat basert på JSON + bildefiler, og senere kunne importere dette igjen.
+
+### Begrunnelse
+
+Brukerens data skal ikke være låst til CloudKit eller én klientimplementasjon.
+
+---
+
+## B-028 – Neste PoC validerer CloudKit, ikke UI
+
+**Dato:** 2026-09-14  
+**Status:** Besluttet
+
+### Beslutning
+
+Neste tekniske PoC skal bruke CloudKit JS og validere:
+
+1. iCloud-autentisering
+2. oppretting av `Textile`
+3. lesing/endring av `Textile`
+4. `Piece`-relasjon
+5. opplasting og lesing av bilde/Asset
+6. tilgang til samme data fra flere Apple-enheter
+
+UI-et holdes bevisst enkelt i denne fasen.
+
+### Begrunnelse
+
+Dette validerer den delen av løsningen som også gjenbrukes dersom Tekstilig senere blir en SwiftUI-app.
