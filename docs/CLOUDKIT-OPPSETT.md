@@ -3,165 +3,328 @@
 **Status:** Forberedelse til CloudKit PoC  
 **Dato:** 2026-09-14
 
-Dette dokumentet beskriver hva som bør være på plass før Tekstilig kan bruke CloudKit fra GitHub Pages/PWA, og hvordan oppsettet bør gjøres med tanke på en mulig senere SwiftUI-app.
+Dette dokumentet er arbeidsveiledningen for å klargjøre Tekstilig for en CloudKit-PoC fra GitHub Pages/PWA, med mulighet for senere gjenbruk i en SwiftUI-app.
 
 ## Slik skal dokumentet brukes
 
-Dette dokumentet er både **arbeidsveiledning** og **bakgrunnsdokumentasjon**. Du skal ikke utføre alle kapitlene punkt for punkt.
+Arbeidsdelen skal følges **strengt sekvensielt fra punkt 1 og videre**. Et punkt skal være ferdig før neste punkt påbegynnes. Ingen handling i et tidligere punkt forutsetter at et senere punkt allerede er utført.
 
-Bruk **kapittel 15 – Sjekkliste før jeg kan lage CloudKit-PoC-koden** som den autoritative arbeidslisten. Kapitlene før denne forklarer hvordan punktene i sjekklisten utføres, hvilke valg vi har tatt, og hva som skal gjøres senere i prosjektet.
+Statusmarkeringene er:
 
-Markeringene betyr:
+- **✅ AKSJON – DU:** Utført og kontrollert.
+- **❗️ AKSJON – DU:** Gjenstår helt eller delvis.
+- **INFORMASJON:** Forklaring eller prosjektregel. Ingen handling kreves nå.
+- **SENERE – PROSJEKT:** Gjennomføres sammen med PoC-en eller i en senere fase.
 
-- **AKSJON – DU ❗️:** Dette må du konfigurere eller beslutte før PoC-en.
-- **INFORMASJON:** Bakgrunn eller arbeidsregler; ingen egen handling kreves nå.
-- **SENERE – PROSJEKT:** Dette gjør vi sammen med PoC-en eller senere.
+Du kan selv endre `❗️` til `✅` etter hvert som punktene blir ferdige.
 
-### Kort arbeidsrekkefølge
+## Fremdrift akkurat nå
 
-1. Sørg for Apple Developer Program og nødvendig rolle.
-2. Bestem permanent Bundle ID og iCloud container ID.
-3. Opprett App ID og aktiver iCloud/CloudKit.
-4. Opprett og koble iCloud-containeren.
-5. Kontroller at containeren vises i CloudKit Console.
-6. Bestem GitHub repository og Pages-adresse, og aktiver HTTPS.
-7. Opprett et **Development** API-token.
-8. Legg GitHub Pages-origin inn som `Allowed Origin`.
-9. Bekreft at PoC-en bruker **Development**, ikke Production.
-10. Stopp der og bruk kapittel 15 som kontrolliste.
+Følgende er allerede bekreftet:
 
-Du skal **ikke** deploye production-schema, opprette production-token eller bygge hele CloudKit-schemaet manuelt før PoC-en.
+- ✅ Apple Developer-tilgang fungerer.
+- ✅ Permanent Bundle ID er valgt: `com.longfjeld.tekstilig`.
+- ✅ Permanent iCloud container ID er valgt og opprettet: `iCloud.com.longfjeld.tekstilig`.
+- ✅ App ID for Tekstilig er opprettet med iCloud/CloudKit.
+- ✅ iCloud-containeren er koblet til Tekstilig.
+- ✅ Containeren er synlig i CloudKit Database.
+- ✅ CloudKit-miljøet er kontrollert til `Development`.
+- ✅ GitHub Pages-adresse og HTTPS må kontrolleres/publiseres.
+- ✅ Development API-token må opprettes etter at Pages-origin er kjent.
+- ❗️ Allowed Origin må settes på Development-tokenet.
+- ❗️ Deretter kan CloudKit-PoC-en bygges og testes.
 
-## 1. Kontoer og tilganger
+---
 
-**AKSJON – DU ❗️:** Kontroller konto, medlemskap og rolle.
+# Arbeidsveiledning
 
-### Apple Account
+## 1. Apple-konto og Developer-tilgang
 
-Du trenger en Apple Account med tofaktorautentisering. Apple krever tofaktorautentisering ved innmelding i Apple Developer Program.
+**✅ AKSJON – DU**
 
-### Apple Developer Program
+Følgende skal være på plass:
 
-For Tekstilig bør en aktiv **Apple Developer Program**-konto behandles som en prosjektforutsetning. CloudKit inngår i programmet, og medlemskap vil uansett være nødvendig dersom vi senere skal distribuere en SwiftUI-app via TestFlight/App Store.
+- Apple Account med tofaktorautentisering.
+- Aktiv tilgang til Apple Developer.
+- Tilgang til **Certificates, Identifiers & Profiles**.
+- Tilstrekkelig rolle til å opprette og administrere iCloud-containeren.
 
-For et organisasjonsteam må riktig rolle være tilgjengelig. Opprettelse av en iCloud container krever ifølge Apple rollen **Account Holder eller Admin**.
+Dette er i praksis bekreftet fordi Tekstilig sin App ID og iCloud-container allerede er opprettet.
 
-For et privat prosjekt er individuell medlemskap enklest dersom appen og containeren skal eies privat. Dersom løsningen skal eies av en organisasjon, bør containeren opprettes under organisasjonens Developer Team fra starten. Flytting senere bør unngås hvis mulig.
+**Resultat:** Punkt 1 er ferdig.
 
-### iCloud-konto for testing
+---
 
-Minst én vanlig iCloud-konto må være tilgjengelig for å teste den private databasen. Det er en fordel å ha to testkontoer senere når deling/`CKShare` eventuelt skal testes.
+## 2. Fastsett permanente identifikatorer
 
-## 2. Verktøy på Mac
+**✅ AKSJON – DU**
 
-**AKSJON – DU ❗️:** Kontroller grunnleggende verktøy og portaltilganger.
-
-Installer/ha tilgjengelig:
-
-- siste stabile Xcode
-- Git
-- nettlesere som skal testes, særlig Safari
-- tilgang til Apple Developer-portalen
-- tilgang til CloudKit Console
-- GitHub-konto/repository for Tekstilig
-
-Xcode blir spesielt viktig hvis vi går videre med SwiftUI. Apple beskriver også CloudKit JS som en webflate mot de samme CloudKit-containerne som brukes av iOS/macOS-apper.
-
-## 3. Velg eierskap og identifiers før opprettelse
-
-**AKSJON – DU ❗️:** Bestem permanente identifikatorer før opprettelse.
-
-Før containeren opprettes bør følgende fastsettes:
+Tekstilig bruker:
 
 ```text
 Appnavn:       Tekstilig
-Bundle ID:     f.eks. com.longfjeld.tekstilig
-iCloud ID:     f.eks. iCloud.com.longfjeld.tekstilig
-GitHub repo:   f.eks. Longfjeld/Tekstilig
-Pages URL:     f.eks. https://longfjeld.github.io/Tekstilig/
-Custom domain: valgfritt (vi setter ikke denne)
+Bundle ID:     com.longfjeld.tekstilig
+iCloud ID:     iCloud.com.longfjeld.tekstilig
+GitHub repo:   Longfjeld/Tekstilig
+Custom domain: Ingen foreløpig
 ```
 
-Identifierne bør velges konservativt og regnes som permanente.
+Bundle ID og iCloud container ID bør behandles som permanente.
 
-## 4. Opprett App ID / Bundle ID
+GitHub Pages-adressen kontrolleres senere i punkt 7, etter at GitHub Pages er aktivert.
 
-**AKSJON – DU ❗️:** Utføres i Apple Developer-portalen.
+**Resultat:** Punkt 2 er ferdig.
 
-I Apple Developer -> Certificates, Identifiers & Profiles:
+---
 
-1. Opprett en eksplisitt App ID/Bundle ID for Tekstilig hvis den ikke finnes.
-2. Aktiver iCloud capability.
-3. Velg CloudKit-støtte.
-4. Knytt App ID-en til Tekstilig sin iCloud container.
+## 3. Opprett App ID og aktiver CloudKit
 
-Selv om første klient er en webapp, anbefales dette oppsettet fordi samme container da er klar for en senere native app.
+**✅ AKSJON – DU**
 
-## 5. Opprett iCloud container
+I Apple Developer → **Certificates, Identifiers & Profiles → Identifiers** er følgende opprettet:
 
-**AKSJON – DU ❗️:** Utføres i Apple Developer-portalen.
+```text
+Description:        Tekstilig
+App ID Prefix:      Team ID
+Bundle ID type:     Explicit
+Bundle ID:          com.longfjeld.tekstilig
+```
 
-I Apple Developer -> Certificates, Identifiers & Profiles -> Identifiers:
+Under **Capabilities** er:
+
+- iCloud aktivert.
+- CloudKit support aktivert.
+
+**Resultat:** Punkt 3 er ferdig.
+
+---
+
+## 4. Opprett iCloud-container
+
+**✅ AKSJON – DU**
+
+I Apple Developer → **Certificates, Identifiers & Profiles → Identifiers**:
 
 1. Velg `iCloud Containers`.
-2. Opprett containeren.
-3. Bruk valgt permanent identifier, eksempelvis:
+2. Opprett containeren:
 
 ```text
 iCloud.com.longfjeld.tekstilig
 ```
 
-Apple oppgir at opprettelse krever Account Holder eller Admin.
+Containeren er allerede opprettet.
 
-## 6. Åpne CloudKit Console
+**Resultat:** Punkt 4 er ferdig.
 
-**AKSJON – DU ❗️:** Kontroller at Tekstilig-containeren er synlig. Schemaarbeidet gjøres senere.
+---
 
-CloudKit Console brukes til blant annet:
+## 5. Knytt iCloud-containeren til App ID-en
 
-- schema
-- development-data
-- production-schema
-- API tokens
-- telemetry/logs
-- deploy av schema til production
+**✅ AKSJON – DU**
 
-Adresse:
+Når både App ID og iCloud-container eksisterer:
+
+1. Åpne App ID-en `com.longfjeld.tekstilig`.
+2. Kontroller at iCloud/CloudKit er aktivert.
+3. Knytt containeren:
+
+```text
+iCloud.com.longfjeld.tekstilig
+```
+
+4. Lagre endringen.
+
+Dette er allerede utført for Tekstilig.
+
+**Resultat:** Punkt 5 er ferdig.
+
+---
+
+## 6. Kontroller container og Development-miljø i CloudKit Database
+
+**✅ AKSJON – DU**
+
+1. Åpne:
 
 ```text
 https://icloud.developer.apple.com/
 ```
 
-Velg Tekstilig-containeren før videre oppsett.
+2. Velg **CloudKit Database**.
+3. Kontroller at containeren er:
 
-## 7. Development og production
+```text
+iCloud.com.longfjeld.tekstilig
+```
 
-**INFORMASJON:** Bruk Development for PoC. Ikke deploy til Production nå.
+4. Kontroller at miljøet er:
 
-CloudKit har separate miljøer.
+```text
+Development
+```
 
-### Development
+Begge deler er kontrollert i CloudKit Database.
 
-Brukes under PoC og schemautvikling. Her kan schema endres og miljøet resettes.
+Ikke opprett schema, record types, indekser eller Production-oppsett nå.
 
-### Production
+**Resultat:** Punkt 6 er ferdig.
 
-Brukes når schemaet er testet og deployet. Produksjonsschema skal behandles som langsiktig. Apple dokumenterer at produksjonsendringer i praksis må være fremoverkompatible/additive; man bør derfor ikke deploye tidlige eksperimentfelt ukritisk.
+---
 
-### Arbeidsregel
+## 7. Klargjør GitHub Pages og fastsett web-origin
 
-Vi skal ikke deploye Tekstilig-schema til production før:
+**✅ AKSJON – DU**
 
-- record-typene er gjennomgått
-- navn og datatyper er gjennomgått
-- nødvendige query-indexer er bestemt
-- PoC fungerer i development
+Dette punktet skal fullføres **før** API-tokenet opprettes, fordi vi trenger den faktiske Pages-origin-en som `Allowed Origin`.
 
-## 8. Første CloudKit-schema
+### 7.1 Kontroller repository
 
-**SENERE – PROSJEKT:** Foreløpig schema-design. Ikke bygg hele schemaet manuelt nå.
+Repositoryet skal være:
 
-Første PoC bør ha et minimalt schema som senere kan utvides.
+```text
+Longfjeld/Tekstilig
+```
+
+Tekstilig-koden kan ligge offentlig på GitHub. CloudKit-brukerdata skal ikke ligge i repositoryet.
+
+### 7.2 Aktiver GitHub Pages
+
+I GitHub-repositoryet:
+
+1. Åpne **Settings**.
+2. Åpne **Pages**.
+3. Velg publiseringskilde for Pages.
+4. Publiser appen.
+5. Vent til GitHub viser at siden er tilgjengelig.
+
+Forventet adresse er eksempelvis:
+
+```text
+https://longfjeld.github.io/Tekstilig/
+```
+
+Bruk den faktiske adressen GitHub viser dersom store/små bokstaver eller repository-navn avviker.
+
+### 7.3 Kontroller HTTPS
+
+Åpne Pages-adressen i nettleseren og kontroller at den bruker:
+
+```text
+https://
+```
+
+Aktiver **Enforce HTTPS** i GitHub Pages dersom valget er tilgjengelig og ikke allerede er aktivert.
+
+### 7.4 Fastsett origin
+
+For en Pages-adresse som:
+
+```text
+https://longfjeld.github.io/Tekstilig/
+```
+
+er origin:
+
+```text
+https://longfjeld.github.io
+```
+
+Path-delen `/Tekstilig/` er ikke en del av origin.
+
+### 7.5 Noter verdiene
+
+Fyll inn:
+
+```text
+GitHub repository:  Longfjeld/Tekstilig
+Pages URL:           https://longfjeld.github.io/Tekstilig/
+Allowed Origin:      https://longfjeld.github.io
+HTTPS kontrollert:   Ja
+```
+
+**Stopp ved slutten av punkt 7 dersom disse verdiene ikke er klare. Ikke gå videre til punkt 8 før de er bekreftet.**
+
+---
+
+## 8. Opprett Development API-token
+
+✅ AKSJON – DU**
+
+Punkt 7 skal være ferdig før dette punktet utføres.
+
+1. Åpne CloudKit Database.
+2. Kontroller igjen:
+
+```text
+Container:    iCloud.com.longfjeld.tekstilig
+Environment:  Development
+```
+
+3. Gå til **Settings → Tokens & Keys**.
+4. Opprett et nytt web/API-token for Development.
+5. Gi tokenet et tydelig navn, for eksempel:
+
+```text
+Tekstilig PWA Development
+```
+
+6. Sett `Allowed Origin` til verdien som ble bekreftet i punkt 7.
+7. Lagre tokenet.
+8. Noter tokenverdien slik at den kan brukes i PoC-konfigurasjonen.
+
+Ikke opprett Production-token nå.
+
+> Web-API-tokenet brukes av klientkoden og er ikke det samme som en hemmelig servernøkkel. Server-to-server private keys eller andre private nøkler skal aldri legges i GitHub Pages-koden.
+
+Når tokenet er opprettet og origin er satt korrekt, endres dette punktet til `✅`.
+
+---
+
+## 9. Kontroller at forhåndsoppsettet er komplett
+
+**✅ AKSJON – DU**
+
+Dette punktet utføres først når punkt 8 er ferdig.
+
+Kontroller følgende:
+
+- [x] Apple Developer-tilgang fungerer.
+- [x] Bundle ID er `com.longfjeld.tekstilig`.
+- [x] iCloud container ID er `iCloud.com.longfjeld.tekstilig`.
+- [x] iCloud/CloudKit er aktivert for App ID-en.
+- [x] Containeren er koblet til App ID-en.
+- [x] Containeren er synlig i CloudKit Database.
+- [x] `Development` er valgt.
+- [x] GitHub Pages er publisert.
+- [x] GitHub Pages bruker HTTPS.
+- [x] Eksakt Pages URL er notert.
+- [x] Eksakt Allowed Origin er notert.
+- [x] Development API-token er opprettet.
+- [x] Allowed Origin er lagt inn på Development-tokenet.
+
+Når alle punktene er avkrysset, er ditt forhåndsoppsett ferdig.
+
+Gi deretter følgende tre verdier til PoC-arbeidet:
+
+```text
+Container ID:  iCloud.com.longfjeld.tekstilig
+Pages URL:     https://longfjeld.github.io/Tekstilig/
+API token:     f2bf857c5160f4dc3c08917c06ab9b678d5a4582f45dcbc7140d0f9d015c2853
+```
+
+**Ikke gå videre med manuelt CloudKit-schema eller Production-oppsett. Neste steg er PoC-implementeringen.**
+
+---
+
+# Informasjon om det som skjer etter forhåndsoppsettet
+
+Delene nedenfor er ikke aksjonspunkter du skal utføre nå.
+
+## 10. Første CloudKit-schema
+
+**SENERE – PROSJEKT**
+
+PoC-en skal bruke et minimalt schema som kan utvides senere.
 
 ### `Textile`
 
@@ -197,97 +360,37 @@ primary          Int(64)/Boolean-mapping
 imageAsset       Asset
 ```
 
-Eksakt bruk av `Reference`/parent-relasjoner og eventuelle custom record zones bestemmes før PoC-koden låses. Dette er spesielt viktig hvis fremtidig deling via CKShare skal holdes åpen.
+Eksakt bruk av `Reference`, parent-relasjoner og eventuelle custom record zones bestemmes før PoC-schemaet låses. Dette er viktig dersom fremtidig deling via `CKShare` skal holdes åpen.
 
-## 9. Indekser
+---
 
-**SENERE – PROSJEKT:** Planlegges sammen med schema/PoC.
+## 11. Indekser
 
-CloudKit-felter som skal brukes i server-side queries må planlegges og indekseres. Ikke indekser alt automatisk i production.
+**SENERE – PROSJEKT**
 
-For første PoC trenger vi bare det som er nødvendig for å hente testrecords. Før produksjon vurderes blant annet indekser for:
+CloudKit-felter som brukes i server-side queries må planlegges og indekseres.
+
+Aktuelle felt senere er blant annet:
 
 - `textileId`
-- `name` hvis server-side søk skal brukes
+- `name`
 - `category`
 - relasjonsfelt
-- `updatedAt` dersom dette inngår i synk
+- `updatedAt`
 
 Komplekse kombinerte brukerfiltre kan fortsatt utføres lokalt mot cache.
 
-## 10. Opprett API-token for CloudKit JS
+Vi skal ikke opprette produksjonsindekser nå.
 
-**AKSJON – DU ❗️:** Opprett kun Development-tokenet som PoC-en trenger.
-
-CloudKit JS krever container-ID og API-token.
-
-I CloudKit Console:
-
-1. Åpne riktig container.
-2. Gå til API Access / API Tokens.
-3. Opprett token for **development**.
-4. Begrens `Allowed Origins` til den faktiske origin som brukes av GitHub Pages.
-5. Angi sign-in callback/redirect etter behov i CloudKit-oppsettet.
-6. Opprett separat token for production når vi er klare for production.
-
-Apple dokumenterer at tokens er knyttet til container og deployment environment; development og production skal derfor ha separate tokens.
-
-### Viktig om tokenet
-
-Web-API-tokenet brukes i klientkoden og er ikke det samme som en hemmelig servernøkkel. Sikkerheten skal likevel strammes inn med `Allowed Origins`.
-
-**Ikke** legg server-to-server private keys eller andre private nøkler i GitHub Pages-kode.
-
-## 11. GitHub Pages-oppsett
-
-**AKSJON – DU ❗️:** Pages-URL, HTTPS og faktisk origin må være klare.
-
-### Repository
-
-Tekstilig-koden kan fortsatt ligge på GitHub og publiseres med GitHub Pages. Ingen CloudKit-brukerdata skal ligge i repositoryet.
-
-### HTTPS
-
-HTTPS skal være aktivert og `Enforce HTTPS` skal brukes. GitHub oppgir at Pages støtter HTTPS både på `github.io` og korrekt konfigurerte custom domains.
-
-### Origin
-
-Hvis appen publiseres som:
-
-```text
-https://longfjeld.github.io/tekstilig/
-```
-
-er web-origin:
-
-```text
-https://longfjeld.github.io
-```
-
-Det er origin, ikke prosjektets URL-path, som normalt er relevant for origin-begrensning. Den konkrete CloudKit-konfigurasjonen verifiseres når tokenet opprettes.
-
-### Custom domain
-
-Et custom domain er valgfritt. Hvis dere senere bruker eksempelvis:
-
-```text
-https://tekstilig.longfjeld.com
-```
-
-må dette:
-
-- konfigureres i GitHub Pages/DNS
-- ha gyldig HTTPS
-- legges til i CloudKit-tokenets tillatte origins
-- testes før gammel origin eventuelt fjernes
-
-GitHub anbefaler å verifisere custom domain og støtter HTTPS på korrekt konfigurerte domener.
+---
 
 ## 12. CloudKit JS i PWA-en
 
-**SENERE – PROSJEKT:** Implementeres i PoC-koden.
+**SENERE – PROSJEKT**
 
-Apple leverer CloudKit JS fra sin CDN. Dokumentasjonen viser CloudKit JS 2 via:
+PoC-en skal bruke CloudKit JS mot den samme CloudKit-containeren som senere kan brukes av en native app.
+
+Apple leverer CloudKit JS fra sin CDN, blant annet via:
 
 ```html
 <script src="https://cdn.apple-cloudkit.com/ck/2/CloudKit.js"></script>
@@ -296,41 +399,74 @@ Apple leverer CloudKit JS fra sin CDN. Dokumentasjonen viser CloudKit JS 2 via:
 Konfigurasjonen trenger i hovedsak:
 
 - container identifier
-- API token
-- environment: development/production
+- Development API-token
+- environment `development`
 - autentisering av iCloud-bruker for privat database
 
-`setUpAuth()` kan brukes til å oppdage aktiv CloudKit-session og presentere inn-/utlogging.
+Autentiseringsflyten implementeres i PoC-koden.
 
-## 13. Første PoC-test
+---
 
-**SENERE – PROSJEKT:** Dette er akseptansekriteriene når PoC-en testes.
+## 13. Akseptansekriterier for CloudKit-PoC
 
-Når punktene over er klare bør PWA-PoC-en gjøre bare dette:
+**SENERE – PROSJEKT**
 
-1. laste CloudKit JS
-2. konfigurere Tekstilig-container i development
-3. la bruker logge inn med iCloud
-4. vise hvilken CloudKit-bruker/session som er aktiv
-5. opprette én `Textile`
-6. lese den tilbake
-7. endre den
-8. opprette ett `Piece`
-9. fotografere/velge et bilde og lagre det som Asset
-10. lese record og bilde på en annen Apple-enhet
-11. logge relevante feil forståelig
+Når punkt 1–9 er ferdige, skal PoC-en bygges for å validere:
 
-Dette er godkjenningskriteriet før resten av UI-et kobles på CloudKit.
+1. lasting av CloudKit JS
+2. konfigurasjon av `iCloud.com.longfjeld.tekstilig` i Development
+3. innlogging med iCloud
+4. aktiv CloudKit-bruker/session
+5. opprettelse av én `Textile`
+6. lesing av samme record
+7. endring av record
+8. opprettelse av ett `Piece`
+9. fotografering/valg av bilde og lagring som Asset
+10. lesing av record og bilde på en annen Apple-enhet
+11. forståelig visning/logging av relevante feil
 
-## 14. Hvis vi går til SwiftUI etter PoC
+Dette er godkjenningskriteriet før resten av Tekstilig-grensesnittet kobles på CloudKit.
 
-**INFORMASJON:** Beskriver gjenbruk ved eventuell overgang til SwiftUI.
+---
 
-Vi oppretter et SwiftUI-prosjekt med samme Bundle ID-familie og kobler det til den samme CloudKit-containeren. I Xcode aktiveres iCloud/CloudKit capability og riktig container velges.
+## 14. Development og Production
 
-Da gjenbrukes:
+**INFORMASJON**
 
-- alle eksisterende CloudKit-data
+CloudKit har separate miljøer.
+
+### Development
+
+Brukes under PoC og schemautvikling. Her kan schemaet utvikles og testdata håndteres uten å låse tidlige valg til produksjon.
+
+### Production
+
+Brukes først når schemaet er gjennomgått og PoC-en fungerer.
+
+Vi skal ikke deploye Tekstilig-schema til Production før:
+
+- record-typene er gjennomgått
+- navn og datatyper er gjennomgått
+- nødvendige query-indekser er bestemt
+- PoC-en fungerer i Development
+
+---
+
+## 15. Mulig overgang til SwiftUI
+
+**INFORMASJON**
+
+CloudKit-PoC-en er ikke en blindvei dersom Tekstilig senere bygges som SwiftUI-app.
+
+En native app kan kobles til den samme CloudKit-containeren:
+
+```text
+iCloud.com.longfjeld.tekstilig
+```
+
+Følgende kan gjenbrukes:
+
+- CloudKit-data
 - schema
 - record-typer
 - assets
@@ -338,38 +474,44 @@ Da gjenbrukes:
 - Tekstilig-ID-er
 - logisk datamodell
 
-Native appen bruker `CKContainer`, `CKDatabase`, `CKRecord`, `CKAsset` osv. i stedet for CloudKit JS.
+SwiftUI/native CloudKit vil bruke blant annet `CKContainer`, `CKDatabase`, `CKRecord` og `CKAsset` i stedet for CloudKit JS.
 
-Det gjør PWA-PoC-en til en backend-/schema-PoC, ikke en blindvei.
+Web-spesifikke deler som HTML/CSS, service worker og CloudKit-JS-autentiseringskode gjenbrukes ikke direkte.
 
-## 15. Sjekkliste før jeg kan lage CloudKit-PoC-koden
+---
 
-**AKSJON – DU / FASIT:** Dette er den autoritative sjekklisten.
+## 16. Dette skal ikke gjøres før PoC-en
 
-- [x] Apple Account med tofaktorautentisering
-- [ ] Apple Developer Program/team valgt
-- [ ] Tilgang som Account Holder/Admin der container skal opprettes
-- [ ] Endelig Bundle ID bestemt
-- [ ] Endelig iCloud container ID bestemt/opprettet
-- [ ] CloudKit aktivert for App ID
-- [ ] Tekstilig-container synlig i CloudKit Console
-- [ ] GitHub repository/Pages URL bestemt
-- [ ] HTTPS aktiv på Pages
-- [ ] Development API-token opprettet
-- [ ] GitHub Pages-origin lagt inn som Allowed Origin
-- [ ] Development brukes – ikke production – for første PoC
+**INFORMASJON**
 
-Når disse er på plass er ditt forhåndsoppsett ferdig. PoC-koden trenger i praksis container-ID, Development API-token og den avtalte Pages-origin.
-
-### Dette skal ikke gjøres før vi går videre
+Før punkt 1–9 er ferdige og PoC-arbeidet starter:
 
 - Ikke deploy schema til Production.
 - Ikke opprett Production API-token.
-- Ikke opprett alle `Textile`, `Piece` og `TextileImage`-feltene manuelt med mindre vi uttrykkelig avtaler det under PoC-arbeidet.
-- Ikke bygg CloudKit JS-kode selv.
-- Ikke opprett SwiftUI-prosjektet ennå dersom vi først skal gjennomføre CloudKit/PWA-PoC-en.
+- Ikke opprett hele `Textile`, `Piece` og `TextileImage`-schemaet manuelt.
+- Ikke bygg CloudKit JS-kode manuelt.
+- Ikke opprett SwiftUI-prosjektet dersom vi først skal gjennomføre CloudKit/PWA-PoC-en.
 
-## 16. Offisielle kilder
+---
+
+## 17. Verktøy for senere SwiftUI-arbeid
+
+**INFORMASJON**
+
+På Mac bør følgende være tilgjengelig når vi eventuelt går videre til SwiftUI:
+
+- siste stabile Xcode
+- Git
+- Safari
+- Apple Developer-tilgang
+- CloudKit Database-tilgang
+- GitHub-tilgang
+
+Xcode er ikke nødvendig for å fullføre punkt 1–9 i denne CloudKit/PWA-forberedelsen.
+
+---
+
+## 18. Offisielle kilder
 
 - Apple Developer Program enrollment: https://developer.apple.com/help/account/membership/program-enrollment
 - Apple Developer Program membership/CloudKit: https://developer.apple.com/programs/whats-included/
@@ -378,7 +520,4 @@ Når disse er på plass er ditt forhåndsoppsett ferdig. PoC-koden trenger i pra
 - Apple: CloudKit JS: https://developer.apple.com/documentation/cloudkitjs
 - Apple: CloudKit JS configuration: https://developer.apple.com/documentation/cloudkitjs/cloudkit
 - Apple: CloudKit JS authentication: https://developer.apple.com/documentation/cloudkitjs/cloudkit.container/setupauth
-- Apple: CloudKit Console: https://developer.apple.com/icloud/cloudkit/
-- Apple: Deploy CloudKit schema: https://developer.apple.com/documentation/cloudkit/deploying-an-icloud-container-s-schema
-- GitHub: GitHub Pages HTTPS: https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https
-- GitHub: Custom domains: https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages
+- GitHub Pages HTTPS: https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https
