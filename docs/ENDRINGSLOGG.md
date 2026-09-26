@@ -104,3 +104,37 @@ CloudKit er valgt som ny primær lagringsarkitektur etter at første PWA-prototy
 ### Ingen kodeendring
 
 Eksisterende PWA-kode er ikke endret i denne leveransen. Neste kodeendring blir en CloudKit JS PoC når container, token og origin er klargjort.
+
+
+## Kodeleveranse 0002 – 2026-09-25
+
+CloudKit-forhåndsoppsettet er validert mot prosjektets dokumentasjon og første CloudKit JS PoC er implementert.
+
+### Opprettet
+
+- `cloudkit-config.js` – Development-konfigurasjon for container, API-token og Allowed Origin
+- `docs/CLOUDKIT-POC-TEST.md` – strengt sekvensiell testprosedyre
+
+### Endret
+
+- `index.html` – CloudKit PoC-grensesnitt
+- `app.js` – iCloud-autentisering og tester for `Textile`, `Piece` og `TextileImage`/Asset
+- `styles.css` – støtte for CloudKit-autentiseringsområdet
+- `sw.js` – nytt cache-navn og ny asset-liste; eksterne CloudKit-kall caches ikke
+- `README.md` – kodeleveranse 0002 og testmål
+- `docs/README.md` – oppdatert prosjektstatus
+- `docs/CLOUDKIT-OPPSETT.md` – status korrigert etter fullført forhåndsoppsett
+- `docs/ENDRINGSLOGG.md` – denne leveransen
+
+### Validering av oppsett
+
+Dokumenterte verdier er internt konsistente:
+
+```text
+Container:      iCloud.com.longfjeld.tekstilig
+Environment:    development
+Pages URL:      https://longfjeld.github.io/Tekstilig/
+Allowed Origin: https://longfjeld.github.io
+```
+
+Development API-tokenet har forventet 64-tegns heksadesimalt format. Selve Allowed-Origin-innstillingen i Apple-portalen kan ikke verifiseres fra repositoryfilene alene og regnes som brukerbekreftet.

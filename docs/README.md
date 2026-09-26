@@ -1,44 +1,23 @@
 # Tekstilig
 
-Tekstilig er en lokal-first webapp/PWA for registrering, søk og filtrering av tekstiler til bruk i syprosjekter.
+Tekstilig er et tekstilregister for registrering, søk og filtrering av tekstiler til syprosjekter.
 
-## Formål
+## Arkitekturstatus
 
-Appen skal gjøre det enkelt å svare på spørsmål som:
+CloudKit er valgt som primær produksjonslagring. GitHub Pages/PWA brukes nå som PoC-klient. En senere SwiftUI-app kan kobles til samme CloudKit-container, schema og data.
 
-- Hvilke tekstiler har vi?
-- Hvor ligger et bestemt stoff?
-- Har vi et stoff med riktig materiale, størrelse og egenskaper til et prosjekt?
-- Hvor mye sammenhengende stoff er tilgjengelig?
-- Er deler av beholdningen allerede reservert?
-
-## Hovedprinsipper
-
-- Programkoden kan publiseres via GitHub/GitHub Pages.
-- Private tekstildata skal ikke publiseres i GitHub.
-- Data og bilder lagres lokalt i en bruker-valgt katalog, primært i iCloud Drive.
-- Appen skal fungere godt på mobil/iPad ved registrering og oppslag.
-- Mac skal være godt egnet til administrasjon, redigering og mer omfattende søk.
-- Stoffbildene skal være det viktigste visuelle elementet.
+`tekstiler.json` beholdes som planlagt eksport-/backupformat, ikke som primær database.
 
 ## Dokumentasjon
 
 - `ARKITEKTUR.md` – teknisk arkitektur og lagringsprinsipper
-- `DATAMODELL.md` – autoritativ datamodell
+- `DATAMODELL.md` – autoritativ logisk datamodell
 - `BESLUTNINGSLOGG.md` – beslutninger og begrunnelser
 - `UX-FLYTER.md` – hovedskjermer, navigasjon og brukerflyter
+- `CLOUDKIT-OPPSETT.md` – kontoer, container, token og GitHub Pages-forberedelser
+- `CLOUDKIT-POC-TEST.md` – sekvensiell test av CloudKit-PoC-en
 - `ENDRINGSLOGG.md` – endringer mellom leveranser
 
 ## Status
 
-Dokumentasjon 0002 etablerer også UX-grunnlaget og hovedflytene. Applikasjonskode er ikke opprettet ennå.
-
-
-## CloudKit
-
-CloudKit er nå valgt som primær produksjonslagring. Se:
-
-- `CLOUDKIT-OPPSETT.md` – kontoer, tilganger, CloudKit Console, API-token, GitHub Pages og PoC-forberedelser
-- `ARKITEKTUR.md` – oppdatert arkitektur for PWA + mulig SwiftUI-klient mot samme CloudKit-container
-
-`tekstiler.json` er fortsatt del av datamodellens eksport-/backupformat, men er ikke lenger planlagt som primær produksjonsdatabase.
+CloudKit-forhåndsoppsettet er ferdig. Neste milepæl er å publisere kodeleveranse 0002 og validere CloudKit-PoC-en i Development.

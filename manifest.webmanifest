@@ -1,7 +1,7 @@
 {
   "name": "Tekstilig",
   "short_name": "Tekstilig",
-  "description": "Lokal-first tekstilregister for syprosjekter",
+  "description": "Tekstilregister med CloudKit-synk for syprosjekter",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

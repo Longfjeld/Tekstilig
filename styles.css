@@ -68,6 +68,10 @@ dt { color: var(--muted); font-size: .78rem; margin-bottom: 6px; }
 dd { margin: 0; font-weight: 650; }
 .notice { border-left: 3px solid var(--accent); padding: 11px 14px; background: var(--soft); border-radius: 4px 12px 12px 4px; line-height: 1.5; }
 
+
+.auth-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; min-height: 44px; align-items: center; }
+.auth-buttons > div:empty { display: none; }
+
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .button { border: 1px solid var(--line); border-radius: 12px; padding: 10px 15px; min-height: 44px; cursor: pointer; transition: transform .12s ease, opacity .12s ease; }
 .button:active { transform: translateY(1px); }

@@ -29,10 +29,11 @@ Følgende er allerede bekreftet:
 - ✅ iCloud-containeren er koblet til Tekstilig.
 - ✅ Containeren er synlig i CloudKit Database.
 - ✅ CloudKit-miljøet er kontrollert til `Development`.
-- ✅ GitHub Pages-adresse og HTTPS må kontrolleres/publiseres.
-- ✅ Development API-token må opprettes etter at Pages-origin er kjent.
-- ❗️ Allowed Origin må settes på Development-tokenet.
-- ❗️ Deretter kan CloudKit-PoC-en bygges og testes.
+- ✅ GitHub Pages-adresse er fastsatt og HTTPS er kontrollert.
+- ✅ Development API-token er opprettet etter at Pages-origin ble fastsatt.
+- ✅ Allowed Origin er satt på Development-tokenet.
+- ✅ Forhåndsoppsettet er komplett.
+- ❗️ CloudKit-PoC-en må nå publiseres og testes sekvensielt.
 
 ---
 
@@ -248,7 +249,7 @@ HTTPS kontrollert:   Ja
 
 ## 8. Opprett Development API-token
 
-✅ AKSJON – DU**
+**✅ AKSJON – DU**
 
 Punkt 7 skal være ferdig før dette punktet utføres.
 
@@ -312,7 +313,7 @@ Pages URL:     https://longfjeld.github.io/Tekstilig/
 API token:     f2bf857c5160f4dc3c08917c06ab9b678d5a4582f45dcbc7140d0f9d015c2853
 ```
 
-**Ikke gå videre med manuelt CloudKit-schema eller Production-oppsett. Neste steg er PoC-implementeringen.**
+**Ikke gå videre med manuelt Production-oppsett. Neste steg er å publisere og teste CloudKit-PoC-en etter `CLOUDKIT-POC-TEST.md`.**
 
 ---
 

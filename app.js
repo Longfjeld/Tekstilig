@@ -1,19 +1,33 @@
-import { createBestStorage, detectCapabilities } from './storage.js';
+'use strict';
+
+import { CLOUDKIT_CONFIG } from './cloudkit-config.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
-  statusPill: $('statusPill'), directorySupport: $('directorySupport'), opfsSupport: $('opfsSupport'), shareSupport: $('shareSupport'),
-  storageMode: $('storageMode'), modeExplanation: $('modeExplanation'), connectButton: $('connectButton'), reloadButton: $('reloadButton'),
-  connectionInfo: $('connectionInfo'), writeButton: $('writeButton'), testName: $('testName'), testWidth: $('testWidth'), testLength: $('testLength'),
-  jsonPreview: $('jsonPreview'), imageInput: $('imageInput'), imagePreviewWrap: $('imagePreviewWrap'), imagePreview: $('imagePreview'), imageMeta: $('imageMeta'),
-  saveImageButton: $('saveImageButton'), portableSection: $('portableSection'), exportButton: $('exportButton'), importInput: $('importInput'),
-  clearLogButton: $('clearLogButton'), log: $('log')
+  statusPill: $('statusPill'), authPill: $('authPill'), cloudKitSupport: $('cloudKitSupport'), containerId: $('containerId'),
+  environment: $('environment'), origin: $('origin'), configNotice: $('configNotice'), identityInfo: $('identityInfo'),
+  textileName: $('textileName'), textileCategory: $('textileCategory'), textileId: $('textileId'), createTextileButton: $('createTextileButton'),
+  fetchTextileButton: $('fetchTextileButton'), updateTextileButton: $('updateTextileButton'), textileRecordInfo: $('textileRecordInfo'),
+  recordPreview: $('recordPreview'), pieceId: $('pieceId'), pieceWidth: $('pieceWidth'), pieceLength: $('pieceLength'),
+  createPieceButton: $('createPieceButton'), pieceRecordInfo: $('pieceRecordInfo'), imageInput: $('imageInput'), imagePreviewWrap: $('imagePreviewWrap'),
+  imagePreview: $('imagePreview'), imageMeta: $('imageMeta'), saveImageButton: $('saveImageButton'), fetchImageButton: $('fetchImageButton'),
+  imageRecordInfo: $('imageRecordInfo'), cloudImageWrap: $('cloudImageWrap'), cloudImage: $('cloudImage'), clearLogButton: $('clearLogButton'), log: $('log')
 };
 
-const caps = detectCapabilities();
-const storage = createBestStorage();
+let container = null;
+let database = null;
+let userIdentity = null;
+let textileRecord = null;
+let pieceRecord = null;
+let imageRecord = null;
 let selectedImage = null;
 let selectedImageUrl = null;
+
+const KEYS = {
+  textileRecordName: 'tekstilig.poc.textileRecordName',
+  pieceRecordName: 'tekstilig.poc.pieceRecordName',
+  imageRecordName: 'tekstilig.poc.imageRecordName'
+};
 
 function log(message, type = '') {
   const li = document.createElement('li');
@@ -22,171 +36,284 @@ function log(message, type = '') {
   els.log.prepend(li);
 }
 
-function setConnected(connected) {
-  els.reloadButton.disabled = !connected;
-  els.writeButton.disabled = !connected;
-  els.exportButton.disabled = !connected;
-  els.saveImageButton.disabled = !connected || !selectedImage;
-  els.statusPill.textContent = connected ? 'Lagring klar' : 'Ikke tilkoblet';
-  els.statusPill.className = `pill ${connected ? 'good' : 'warn'}`;
+function formatError(error) {
+  if (!error) return 'Ukjent feil';
+  const parts = [error.message || error.reason || error.toString?.() || 'Ukjent feil'];
+  if (error.ckErrorCode) parts.push(`CloudKit: ${error.ckErrorCode}`);
+  if (error.serverErrorCode) parts.push(`Server: ${error.serverErrorCode}`);
+  return parts.filter(Boolean).join(' · ');
 }
 
-function renderCapabilities() {
-  els.directorySupport.textContent = caps.directoryPicker ? 'Ja' : 'Nei';
-  els.opfsSupport.textContent = caps.opfs ? 'Ja' : 'Nei';
-  els.shareSupport.textContent = caps.fileShare ? 'Ja' : 'Nei / ukjent';
-
-  if (!storage) {
-    els.storageMode.textContent = 'Ikke støttet';
-    els.modeExplanation.textContent = 'Denne nettleseren mangler både direkte katalogtilgang og OPFS. Prototypen kan ikke utføre lagringstesten.';
-    els.connectButton.disabled = true;
-    return;
+function assertResponse(response, operation) {
+  if (response?.hasErrors) {
+    const error = response.errors?.[0] || new Error(`${operation} returnerte feil.`);
+    throw error;
   }
-
-  if (storage.kind === 'folder') {
-    els.storageMode.textContent = 'Direkte katalog';
-    els.modeExplanation.textContent = 'Nettleseren støtter katalogtilgang. Velg en Tekstilig-katalog; den kan ligge i en lokalt synkronisert iCloud Drive-katalog dersom operativsystemet tilbyr den i filvelgeren.';
-  } else {
-    els.storageMode.textContent = 'Privat app-lager';
-    els.modeExplanation.textContent = 'Safari/iOS gir ikke webappen direkte vedvarende tilgang til en valgfri iCloud Drive-katalog. Prototypen bruker derfor nettleserens private app-lager og tilbyr eksplisitt eksport/import.';
-    els.portableSection.hidden = false;
-  }
+  if (!response?.records?.length) throw new Error(`${operation} returnerte ingen record.`);
+  return response.records[0];
 }
 
-async function connect() {
-  try {
-    const label = await storage.connect();
-    els.connectionInfo.textContent = storage.description();
-    setConnected(true);
-    log(`Lagring klargjort: ${label}`, 'success');
-    await readData();
-  } catch (error) {
-    if (error?.name === 'AbortError') {
-      log('Valg av lagring ble avbrutt.');
-      return;
-    }
-    log(`Kunne ikke klargjøre lagring: ${error.message}`, 'error');
-  }
+function fieldValue(record, name) {
+  return record?.fields?.[name]?.value ?? null;
 }
 
-function makeTestData() {
-  const now = new Date().toISOString();
+function compactRecord(record) {
+  if (!record) return null;
+  const fields = {};
+  for (const [key, field] of Object.entries(record.fields || {})) {
+    const value = field?.value;
+    fields[key] = value instanceof Blob
+      ? `[Blob ${value.type || 'ukjent'} · ${value.size} byte]`
+      : (value?.downloadURL ? { downloadURL: value.downloadURL, size: value.size } : value);
+  }
   return {
-    schemaVersion: 1,
-    textiles: [{
-      id: 'T0001',
-      name: els.testName.value.trim() || 'Testtekstil',
-      category: 'Vevd',
-      description: 'Opprettet av lagringsprototypen.',
-      tags: ['prototype'],
-      colors: [{ group: 'Blå', name: 'Marineblå', hex: '#273448' }],
-      pattern: 'Ensfarget',
-      materials: [{ material: 'Ull', percent: 80 }, { material: 'Polyester', percent: 20 }],
-      pieces: [{
-        id: 'P001',
-        lengthCm: Number(els.testLength.value) || 0,
-        widthCm: Number(els.testWidth.value) || 0,
-        quantity: 1,
-        reservation: null,
-        note: ''
-      }],
-      weightGsm: 320,
-      stretch: { level: 'low', direction: 'width', percent: null },
-      shrinkage: { lengthPercent: 3, widthPercent: 1, note: '' },
-      properties: ['Mykt', 'Kraftig', 'Godt fall'],
-      care: { wash: { allowed: true, temperatureC: 40, cycle: 'normal' }, bleach: 'notAllowed', tumbleDry: 'notAllowed', drying: 'hang', iron: 'medium', dryClean: 'P', notes: '' },
-      images: [],
-      location: { area: '', shelf: '', container: '' },
-      purchase: { supplier: '', purchaseDate: '', pricePerMeter: null, totalPrice: null, currency: 'NOK' },
-      notes: '',
-      createdAt: now,
-      updatedAt: now
-    }]
+    recordType: record.recordType,
+    recordName: record.recordName,
+    recordChangeTag: record.recordChangeTag,
+    fields
   };
 }
 
-async function writeData() {
+function renderRecord(record) {
+  els.recordPreview.textContent = JSON.stringify(compactRecord(record), null, 2);
+}
+
+function setAuthState(identity) {
+  userIdentity = identity || null;
+  const signedIn = !!userIdentity;
+  els.authPill.textContent = signedIn ? 'Innlogget' : 'Ikke innlogget';
+  els.authPill.className = `pill ${signedIn ? 'good' : 'warn'}`;
+  els.statusPill.textContent = signedIn ? 'CloudKit klar' : 'Venter på innlogging';
+  els.statusPill.className = `pill ${signedIn ? 'good' : 'warn'}`;
+  els.identityInfo.textContent = signedIn
+    ? `CloudKit-session aktiv. userRecordName: ${userIdentity.userRecordName || 'ikke oppgitt'}`
+    : 'Ingen aktiv CloudKit-session.';
+  updateButtons();
+}
+
+function updateButtons() {
+  const signedIn = !!userIdentity && !!database;
+  const textileKnown = !!(textileRecord || localStorage.getItem(KEYS.textileRecordName));
+  const imageKnown = !!(imageRecord || localStorage.getItem(KEYS.imageRecordName));
+  els.createTextileButton.disabled = !signedIn;
+  els.fetchTextileButton.disabled = !signedIn || !textileKnown;
+  els.updateTextileButton.disabled = !signedIn || !textileKnown;
+  els.createPieceButton.disabled = !signedIn || !textileKnown;
+  els.saveImageButton.disabled = !signedIn || !textileKnown || !selectedImage;
+  els.fetchImageButton.disabled = !signedIn || !imageKnown;
+}
+
+function renderConfig() {
+  const cloudKitAvailable = !!window.CloudKit;
+  els.cloudKitSupport.textContent = cloudKitAvailable ? 'Lastet' : 'Ikke tilgjengelig';
+  els.containerId.textContent = CLOUDKIT_CONFIG.containerIdentifier;
+  els.environment.textContent = CLOUDKIT_CONFIG.environment;
+  els.origin.textContent = window.location.origin;
+
+  if (!cloudKitAvailable) {
+    els.configNotice.textContent = 'CloudKit JS kunne ikke lastes fra Apple. Kontroller nettverk/Content Blocker og prøv en full reload.';
+    els.statusPill.textContent = 'CloudKit JS mangler';
+    els.statusPill.className = 'pill warn';
+    return false;
+  }
+
+  if (window.location.origin !== CLOUDKIT_CONFIG.allowedOrigin) {
+    els.configNotice.textContent = `Denne siden kjører fra ${window.location.origin}. Tokenet er konfigurert for ${CLOUDKIT_CONFIG.allowedOrigin}. CloudKit-kall kan derfor bli avvist. Publiser/test fra GitHub Pages-adressen.`;
+  } else {
+    els.configNotice.textContent = `Konfigurasjonen samsvarer med forventet GitHub Pages-origin ${CLOUDKIT_CONFIG.allowedOrigin}.`;
+  }
+  return true;
+}
+
+async function initializeCloudKit() {
+  if (!renderConfig()) return;
+
   try {
-    const data = makeTestData();
-    await storage.writeData(data);
-    els.jsonPreview.textContent = JSON.stringify(data, null, 2);
-    log('tekstiler.json ble skrevet.', 'success');
+    window.CloudKit.configure({
+      locale: 'nb-no',
+      containers: [{
+        containerIdentifier: CLOUDKIT_CONFIG.containerIdentifier,
+        environment: CLOUDKIT_CONFIG.environment,
+        apiTokenAuth: {
+          apiToken: CLOUDKIT_CONFIG.apiToken,
+          persist: true,
+          signInButton: { id: 'apple-sign-in-button', theme: 'black' },
+          signOutButton: { id: 'apple-sign-out-button', theme: 'black' }
+        }
+      }]
+    });
+
+    container = window.CloudKit.getDefaultContainer();
+    database = container.privateCloudDatabase;
+    log(`CloudKit konfigurert mot ${CLOUDKIT_CONFIG.containerIdentifier} (${CLOUDKIT_CONFIG.environment}).`, 'success');
+
+    const identity = await container.setUpAuth();
+    setAuthState(identity);
+    if (identity) log('Eksisterende iCloud-session funnet.', 'success');
+    else log('CloudKit er klart. Logg inn med iCloud for å fortsette.');
+
+    container.whenUserSignsIn().then((signedInIdentity) => {
+      setAuthState(signedInIdentity);
+      log('iCloud-innlogging fullført.', 'success');
+    }).catch((error) => log(`Innlogging feilet: ${formatError(error)}`, 'error'));
+
+    container.whenUserSignsOut().then(() => {
+      textileRecord = null;
+      pieceRecord = null;
+      imageRecord = null;
+      setAuthState(null);
+      log('iCloud-session avsluttet.');
+    }).catch((error) => log(`Utlogging feilet: ${formatError(error)}`, 'error'));
   } catch (error) {
-    log(`Skriving feilet: ${error.message}`, 'error');
+    setAuthState(null);
+    els.configNotice.textContent = `CloudKit-konfigurasjon feilet: ${formatError(error)}`;
+    log(`CloudKit-konfigurasjon feilet: ${formatError(error)}`, 'error');
   }
 }
 
-async function readData() {
+function textileRecordName() {
+  return textileRecord?.recordName || localStorage.getItem(KEYS.textileRecordName);
+}
+
+async function createTextile() {
   try {
-    const data = await storage.readData();
-    els.jsonPreview.textContent = JSON.stringify(data, null, 2);
-    log(`tekstiler.json lest: ${data.textiles?.length ?? 0} tekstil(er).`, 'success');
-    return data;
+    const now = Date.now();
+    const record = {
+      recordType: 'Textile',
+      fields: {
+        textileId: { value: els.textileId.value.trim() || 'T0001', type: 'STRING' },
+        name: { value: els.textileName.value.trim() || 'Testtekstil', type: 'STRING' },
+        category: { value: els.textileCategory.value.trim() || 'Vevd', type: 'STRING' },
+        createdAt: { value: now, type: 'TIMESTAMP' },
+        updatedAt: { value: now, type: 'TIMESTAMP' },
+        schemaVersion: { value: 1, type: 'INT64' }
+      }
+    };
+    const response = await database.saveRecords(record);
+    textileRecord = assertResponse(response, 'Opprett Textile');
+    localStorage.setItem(KEYS.textileRecordName, textileRecord.recordName);
+    els.textileRecordInfo.textContent = `Textile lagret. recordName: ${textileRecord.recordName}`;
+    renderRecord(textileRecord);
+    updateButtons();
+    log(`Textile opprettet: ${textileRecord.recordName}.`, 'success');
   } catch (error) {
-    log(`Lesing feilet: ${error.message}`, 'error');
-    throw error;
+    log(`Opprett Textile feilet: ${formatError(error)}`, 'error');
   }
 }
 
-function safeImageName(file) {
-  const ext = (file.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg').replace(/[^a-z0-9]/gi, '');
-  return `T0001-test-${Date.now()}.${ext}`;
+async function fetchTextile() {
+  try {
+    const recordName = textileRecordName();
+    if (!recordName) throw new Error('Ingen Textile recordName er kjent. Opprett en Textile først.');
+    const response = await database.fetchRecords(recordName);
+    textileRecord = assertResponse(response, 'Les Textile');
+    els.textileRecordInfo.textContent = `Textile lest fra CloudKit. recordName: ${textileRecord.recordName}`;
+    renderRecord(textileRecord);
+    updateButtons();
+    log(`Textile lest tilbake: ${textileRecord.recordName}.`, 'success');
+  } catch (error) {
+    log(`Les Textile feilet: ${formatError(error)}`, 'error');
+  }
+}
+
+async function updateTextile() {
+  try {
+    if (!textileRecord) await fetchTextile();
+    if (!textileRecord) throw new Error('Kunne ikke hente Textile før oppdatering.');
+
+    const newName = `${fieldValue(textileRecord, 'name') || 'Tekstil'} · oppdatert`;
+    textileRecord.fields.name = { value: newName, type: 'STRING' };
+    textileRecord.fields.updatedAt = { value: Date.now(), type: 'TIMESTAMP' };
+    const response = await database.saveRecords(textileRecord);
+    textileRecord = assertResponse(response, 'Oppdater Textile');
+    els.textileName.value = newName;
+    els.textileRecordInfo.textContent = `Textile oppdatert. recordName: ${textileRecord.recordName}`;
+    renderRecord(textileRecord);
+    log('Textile ble endret og lagret med gjeldende recordChangeTag.', 'success');
+  } catch (error) {
+    log(`Oppdater Textile feilet: ${formatError(error)}`, 'error');
+  }
+}
+
+async function createPiece() {
+  try {
+    const parentTextileId = fieldValue(textileRecord, 'textileId') || els.textileId.value.trim() || 'T0001';
+    const record = {
+      recordType: 'Piece',
+      fields: {
+        pieceId: { value: els.pieceId.value.trim() || 'P001', type: 'STRING' },
+        textileId: { value: parentTextileId, type: 'STRING' },
+        lengthCm: { value: Number(els.pieceLength.value) || 0, type: 'INT64' },
+        widthCm: { value: Number(els.pieceWidth.value) || 0, type: 'INT64' },
+        reservedLengthCm: { value: 0, type: 'INT64' },
+        project: { value: '', type: 'STRING' }
+      }
+    };
+    const response = await database.saveRecords(record);
+    pieceRecord = assertResponse(response, 'Opprett Piece');
+    localStorage.setItem(KEYS.pieceRecordName, pieceRecord.recordName);
+    els.pieceRecordInfo.textContent = `Piece lagret. recordName: ${pieceRecord.recordName}`;
+    renderRecord(pieceRecord);
+    log(`Piece opprettet: ${pieceRecord.recordName}.`, 'success');
+  } catch (error) {
+    log(`Opprett Piece feilet: ${formatError(error)}`, 'error');
+  }
 }
 
 async function saveImage() {
   if (!selectedImage) return;
   try {
-    const name = safeImageName(selectedImage);
-    await storage.writeImage(name, selectedImage);
-    log(`Testbilde lagret som bilder/${name}.`, 'success');
+    const parentTextileId = fieldValue(textileRecord, 'textileId') || els.textileId.value.trim() || 'T0001';
+    const imageId = `IMG-${Date.now()}`;
+    const record = {
+      recordType: 'TextileImage',
+      fields: {
+        imageId: { value: imageId, type: 'STRING' },
+        textileId: { value: parentTextileId, type: 'STRING' },
+        type: { value: 'fabric', type: 'STRING' },
+        primary: { value: 1, type: 'INT64' },
+        fileName: { value: selectedImage.name || `${imageId}.jpg`, type: 'STRING' },
+        contentType: { value: selectedImage.type || 'application/octet-stream', type: 'STRING' },
+        imageAsset: { value: selectedImage, type: 'ASSET' }
+      }
+    };
+    const response = await database.saveRecords(record);
+    imageRecord = assertResponse(response, 'Lagre TextileImage');
+    localStorage.setItem(KEYS.imageRecordName, imageRecord.recordName);
+    els.imageRecordInfo.textContent = `TextileImage lagret. recordName: ${imageRecord.recordName}`;
+    renderRecord(imageRecord);
+    updateButtons();
+    log(`Bilde lagret som CloudKit Asset: ${imageRecord.recordName}.`, 'success');
   } catch (error) {
-    log(`Bildelagring feilet: ${error.message}`, 'error');
+    log(`Lagre bilde feilet: ${formatError(error)}`, 'error');
   }
 }
 
-async function exportData() {
+async function fetchImage() {
   try {
-    const data = await storage.readData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const file = new File([blob], 'tekstiler.json', { type: 'application/json' });
-
-    if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Tekstilig – tekstiler.json' });
-      log('Eksport sendt til systemets delingsdialog.', 'success');
-      return;
-    }
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tekstiler.json';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    log('tekstiler.json eksportert som nedlasting.', 'success');
+    const recordName = imageRecord?.recordName || localStorage.getItem(KEYS.imageRecordName);
+    if (!recordName) throw new Error('Ingen TextileImage recordName er kjent.');
+    const response = await database.fetchRecords(recordName);
+    imageRecord = assertResponse(response, 'Les TextileImage');
+    const asset = fieldValue(imageRecord, 'imageAsset');
+    if (!asset?.downloadURL) throw new Error('Recorden inneholder ikke en downloadURL for imageAsset.');
+    const filename = encodeURIComponent(fieldValue(imageRecord, 'fileName') || 'tekstilig-bilde');
+    els.cloudImage.src = asset.downloadURL.replace('${f}', filename);
+    els.cloudImageWrap.hidden = false;
+    els.imageRecordInfo.textContent = `TextileImage lest tilbake. recordName: ${imageRecord.recordName}`;
+    renderRecord(imageRecord);
+    log('TextileImage og Asset-URL lest tilbake fra CloudKit.', 'success');
   } catch (error) {
-    if (error?.name === 'AbortError') return;
-    log(`Eksport feilet: ${error.message}`, 'error');
+    log(`Les bilde feilet: ${formatError(error)}`, 'error');
   }
 }
 
-async function importData(file) {
-  try {
-    const data = JSON.parse(await file.text());
-    if (data.schemaVersion !== 1 || !Array.isArray(data.textiles)) throw new Error('Filen ser ikke ut som Tekstilig schemaVersion 1.');
-    await storage.writeData(data);
-    els.jsonPreview.textContent = JSON.stringify(data, null, 2);
-    log(`Importerte ${data.textiles.length} tekstil(er).`, 'success');
-  } catch (error) {
-    log(`Import feilet: ${error.message}`, 'error');
-  }
-}
-
-els.connectButton.addEventListener('click', connect);
-els.reloadButton.addEventListener('click', readData);
-els.writeButton.addEventListener('click', writeData);
+els.createTextileButton.addEventListener('click', createTextile);
+els.fetchTextileButton.addEventListener('click', fetchTextile);
+els.updateTextileButton.addEventListener('click', updateTextile);
+els.createPieceButton.addEventListener('click', createPiece);
 els.saveImageButton.addEventListener('click', saveImage);
-els.exportButton.addEventListener('click', exportData);
-els.importInput.addEventListener('change', () => els.importInput.files?.[0] && importData(els.importInput.files[0]));
+els.fetchImageButton.addEventListener('click', fetchImage);
 els.clearLogButton.addEventListener('click', () => { els.log.innerHTML = ''; });
 els.imageInput.addEventListener('change', () => {
   selectedImage = els.imageInput.files?.[0] || null;
@@ -196,28 +323,14 @@ els.imageInput.addEventListener('change', () => {
   els.imagePreview.src = selectedImageUrl;
   els.imagePreviewWrap.hidden = false;
   els.imageMeta.textContent = `${selectedImage.name || 'Kamerabilde'} · ${(selectedImage.size / 1024 / 1024).toFixed(2)} MB · ${selectedImage.type || 'ukjent format'}`;
-  els.saveImageButton.disabled = !storage?.directory;
-  log('Bilde valgt for test.');
+  updateButtons();
+  log('Bilde valgt for CloudKit Asset-test.');
 });
 
-renderCapabilities();
-setConnected(false);
-
-(async () => {
-  if (!storage) return;
-  try {
-    const ok = await storage.reconnect();
-    if (ok) {
-      els.connectionInfo.textContent = storage.description();
-      setConnected(true);
-      log('Eksisterende lagring ble funnet og åpnet.', 'success');
-      await readData();
-    }
-  } catch (error) {
-    log(`Automatisk gjenåpning var ikke mulig: ${error.message}`);
-  }
-})();
+renderConfig();
+updateButtons();
+initializeCloudKit();
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => log(`Service worker: ${err.message}`)));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch((error) => log(`Service worker: ${error.message}`, 'error')));
 }
