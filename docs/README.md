@@ -4,7 +4,9 @@ Tekstilig er et tekstilregister for registrering, søk og filtrering av tekstile
 
 ## Arkitekturstatus
 
-CloudKit er valgt som primær produksjonslagring. GitHub Pages/PWA brukes nå som PoC-klient. En senere SwiftUI-app kan kobles til samme CloudKit-container, schema og data.
+CloudKit er valgt som primær produksjonslagring. CloudKit JS/PWA-PoC-en har validert autentisering og strukturerte records i privat Development-database, men Asset-opplasting stoppet på CORS/preflight i nettleseren.
+
+Neste klientspor er derfor **SwiftUI med native CloudKit**, mot samme container og schema. PWA-en beholdes som PoC/referanse.
 
 `tekstiler.json` beholdes som planlagt eksport-/backupformat, ikke som primær database.
 
@@ -15,9 +17,10 @@ CloudKit er valgt som primær produksjonslagring. GitHub Pages/PWA brukes nå so
 - `BESLUTNINGSLOGG.md` – beslutninger og begrunnelser
 - `UX-FLYTER.md` – hovedskjermer, navigasjon og brukerflyter
 - `CLOUDKIT-OPPSETT.md` – kontoer, container, token og GitHub Pages-forberedelser
-- `CLOUDKIT-POC-TEST.md` – sekvensiell test av CloudKit-PoC-en
+- `CLOUDKIT-POC-TEST.md` – resultatlogg fra avsluttet CloudKit JS/PWA-PoC
+- `SWIFTUI-OPPSTART.md` – sekvensiell oppstart av native SwiftUI/CloudKit-PoC
 - `ENDRINGSLOGG.md` – endringer mellom leveranser
 
 ## Status
 
-CloudKit-forhåndsoppsettet er ferdig. Neste milepæl er å publisere kodeleveranse 0002 og validere CloudKit-PoC-en i Development.
+CloudKit JS/PWA-PoC-en er avsluttet. Neste handling er punkt 1 i `SWIFTUI-OPPSTART.md`. Første SwiftUI-kodeleveranse lages etter at punktene 1–5 er bekreftet.

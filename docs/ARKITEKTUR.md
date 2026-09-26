@@ -269,3 +269,44 @@ Deling er ikke en del av første PoC.
 - Apple: Deploying an iCloud Container's Schema – https://developer.apple.com/documentation/cloudkit/deploying-an-icloud-container-s-schema
 - Apple: CloudKit Console – https://developer.apple.com/icloud/cloudkit/
 - GitHub: Securing GitHub Pages with HTTPS – https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https
+
+---
+
+## 15. Arkitekturstatus etter CloudKit JS PoC – 2026-09-26
+
+CloudKit JS/PWA-sporet er avsluttet som teknisk PoC. Testen validerte autentisering og vanlige record-operasjoner mot privat CloudKit-database, men Asset-opplasting ble stoppet av CORS/preflight på Apples separate `singleFileUpload`-endepunkt i både Safari og Chrome.
+
+Dette endrer **ikke** beslutningen om CloudKit som primærlager. Neste klientspor er SwiftUI med native CloudKit mot samme Development-container:
+
+```text
+iCloud.com.longfjeld.tekstilig
+```
+
+Oppdatert klientbilde:
+
+```text
++---------------------------+
+| CloudKit                  |
+| Private database          |
+| Development               |
+|                           |
+| Textile                   |
+| Piece                     |
+| TextileImage + CKAsset    |
++-------------+-------------+
+              ^
+              |
+      native CloudKit
+              |
++-------------+-------------+
+| Tekstilig SwiftUI         |
+| iPhone / iPad først       |
+| Mac senere etter behov    |
++---------------------------+
+
+PWA / CloudKit JS
+  -> beholdes som PoC/referanse
+  -> ikke aktivt produksjonsspor
+```
+
+Før videre UI-utvikling skal en minimal native PoC validere eksisterende records og deretter `CKAsset`. Production deployes ikke før schema og native flyt er gjennomgått.

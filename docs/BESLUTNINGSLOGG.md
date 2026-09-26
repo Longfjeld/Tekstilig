@@ -455,3 +455,44 @@ UI-et holdes bevisst enkelt i denne fasen.
 ### Begrunnelse
 
 Dette validerer den delen av løsningen som også gjenbrukes dersom Tekstilig senere blir en SwiftUI-app.
+
+---
+
+## B-029 – Native SwiftUI blir neste klientspor
+
+**Dato:** 2026-09-26  
+**Status:** Besluttet
+
+### Beslutning
+
+CloudKit JS/PWA-PoC-en avsluttes som teknisk validering. Videre klientutvikling flyttes til SwiftUI med native CloudKit.
+
+### Validerte resultater fra PoC-en
+
+Følgende fungerte mot brukerens private CloudKit-database i Development:
+
+- CloudKit JS-konfigurasjon og iCloud-autentisering
+- oppretting, lesing og endring av `Textile`
+- oppretting av `Piece`
+- valg av bildefil i webklienten
+
+Følgende ble ikke validert som fungerende:
+
+- opplasting av `TextileImage.imageAsset` fra PWA-en
+- lesing av samme Asset tilbake
+- kryssenhetstest av lagret bilde
+
+Ved Asset-opplasting gikk forespørselen til Apples `cws.icloud-content.com/.../singleFileUpload`, men både Safari og Chrome stoppet flyten med CORS/preflight-feil (`PreflightMissingAllowOriginHeader`). Feilen besto også ved en kontrolltest der Development-tokenet midlertidig ble satt til `Any Domain`. Tokenet skal stå tilbake på `Only the following domain(s): https://longfjeld.github.io`.
+
+### Begrunnelse
+
+Bilder er en kjernefunksjon i Tekstilig. PoC-en har validert at CloudKit-containeren, privat database og den strukturerte record-modellen fungerer, men websporet har ikke gitt en robust Asset-flyt i testmiljøet. Det er derfor mer hensiktsmessig å validere samme backend med native `CKAsset` enn å bruke mer tid på PWA-spesifikk Asset-feilsøking.
+
+### Konsekvens
+
+- CloudKit beholdes som planlagt primærlager.
+- Eksisterende Development-container og schema beholdes.
+- `Textile`, `Piece` og `TextileImage` beholdes som utgangspunkt og gjennomgås før Production.
+- PWA-koden beholdes som PoC/referanse, men er ikke lenger aktivt implementeringsspor.
+- Neste tekniske milepæl er en minimal SwiftUI/CloudKit-PoC som først validerer eksisterende records og deretter `CKAsset`.
+- Production deployes fortsatt ikke.

@@ -138,3 +138,24 @@ Allowed Origin: https://longfjeld.github.io
 ```
 
 Development API-tokenet har forventet 64-tegns heksadesimalt format. Selve Allowed-Origin-innstillingen i Apple-portalen kan ikke verifiseres fra repositoryfilene alene og regnes som brukerbekreftet.
+
+## Dokumentasjonsendring 0004 – 2026-09-26
+
+CloudKit JS/PWA-PoC-en er avsluttet etter at record-operasjoner fungerte, mens Asset-opplasting stoppet i nettleseren på CORS/preflight mot Apples separate `singleFileUpload`-endepunkt. Neste klientspor er SwiftUI med native CloudKit.
+
+### Ny fil
+
+- `SWIFTUI-OPPSTART.md` – strengt sekvensiell oppstartsplan for native SwiftUI/CloudKit-PoC
+
+### Endret
+
+- `BESLUTNINGSLOGG.md` – B-029 dokumenterer overgang til native SwiftUI som neste klientspor
+- `CLOUDKIT-POC-TEST.md` – gjort om fra testprosedyre til faktisk resultatlogg
+- `ARKITEKTUR.md` – PWA markert som avsluttet PoC-spor; SwiftUI/native CloudKit som neste valideringsspor
+- `README.md` – prosjektstatus og neste milepæl oppdatert
+- `docs/README.md` – dokumentoversikt og status oppdatert
+- `ENDRINGSLOGG.md` – denne leveransen
+
+### Ingen applikasjonskode
+
+Denne leveransen endrer ikke PWA-koden. Første SwiftUI-kode lages etter at punktene 1–5 i `SWIFTUI-OPPSTART.md` er utført.

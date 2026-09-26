@@ -1,33 +1,30 @@
-# Tekstilig – CloudKit PoC 0002
+# Tekstilig – overgang til SwiftUI/native CloudKit
 
-Denne leveransen erstatter den første lokale lagringsprototypen som aktiv testflate. Målet nå er å validere CloudKit som primær lagring for Tekstilig.
+CloudKit JS/PWA-PoC-en er nå avsluttet som teknisk validering.
 
-## Denne PoC-en tester
+## PoC-resultat
 
-1. lasting og konfigurering av CloudKit JS
-2. innlogging med iCloud
-3. privat CloudKit-database
-4. opprettelse av en `Textile`-record
-5. lesing av samme record
-6. endring og lagring med `recordChangeTag`
-7. opprettelse av en `Piece`-record
-8. valg/fotografering av bilde
-9. lagring av bildet som `TextileImage` med CloudKit Asset
-10. lesing av bildet tilbake fra CloudKit
+Følgende ble validert i privat CloudKit Development-database:
 
-Konfigurasjonen ligger i `cloudkit-config.js`. Web API-tokenet er et CloudKit JS-token og kan ligge i den publiserte klientkoden; tilgang begrenses med Allowed Origin i CloudKit. Private servernøkler skal aldri legges i repositoryet.
+- iCloud-autentisering
+- `Textile`: oppretting, lesing og endring
+- `Piece`: oppretting
+- eksisterende CloudKit-container og schema
 
-## Publisering og test
+Bildevalg fungerte i webklienten, men opplasting av `TextileImage.imageAsset` stoppet på CORS/preflight mot Apples separate `singleFileUpload`-endepunkt i både Safari og Chrome. Samme feil besto i en diagnostisk test med Development-tokenet midlertidig satt til `Any Domain`.
 
-Publiser de endrede filene til GitHub Pages og følg `docs/CLOUDKIT-POC-TEST.md` strengt fra punkt 1 og videre.
+## Beslutning
 
-## Miljø
+CloudKit beholdes som primærlager. Neste klientspor er **SwiftUI med native CloudKit** mot samme container:
 
 ```text
-Container:      iCloud.com.longfjeld.tekstilig
-Environment:    development
-Pages:          https://longfjeld.github.io/Tekstilig/
-Allowed Origin: https://longfjeld.github.io
+iCloud.com.longfjeld.tekstilig
 ```
 
-Production skal ikke konfigureres eller deployes ennå.
+PWA-koden beholdes som PoC/referanse, men videre funksjonsutvikling skjer ikke der nå.
+
+## Neste steg
+
+Følg `docs/SWIFTUI-OPPSTART.md` strengt fra punkt 1. Første native kodeleveranse lages etter at punktene 1–5 er utført og kontrollert.
+
+Production skal ikke deployes ennå.

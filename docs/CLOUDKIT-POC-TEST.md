@@ -1,152 +1,123 @@
-# CloudKit PoC – sekvensiell test
+# CloudKit JS PoC – testresultat
 
-**Status:** Klar for test  
-**Miljø:** Development
+**Status:** Avsluttet 2026-09-26  
+**Miljø:** Development  
+**Resultat:** Records validert; Asset-opplasting stoppet av CORS/preflight
 
-Denne veiledningen skal følges strengt i nummerrekkefølge. Fullfør hvert punkt før du går videre.
+Dette dokumentet er nå en resultatlogg. Det skal ikke brukes som videre testprosedyre. Neste arbeidsveiledning er `SWIFTUI-OPPSTART.md`.
 
-Statusmarkeringer:
+## 1. Publisering
 
-- ❗️ gjenstår
-- ✅ utført
+**✅ UTFØRT**
 
-## 1. Publiser kodeendringen
+CloudKit PoC 0002 ble publisert på GitHub Pages og riktig versjon ble bekreftet i nettleseren.
 
-**❗️ AKSJON – DU**
+## 2. CloudKit-konfigurasjon
 
-1. Kopier filene fra endringspakken over tilsvarende filer i repositoryet.
-2. Kontroller `git diff`.
-3. Commit endringen.
-4. Push til GitHub.
-5. Vent til GitHub Pages-deploy er ferdig.
+**✅ UTFØRT**
 
-Ikke gå videre før Pages viser den nye overskriften **CloudKit PoC 0002**.
-
-## 2. Åpne PoC-en fra korrekt adresse
-
-**❗️ AKSJON – DU**
-
-Åpne:
+Bekreftet:
 
 ```text
-https://longfjeld.github.io/Tekstilig/
+Container:      iCloud.com.longfjeld.tekstilig
+Environment:    development
+Pages URL:      https://longfjeld.github.io/Tekstilig/
+Allowed Origin: https://longfjeld.github.io
 ```
 
-Kontroller at seksjonen **CloudKit-miljø** viser:
+## 3. iCloud-innlogging
+
+**✅ UTFØRT**
+
+CloudKit JS autentiserte mot iCloud og privat database kunne brukes.
+
+## 4. Textile
+
+**✅ UTFØRT**
+
+`Textile` måtte først opprettes eksplisitt i Development-schemaet. Deretter fungerte:
+
+1. oppretting
+2. lesing
+3. endring og ny lagring
+
+Dette korrigerer den opprinnelige antakelsen om at PoC-en kunne basere seg på just-in-time opprettelse av record type.
+
+## 5. Piece
+
+**✅ UTFØRT**
+
+`Piece` måtte først opprettes eksplisitt i Development-schemaet. Deretter fungerte oppretting av `Piece`.
+
+## 6. TextileImage-schema
+
+**✅ UTFØRT**
+
+`TextileImage` ble opprettet eksplisitt med feltene:
+
+| Felt | Type |
+|:---|:---|
+| `contentType` | String |
+| `fileName` | String |
+| `imageAsset` | Asset |
+| `imageId` | String |
+| `primary` | Int(64) |
+| `textileId` | String |
+| `type` | String |
+
+## 7. Valg av bilde
+
+**✅ UTFØRT**
+
+Webklienten kunne velge bilde og sende filen inn i Asset-flyten.
+
+## 8. Lagre TextileImage som Asset
+
+**❌ IKKE VALIDERT**
+
+CloudKit JS rapporterte:
 
 ```text
-CloudKit JS:  Lastet
-Container:    iCloud.com.longfjeld.tekstilig
-Miljø:        development
-Web-origin:   https://longfjeld.github.io
+UNEXPECTED_SERVER_RESPONSE
+CKError: NETWORK_ERROR
 ```
 
-Hvis origin avviker, stopp testen.
-
-## 3. Logg inn med iCloud
-
-**❗️ AKSJON – DU**
-
-1. Bruk Apple-knappen under **Logg inn med iCloud**.
-2. Fullfør Apples innlogging.
-3. Kontroller at status blir **Innlogget**.
-4. Kontroller at `userRecordName` vises.
-
-Hvis innloggingen feiler, stopp og kopier feilen fra PoC-loggen.
-
-## 4. Opprett Textile
-
-**❗️ AKSJON – DU**
-
-1. Behold testverdiene eller skriv egne.
-2. Trykk **Opprett Textile** én gang.
-3. Kontroller at PoC-loggen sier at `Textile` ble opprettet.
-4. Noter `recordName` som vises.
-
-Development kan opprette første schema just-in-time når den første recorden lagres. Hvis CloudKit avviser schema/felter, stopp og send hele feilmeldingen.
-
-## 5. Les Textile tilbake
-
-**❗️ AKSJON – DU**
-
-1. Trykk **Les Textile**.
-2. Kontroller at samme `recordName` returneres.
-3. Kontroller at `textileId`, `name`, `category`, `createdAt`, `updatedAt` og `schemaVersion` vises i JSON-panelet.
-
-## 6. Endre Textile
-
-**❗️ AKSJON – DU**
-
-1. Trykk **Endre navn og lagre**.
-2. Kontroller at navnet får suffikset `· oppdatert`.
-3. Kontroller at lagringen lykkes uten konfliktfeil.
-
-Dette validerer oppdatering med CloudKit sin `recordChangeTag`.
-
-## 7. Opprett Piece
-
-**❗️ AKSJON – DU**
-
-1. Kontroller Piece-ID, bredde og lengde.
-2. Trykk **Opprett Piece**.
-3. Kontroller at en `Piece`-record opprettes og får et `recordName`.
-
-## 8. Velg eller fotografer et bilde
-
-**❗️ AKSJON – DU**
-
-1. Trykk **Velg bilde / åpne kamera**.
-2. På iPhone/iPad: ta gjerne et nytt bilde.
-3. Kontroller at forhåndsvisning, filstørrelse og MIME-type vises.
-
-For denne PoC-en bør du bruke et vanlig bilde med moderat størrelse.
-
-## 9. Lagre TextileImage som CloudKit Asset
-
-**❗️ AKSJON – DU**
-
-1. Trykk **Lagre TextileImage**.
-2. Vent til operasjonen er ferdig.
-3. Kontroller at `TextileImage` får et `recordName`.
-4. Kontroller at PoC-loggen rapporterer vellykket Asset-lagring.
-
-Hvis denne operasjonen feiler, stopp og kopier hele feilmeldingen.
-
-## 10. Les bildet tilbake
-
-**❗️ AKSJON – DU**
-
-1. Trykk **Les bilde tilbake**.
-2. Kontroller at bildet vises i seksjonen som bilde hentet fra CloudKit.
-3. Kontroller at loggen sier at Asset-URL ble lest tilbake.
-
-## 11. Test på en annen Apple-enhet
-
-**❗️ AKSJON – DU**
-
-1. Åpne samme Pages-adresse på en annen Apple-enhet.
-2. Logg inn med **samme iCloud-konto**.
-3. PoC-en lagrer test-recordenes CloudKit `recordName` lokalt i nettleseren, så knappene for direkte oppslag kjenner ikke automatisk ID-ene fra den første enheten.
-4. For denne første PoC-runden er derfor selve kryssenhetstesten godkjent når innloggingen fungerer på enhet 2. Server-side søk/synk for å finne eksisterende records blir neste implementering etter at steg 1–10 er validert.
-
-## 12. Rapporter resultatet
-
-**❗️ AKSJON – DU**
-
-Send tilbake status i denne formen:
+Nettverksanalyse viste at Asset-flyten gikk til:
 
 ```text
-1 Publisering:       OK / FEIL
-2 CloudKit config:   OK / FEIL
-3 iCloud login:      OK / FEIL
-4 Create Textile:    OK / FEIL
-5 Fetch Textile:     OK / FEIL
-6 Update Textile:    OK / FEIL
-7 Create Piece:      OK / FEIL
-8 Velg bilde:        OK / FEIL
-9 Save Asset:        OK / FEIL
-10 Fetch Asset:      OK / FEIL
-11 Enhet 2 login:    OK / FEIL
+https://cws.icloud-content.com/.../singleFileUpload
 ```
 
-Ved feil: ta med teksten fra PoC-loggen og hvilket nummer testen stoppet på. Ikke fortsett forbi første feil.
+Nettleseren rapporterte CORS/preflight-feil:
+
+```text
+PreflightMissingAllowOriginHeader
+```
+
+og at origin:
+
+```text
+https://longfjeld.github.io
+```
+
+ikke var tillatt av responsens `Access-Control-Allow-Origin`.
+
+Feilen ble observert i både Safari og Chrome. Development-tokenets Allowed Origin ble kontrollert til `https://longfjeld.github.io`. Som diagnostisk kontroll ble tokenet midlertidig satt til `Any Domain`; samme feil besto.
+
+**Sluttstatus:** PWA-PoC-en stoppes her. Dette dokumenterer det observerte testresultatet; det hevdes ikke at CloudKit JS Assets generelt er umulig, bare at denne løsningen ikke ga en fungerende Asset-flyt i vårt testoppsett.
+
+## 9. Les Asset tilbake
+
+**⏭️ IKKE UTFØRT**
+
+Kan ikke testes meningsfullt før punkt 8 fungerer.
+
+## 10. Kryssenhetstest av bilde
+
+**⏭️ IKKE UTFØRT**
+
+Kan ikke testes meningsfullt før Asset-lagring fungerer.
+
+## 11. Konklusjon
+
+PoC-en har validert CloudKit som backend for strukturerte Tekstilig-records, men ikke bildeopplasting via CloudKit JS/PWA. Videre validering flyttes derfor til SwiftUI/native CloudKit mot samme Development-container.
