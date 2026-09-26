@@ -1,0 +1,7 @@
+Ved manuell oppdatering fra Tekstilig-current(6):
+
+1. Slett Tekstilig/MyApp.swift
+2. Slett eventuelle Tekstilig.xcodeproj/**/xcuserdata-kataloger fra prosjektkopien/repositoryet
+3. Slett eventuelle *.xcuserstate-filer fra repositoryet
+
+Tekstilig/TekstiligApp.swift erstatter MyApp.swift.

@@ -1,6 +1,6 @@
 # SwiftUI + CloudKit – sekvensiell oppstart
 
-**Status:** Neste arbeidsfase  
+**Status:** Punkt 1–5 fullført · punkt 6 klar til test  
 **Miljø:** Development
 
 Denne veiledningen skal følges strengt i nummerrekkefølge. Innenfor hvert punkt kommer handlingen først, deretter kontrollen, og til slutt eventuell stopp-/fortsett-beslutning.
@@ -94,20 +94,101 @@ iCloud.com.longfjeld.tekstilig
 
 **Ikke legg til CloudKit-kode før den tomme appen kjører korrekt.**
 
-## 6. Lag minimal CloudKit-diagnostikk
+## 6. Kjør minimal CloudKit-diagnostikk
 
-**⏭️ NESTE KODELEVERANSE**
+**✅ AKSJON – DU**
 
-Når punkt 1–5 er bekreftet, lager vi den første native kodeleveransen. Den skal bevisst være liten og teste i denne rekkefølgen:
+Kodeleveransen for dette punktet ligger nå i Xcode-prosjektet. Testen gjør bare det som trengs for å validere native CloudKit før vi går videre til bilder.
 
-1. åpne `CKContainer(identifier: "iCloud.com.longfjeld.tekstilig")`
-2. hente iCloud account status
-3. åpne private database
-4. lese/opprette en minimal `Textile`
-5. lese den tilbake
-6. først deretter teste bilde som `CKAsset`
+### 6.1 Åpne oppdatert prosjekt
 
-Vi bygger ikke full Tekstilig-UI før disse operasjonene fungerer.
+1. Pakk ut den nye leveransen.
+2. Åpne `Tekstilig.xcodeproj` i Xcode.
+3. Kontroller i Project navigator at gruppen **Tekstilig** inneholder:
+
+```text
+TekstiligApp.swift
+ContentView.swift
+CloudKitDiagnosticModel.swift
+Tekstilig.entitlements
+Assets.xcassets
+```
+
+4. Velg Tekstilig-targetet.
+5. Åpne **Signing & Capabilities**.
+6. Kontroller at **iCloud → CloudKit** fortsatt er aktivert.
+7. Kontroller at containeren fortsatt er:
+
+```text
+iCloud.com.longfjeld.tekstilig
+```
+
+**Ikke kjør testen dersom containeren mangler eller en annen container er valgt.**
+
+### 6.2 Bygg og start appen
+
+1. Velg samme fysiske testenhet som fungerte i punkt 5.
+2. Velg **Product → Run** eller trykk Run-knappen.
+3. Vent til Tekstilig åpnes på enheten.
+4. Kontroller at skjermen viser seksjonen **CloudKit** og knappen **Kjør CloudKit-diagnostikk**.
+
+Hvis appen ikke bygger eller starter, stopp her og noter hele feilmeldingen fra Xcode.
+
+### 6.3 Kjør testen
+
+1. Trykk **Kjør CloudKit-diagnostikk**.
+2. Testen skal utføre følgende i denne rekkefølgen:
+   1. åpne `CKContainer(identifier: "iCloud.com.longfjeld.tekstilig")`
+   2. hente iCloud account status
+   3. velge brukerens private database
+   4. lete etter testrecorden `swiftui-poc-textile-v1`
+   5. opprette en minimal `Textile` dersom den ikke allerede finnes
+   6. lese samme `Textile` tilbake fra CloudKit
+3. Kontroller at **iCloud** viser `Tilgjengelig`.
+4. Kontroller at resultatlisten avsluttes med:
+
+```text
+Steg 6 er validert. Klar for CKAsset-testen i steg 7.
+```
+
+5. Kontroller at skjermen viser **Steg 6 er fullført**.
+
+Testen bruker én fast record-ID. Gjentatt kjøring skal derfor lese samme testrecord i stedet for å opprette nye records.
+
+### 6.4 Kontroller recorden i CloudKit Database
+
+1. Åpne CloudKit Database.
+2. Velg containeren `iCloud.com.longfjeld.tekstilig`.
+3. Kontroller at miljøet er **Development**.
+4. Åpne **Private Database**.
+5. Åpne record type **Textile**.
+6. Finn recorden med Record Name:
+
+```text
+swiftui-poc-textile-v1
+```
+
+7. Kontroller at den minst inneholder disse feltene:
+
+| Felt | Forventet verdi |
+|:---|:---|
+| `textileId` | `T-SWIFTUI-POC-001` |
+| `name` | `SwiftUI CloudKit-test` |
+| `category` | `Test` |
+| `schemaVersion` | `1` |
+| `createdAt` | dato/tid |
+| `updatedAt` | dato/tid |
+
+**Ikke slett testrecorden ennå. Den kan brukes som referanse videre i native PoC-en.**
+
+### 6.5 Stoppunkt
+
+Punkt 6 er ferdig når begge disse kontrollene er bestått:
+
+- appen viser **Steg 6 er fullført**
+- `swiftui-poc-textile-v1` er synlig i privat Development-database
+
+**Ikke gå videre til punkt 7 før begge er bekreftet.**
 
 ## 7. Valider CKAsset
 

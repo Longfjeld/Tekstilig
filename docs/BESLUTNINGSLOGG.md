@@ -496,3 +496,42 @@ Bilder er en kjernefunksjon i Tekstilig. PoC-en har validert at CloudKit-contain
 - PWA-koden beholdes som PoC/referanse, men er ikke lenger aktivt implementeringsspor.
 - Neste tekniske milepæl er en minimal SwiftUI/CloudKit-PoC som først validerer eksisterende records og deretter `CKAsset`.
 - Production deployes fortsatt ikke.
+
+---
+
+## B-030 – Native PoC valideres i små, sekvensielle trinn
+
+**Dato:** 2026-09-26  
+**Status:** Besluttet
+
+### Beslutning
+
+Første native SwiftUI-kode skal ikke implementere produkt-UI eller full datamodell. CloudKit valideres i små trinn med en synlig diagnostikkflate:
+
+1. container og iCloud account status
+2. privat database
+3. minimal `Textile`
+4. lesing av samme record tilbake
+5. deretter `TextileImage` + `CKAsset`
+6. deretter kryssenhetstest
+
+En fast Development-record med Record Name `swiftui-poc-textile-v1` brukes i første test for å unngå at gjentatte testkjøringer oppretter unødvendige records.
+
+### Begrunnelse
+
+Dette isolerer feil, gjør testen lett å kontrollere for en ny Xcode/SwiftUI-bruker og holder teknisk backendvalidering adskilt fra senere produktdesign og funksjonsutvikling.
+
+---
+
+## B-031 – DESIGN.md er autoritativ kilde for visuell design
+
+**Dato:** 2026-09-26  
+**Status:** Besluttet
+
+### Beslutning
+
+`docs/DESIGN.md` er samlet autoritativ kilde for overordnede visuelle design- og typografiprinsipper. `UX-FLYTER.md` beholdes som kilde for brukerflyter, navigasjon og informasjonsstruktur.
+
+### Begrunnelse
+
+Dette reduserer risikoen for at visuelle beslutninger blir spredt og motstridende på tvers av dokumentasjonen når SwiftUI-klienten utvikles videre.

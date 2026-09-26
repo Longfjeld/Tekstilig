@@ -159,3 +159,42 @@ CloudKit JS/PWA-PoC-en er avsluttet etter at record-operasjoner fungerte, mens A
 ### Ingen applikasjonskode
 
 Denne leveransen endrer ikke PWA-koden. Første SwiftUI-kode lages etter at punktene 1–5 i `SWIFTUI-OPPSTART.md` er utført.
+
+## Kodeleveranse 0003 – 2026-09-26
+
+Første native SwiftUI/CloudKit-kodeleveranse etter at punkt 1–5 i `SWIFTUI-OPPSTART.md` ble fullført.
+
+### Opprettet
+
+- `Tekstilig/CloudKitDiagnosticModel.swift` – minimal native CloudKit-diagnostikk
+- `docs/DESIGN.md` – samlet autoritativ design- og typografiretning
+
+### Endret
+
+- `Tekstilig/ContentView.swift` – enkel diagnostikkflate for steg 6
+- `Tekstilig/MyApp.swift` erstattet av `Tekstilig/TekstiligApp.swift`
+- `Tekstilig.xcodeproj/project.pbxproj` – produktnavn ryddet til `Tekstilig`
+- `.gitignore` – lokal Xcode-brukerstate og build-output ignoreres
+- `README.md` – tidlig prosjektstatus og aktivt native utviklingsspor presisert
+- `docs/README.md` – dokumenthierarki og gjeldende neste steg oppdatert
+- `docs/SWIFTUI-OPPSTART.md` – punkt 6 gjort om til konkret, sekvensiell testprosedyre
+- `docs/BESLUTNINGSLOGG.md` – lagt til B-030 og B-031
+- `docs/ENDRINGSLOGG.md` – denne leveransen
+
+### Ryddet fra leveransen
+
+- `xcuserdata`
+- `*.xcuserstate`
+- generert Playground-eksempelkode
+
+### Teknisk omfang
+
+Kodeleveransen tester bare:
+
+1. eksplisitt CloudKit-container
+2. iCloud account status
+3. privat database
+4. hent eller opprett én fast `Textile`
+5. les samme record tilbake
+
+`Piece`, `TextileImage`, `CKAsset`, full datamodell, cache og produkt-UI er bevisst ikke implementert i denne leveransen.

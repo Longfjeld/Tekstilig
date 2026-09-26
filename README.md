@@ -1,30 +1,30 @@
-# Tekstilig – overgang til SwiftUI/native CloudKit
+# Tekstilig
 
-CloudKit JS/PWA-PoC-en er nå avsluttet som teknisk validering.
+Tekstilig er i en tidlig utviklingsfase. Målet er en privat tekstiloversikt for registrering, søk og filtrering av tekstiler til syprosjekter.
 
-## PoC-resultat
+## Nåværende utviklingsspor
 
-Følgende ble validert i privat CloudKit Development-database:
+CloudKit er valgt som primærlager. Den tidligere PWA-en beholdes som teknisk PoC/referanse for CloudKit JS og datamodellen, men videre klientutvikling skjer nå som **SwiftUI med native CloudKit** mot samme container:
+
+```text
+iCloud.com.longfjeld.tekstilig
+```
+
+App Store-distribusjon er et mål for en senere full native versjon, men prosjektet er ikke på distribusjonsstadiet ennå.
+
+## Validert så langt
+
+CloudKit JS/PWA-PoC-en validerte i privat Development-database:
 
 - iCloud-autentisering
 - `Textile`: oppretting, lesing og endring
 - `Piece`: oppretting
 - eksisterende CloudKit-container og schema
 
-Bildevalg fungerte i webklienten, men opplasting av `TextileImage.imageAsset` stoppet på CORS/preflight mot Apples separate `singleFileUpload`-endepunkt i både Safari og Chrome. Samme feil besto i en diagnostisk test med Development-tokenet midlertidig satt til `Any Domain`.
-
-## Beslutning
-
-CloudKit beholdes som primærlager. Neste klientspor er **SwiftUI med native CloudKit** mot samme container:
-
-```text
-iCloud.com.longfjeld.tekstilig
-```
-
-PWA-koden beholdes som PoC/referanse, men videre funksjonsutvikling skjer ikke der nå.
+Bildevalg fungerte i webklienten, men opplasting av `TextileImage.imageAsset` stoppet på CORS/preflight mot Apples separate `singleFileUpload`-endepunkt. Native SwiftUI/CloudKit brukes derfor til videre validering, særlig `CKAsset`.
 
 ## Neste steg
 
-Følg `docs/SWIFTUI-OPPSTART.md` strengt fra punkt 1. Første native kodeleveranse lages etter at punktene 1–5 er utført og kontrollert.
+Punkt 1–5 i `docs/SWIFTUI-OPPSTART.md` er fullført. Kodeleveransen inneholder nå punkt 6: minimal native CloudKit-diagnostikk for å validere container, iCloud-status, privat database og `Textile` før `CKAsset` introduseres.
 
 Production skal ikke deployes ennå.

@@ -60,7 +60,7 @@
 				000000000000000000000010 /* Tekstilig */,
 			);
 			name = Tekstilig;
-			productName = MyApp;
+			productName = Tekstilig;
 			productReference = 000000000000000000000120 /* Tekstilig.app */;
 			productType = "com.apple.product-type.application";
 		};
