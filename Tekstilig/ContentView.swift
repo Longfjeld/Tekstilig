@@ -12,6 +12,7 @@ import AppKit
 struct ContentView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var diagnostic = CloudKitAssetDiagnosticModel()
+    @State private var pieceDiagnostic = CloudKitPieceDiagnosticModel()
 
     var body: some View {
         NavigationStack {
@@ -93,7 +94,62 @@ struct ContentView: View {
                         Label("Steg 7 er fullført", systemImage: "checkmark.seal.fill")
                             .foregroundStyle(.green)
                     } footer: {
-                        Text("Neste steg er å lese samme Textile og TextileImage på en annen Apple-enhet med samme iCloud-konto.")
+                        Text("Kryssenhetstesten i steg 8 er utsatt til en annen fysisk Apple-enhet er tilgjengelig.")
+                    }
+                }
+
+                Section {
+                    Button {
+                        Task {
+                            await pieceDiagnostic.run()
+                        }
+                    } label: {
+                        if pieceDiagnostic.isRunning {
+                            HStack {
+                                ProgressView()
+                                Text("Tester Piece …")
+                            }
+                        } else {
+                            Label("Kjør Piece-test", systemImage: "scissors")
+                        }
+                    }
+                    .disabled(pieceDiagnostic.isRunning)
+                } header: {
+                    Text("Steg 9: valider Piece")
+                } footer: {
+                    Text("Steg 8 er utsatt. Piece-testen bruker den eksisterende test-Textile og gjenbruker recorden swiftui-poc-piece-v1.")
+                }
+
+                if !pieceDiagnostic.logEntries.isEmpty {
+                    Section("Piece-resultat") {
+                        ForEach(pieceDiagnostic.logEntries) { entry in
+                            Label {
+                                Text(entry.message)
+                                    .font(.callout)
+                            } icon: {
+                                Image(systemName: entry.isError ? "xmark.circle.fill" : "checkmark.circle")
+                                    .foregroundStyle(entry.isError ? .red : .secondary)
+                            }
+                        }
+                    }
+                }
+
+                if pieceDiagnostic.completedSuccessfully {
+                    Section("Piece lest tilbake fra CloudKit") {
+                        LabeledContent("Record name", value: pieceDiagnostic.recordName)
+                        LabeledContent("pieceId", value: CloudKitPieceDiagnosticModel.pieceID)
+                        LabeledContent("textileId", value: pieceDiagnostic.textileID)
+                        LabeledContent("Lengde", value: "\(pieceDiagnostic.lengthCm) cm")
+                        LabeledContent("Bredde", value: "\(pieceDiagnostic.widthCm) cm")
+                        LabeledContent("Reservert", value: "\(pieceDiagnostic.reservedLengthCm) cm")
+                        LabeledContent("Prosjekt", value: pieceDiagnostic.project)
+                    }
+
+                    Section {
+                        Label("Steg 9 er fullført", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.green)
+                    } footer: {
+                        Text("Native PoC har nå validert Textile, TextileImage/CKAsset og Piece. Kryssenhetstesten i steg 8 står fortsatt igjen før PoC-en avsluttes helt.")
                     }
                 }
             }

@@ -559,3 +559,28 @@ Native steg 6 har validert reell CloudKit-tilgang fra SwiftUI på fysisk Apple-e
 - PWA-kode endres ikke uten en ny eksplisitt beslutning.
 - CloudKit-container, Development-schema, datamodell og relevante PoC-data gjenbrukes.
 - Dokumentasjon skal omtale SwiftUI som aktiv klient og PWA som frosset PoC/referanse.
+
+
+---
+
+## B-033 – Kryssenhetstest utsettes; Piece-validering fortsetter
+
+**Dato:** 2026-09-26  
+**Status:** Besluttet
+
+### Beslutning
+
+Punkt 8, lesing på en annen fysisk Apple-enhet med samme iCloud-konto, beholdes som et krav før den tekniske CloudKit-PoC-en formelt avsluttes. Testen utsettes fordi en annen fysisk Apple-enhet ikke er tilgjengelig nå.
+
+Dette skal ikke blokkere punkt 9. `Piece` valideres videre native på den allerede fungerende fysiske testenheten.
+
+### Begrunnelse
+
+Kryssenhetstesten validerer en annen egenskap enn `Piece`: at samme private CloudKit-data kan leses fra en separat klientinstans/enhet. `Piece`-testen validerer record-type, feltmapping, relasjon til `Textile` og oppdatering av reservasjon. Testene er derfor teknisk uavhengige og kan utføres i motsatt rekkefølge.
+
+### Konsekvens
+
+- Punkt 8 står som eksplisitt gjenstående og skal ikke markeres fullført uten faktisk annen fysisk enhet.
+- Punkt 9 kan gjennomføres nå.
+- Production deployes fortsatt ikke.
+- PWA-koden forblir frosset.

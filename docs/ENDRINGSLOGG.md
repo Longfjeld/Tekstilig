@@ -244,3 +244,42 @@ Testen:
 ### PWA
 
 Ingen PWA-kode er endret i denne leveransen. PWA-sporet er nå eksplisitt frosset etter B-032.
+
+
+## Kodeleveranse 0005 – 2026-09-26
+
+Native steg 7 er fullført. Kryssenhetstesten i steg 8 er utsatt fordi en annen fysisk Apple-enhet ikke er tilgjengelig. Leveransen implementerer steg 9: native validering av `Piece`.
+
+### Opprettet
+
+- `Tekstilig/CloudKitPieceDiagnosticModel.swift` – native `Piece`-test mot privat Development-database
+
+### Endret
+
+- `Tekstilig/ContentView.swift` – ny Piece-test, resultatlogg og visning av feltene lest tilbake fra CloudKit
+- `README.md` – status oppdatert til fullført steg 7 og aktivt steg 9
+- `docs/README.md` – steg 8 markert utsatt og steg 9 som neste handling
+- `docs/SWIFTUI-OPPSTART.md` – komplett sekvensiell prosedyre for steg 9 i Xcode 27
+- `docs/ARKITEKTUR.md` – konkret Development-mapping for `Piece` dokumentert
+- `docs/BESLUTNINGSLOGG.md` – B-033 dokumenterer hvorfor kryssenhetstest kan utsettes uten å blokkere Piece
+- `docs/ENDRINGSLOGG.md` – denne leveransen
+
+### Piece-testens omfang
+
+Testen:
+
+1. bruker eksisterende `swiftui-poc-textile-v1`
+2. leser permanent `textileId` fra denne
+3. oppretter eller gjenbruker `swiftui-poc-piece-v1`
+4. lagrer `pieceId`, `textileId`, `lengthCm`, `widthCm`, `reservedLengthCm` og `project`
+5. leser basisfeltene tilbake og validerer dem
+6. oppdaterer samme record med reservasjon
+7. leser oppdatert record tilbake og validerer alle testede felt
+
+### Bevisst ikke implementert
+
+- utvidelse av Piece-schema med `quantity` eller reservasjonsnotat
+- full produkt-UI for stoffstykker
+- lokal cache/synkroniseringslag
+- Production-deploy
+- PWA-endringer

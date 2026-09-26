@@ -22,11 +22,12 @@ Native SwiftUI/CloudKit er nå validert på fysisk Apple-enhet for:
 - iCloud account status
 - privat Development-database
 - oppretting/lesing av fast `Textile`-testrecord
+- `TextileImage` med native `CKAsset`, inkludert byte-for-byte tur/retur av bildefilen
 
-Den tidligere CloudKit JS/PWA-PoC-en validerte også vanlige record-operasjoner, men Asset-opplasting stoppet på CORS/preflight mot Apples web-endepunkt. Dette er grunnen til at `CKAsset` nå valideres native.
+Kryssenhetstesten i punkt 8 er utsatt til en annen fysisk Apple-enhet er tilgjengelig. Den blokkerer ikke den videre valideringen av `Piece`.
 
 ## Neste steg
 
-Punkt 1–6 i `docs/SWIFTUI-OPPSTART.md` er fullført. Kodeleveranse 0004 implementerer punkt 7: velg ett bilde med systemets Photos Picker, lagre det som `TextileImage.imageAsset`, hent det tilbake fra privat CloudKit-database og vis den nedlastede Asset-filen.
+Punkt 1–7 i `docs/SWIFTUI-OPPSTART.md` er fullført. Punkt 8 er utsatt. Kodeleveranse 0005 implementerer punkt 9: valider `Piece` native mot samme private Development-database, inkludert kobling til `Textile`, dimensjoner og reservasjon.
 
 Production skal ikke deployes ennå.

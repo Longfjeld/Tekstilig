@@ -22,6 +22,6 @@ Tekstilig er et tekstilregister i tidlig utvikling. CloudKit er valgt som primæ
 
 ## Status
 
-Punkt 1–6 i `SWIFTUI-OPPSTART.md` er fullført. Punkt 7 er neste handling: valider `TextileImage` + `CKAsset` på fysisk iPhone/iPad ved å lagre, hente og vise samme bildefil fra privat Development-database.
+Punkt 1–7 i `SWIFTUI-OPPSTART.md` er fullført. Punkt 8 (kryssenhetstest) er utsatt til en annen fysisk Apple-enhet er tilgjengelig og blokkerer ikke punkt 9. Neste handling er å validere `Piece` native mot privat Development-database.
 
 PWA-koden skal ikke videreutvikles i denne fasen. Full produkt-UI og Production-deploy starter ikke før den native CloudKit-valideringen er ferdig.

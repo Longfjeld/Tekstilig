@@ -70,6 +70,19 @@ Representerer selve tekstilet og hovedegenskapene fra `DATAMODELL.md`.
 
 Representerer ett fysisk stoffstykke med lengde, bredde og eventuell reservasjon.
 
+Gjeldende Development-mapping, etablert i PoC-en og validert native i steg 9:
+
+| Felt | CloudKit-type | Formål |
+|:---|:---|:---|
+| `pieceId` | String | Permanent Tekstilig-ID for stoffstykket |
+| `textileId` | String | Permanent Tekstilig-ID for tilhørende tekstil |
+| `lengthCm` | Int64 | Lengde i centimeter |
+| `widthCm` | Int64 | Bredde i centimeter |
+| `reservedLengthCm` | Int64 | Reservert lengde i centimeter |
+| `project` | String | Prosjektnavn for reservasjonen |
+
+Native steg 9 bruker den faste Development-recorden `swiftui-poc-piece-v1`. Den logiske modellen i `DATAMODELL.md` er rikere enn dette PoC-schemaet; blant annet `quantity` og reservasjonsnotat vurderes når produksjonsmodellen konkretiseres. PoC-en skal ikke utvide CloudKit-schemaet før den gjennomgangen.
+
 ### TextileImage
 
 Representerer metadata om et bilde og en CloudKit Asset med selve bildefilen.
@@ -331,3 +344,10 @@ Før videre UI-utvikling skal en minimal native PoC validere eksisterende record
 Native SwiftUI har på fysisk Apple-enhet validert container, iCloud-konto, privat Development-database og `Textile`. Videre implementering skjer kun i SwiftUI inntil annet eventuelt besluttes.
 
 Neste tekniske validering er `TextileImage.imageAsset` med native `CKAsset`. PWA-filene skal ikke endres som del av denne eller påfølgende SwiftUI-leveranser.
+
+
+## 19. Native Piece-validering – 2026-09-26
+
+Etter fullført native `Textile`- og `TextileImage`/`CKAsset`-validering går teknisk PoC videre med `Piece`. Kryssenhetstesten er midlertidig utsatt fordi en annen fysisk Apple-enhet ikke er tilgjengelig; dette blokkerer ikke valideringen av record-type og felter på samme fysiske klient.
+
+PWA-koden forblir frosset og endres ikke.
