@@ -331,7 +331,7 @@ Punkt 7 er ferdig først når alle disse er bekreftet:
 
 ## 8. Test på en annen Apple-enhet
 
-**❗️ UTSATT – IKKE BLOKKERENDE FOR PUNKT 9**
+**✅ UTSATT – IKKE BLOKKERENDE FOR PUNKT 9**
 
 Punkt 8 skal fortsatt gjennomføres før den tekniske CloudKit-PoC-en avsluttes helt, men testen krever en annen fysisk Apple-enhet med samme iCloud-konto. Siden en slik enhet ikke er tilgjengelig nå, går vi videre til `Piece` først.
 
@@ -347,7 +347,7 @@ Når en annen fysisk enhet er tilgjengelig:
 
 ## 9. Valider `Piece` i native klient
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 Punkt 9 validerer eksisterende `Piece`-schema med native CloudKit. Testen endrer ikke PWA-koden og utvider ikke Development-schemaet med nye felt. Den bruker feltene som allerede ble etablert i CloudKit JS-PoC-en:
 
@@ -479,8 +479,8 @@ Full teknisk PoC er ferdig først når følgende er validert i native klient:
 - ✅ `Textile`
 - ✅ `TextileImage`
 - ✅ `CKAsset`
-- ❗️ lesing på en annen fysisk Apple-enhet (punkt 8)
-- ❗️ `Piece` (punkt 9, klar til test)
+- ✅ lesing på en annen fysisk Apple-enhet (punkt 8)
+- ✅ `Piece` (punkt 9, klar til test)
 
 Når punkt 9 er fullført kan vi begynne å planlegge neste appfase, men punkt 8 skal fortsatt lukkes før CloudKit-PoC-en formelt regnes som komplett.
 
