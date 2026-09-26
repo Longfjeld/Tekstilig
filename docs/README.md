@@ -1,6 +1,6 @@
 # Tekstilig – dokumentasjon
 
-Tekstilig er et tekstilregister i tidlig utvikling. CloudKit er valgt som primærlager, og aktivt klientspor er nå SwiftUI med native CloudKit. Den tidligere PWA-en beholdes som teknisk PoC/referanse.
+Tekstilig er et tekstilregister i tidlig utvikling. CloudKit er valgt som primærlager, og aktivt klientspor er SwiftUI med native CloudKit. Den tidligere PWA-en er frosset og beholdes kun som teknisk PoC/referanse.
 
 ## Autoritative dokumenter
 
@@ -22,6 +22,6 @@ Tekstilig er et tekstilregister i tidlig utvikling. CloudKit er valgt som primæ
 
 ## Status
 
-Punkt 1–5 i `SWIFTUI-OPPSTART.md` er fullført. Neste handling er punkt 6: kjør den leverte native CloudKit-diagnostikken og bekreft både resultatet i appen og testrecorden i privat Development-database.
+Punkt 1–6 i `SWIFTUI-OPPSTART.md` er fullført. Punkt 7 er neste handling: valider `TextileImage` + `CKAsset` på fysisk iPhone/iPad ved å lagre, hente og vise samme bildefil fra privat Development-database.
 
-Full produkt-UI og Production-deploy skal ikke startes før den native CloudKit-valideringen, inkludert `CKAsset`, er ferdig.
+PWA-koden skal ikke videreutvikles i denne fasen. Full produkt-UI og Production-deploy starter ikke før den native CloudKit-valideringen er ferdig.

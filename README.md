@@ -2,29 +2,31 @@
 
 Tekstilig er i en tidlig utviklingsfase. Målet er en privat tekstiloversikt for registrering, søk og filtrering av tekstiler til syprosjekter.
 
-## Nåværende utviklingsspor
+## Aktivt utviklingsspor
 
-CloudKit er valgt som primærlager. Den tidligere PWA-en beholdes som teknisk PoC/referanse for CloudKit JS og datamodellen, men videre klientutvikling skjer nå som **SwiftUI med native CloudKit** mot samme container:
+CloudKit er valgt som primærlager. Videre klientutvikling skjer nå **utelukkende i SwiftUI med native CloudKit** mot containeren:
 
 ```text
 iCloud.com.longfjeld.tekstilig
 ```
 
+Den tidligere PWA-en er frosset som teknisk PoC/referanse. PWA-filene beholdes foreløpig i repositoryet, men skal ikke videreutvikles mens SwiftUI-sporet bygges ut.
+
 App Store-distribusjon er et mål for en senere full native versjon, men prosjektet er ikke på distribusjonsstadiet ennå.
 
 ## Validert så langt
 
-CloudKit JS/PWA-PoC-en validerte i privat Development-database:
+Native SwiftUI/CloudKit er nå validert på fysisk Apple-enhet for:
 
-- iCloud-autentisering
-- `Textile`: oppretting, lesing og endring
-- `Piece`: oppretting
-- eksisterende CloudKit-container og schema
+- signering og CloudKit-entitlements
+- iCloud account status
+- privat Development-database
+- oppretting/lesing av fast `Textile`-testrecord
 
-Bildevalg fungerte i webklienten, men opplasting av `TextileImage.imageAsset` stoppet på CORS/preflight mot Apples separate `singleFileUpload`-endepunkt. Native SwiftUI/CloudKit brukes derfor til videre validering, særlig `CKAsset`.
+Den tidligere CloudKit JS/PWA-PoC-en validerte også vanlige record-operasjoner, men Asset-opplasting stoppet på CORS/preflight mot Apples web-endepunkt. Dette er grunnen til at `CKAsset` nå valideres native.
 
 ## Neste steg
 
-Punkt 1–5 i `docs/SWIFTUI-OPPSTART.md` er fullført. Kodeleveransen inneholder nå punkt 6: minimal native CloudKit-diagnostikk for å validere container, iCloud-status, privat database og `Textile` før `CKAsset` introduseres.
+Punkt 1–6 i `docs/SWIFTUI-OPPSTART.md` er fullført. Kodeleveranse 0004 implementerer punkt 7: velg ett bilde med systemets Photos Picker, lagre det som `TextileImage.imageAsset`, hent det tilbake fra privat CloudKit-database og vis den nedlastede Asset-filen.
 
 Production skal ikke deployes ennå.

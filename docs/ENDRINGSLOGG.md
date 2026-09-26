@@ -198,3 +198,49 @@ Kodeleveransen tester bare:
 5. les samme record tilbake
 
 `Piece`, `TextileImage`, `CKAsset`, full datamodell, cache og produkt-UI er bevisst ikke implementert i denne leveransen.
+
+## Kodeleveranse 0004 – 2026-09-26
+
+Native CloudKit steg 6 er bekreftet fullført på fysisk Apple-enhet. Leveransen implementerer steg 7: `TextileImage` + `CKAsset`.
+
+### Opprettet
+
+- `Tekstilig/CloudKitAssetDiagnosticModel.swift` – native CKAsset tur/retur-test med fast Development-record
+
+### Endret
+
+- `Tekstilig/ContentView.swift` – Photos Picker, lokal forhåndsvisning, CKAsset-test, resultatlogg og visning av bildet lest tilbake fra CloudKit
+- `.gitignore` – ignorerer Xcode lokal brukerstate og build-output
+- `README.md` – SwiftUI er eneste aktive klientspor; PWA er frosset PoC/referanse
+- `docs/README.md` – status oppdatert til punkt 7
+- `docs/SWIFTUI-OPPSTART.md` – punkt 6 markert fullført og punkt 7 gjort til komplett sekvensiell testprosedyre for Xcode 27 / OS 27
+- `docs/ARKITEKTUR.md` – SwiftUI satt som aktiv klientretning og konkret `TextileImage`/Asset-mapping dokumentert
+- `docs/BESLUTNINGSLOGG.md` – B-032 dokumenterer at PWA-sporet fryses
+- `docs/ENDRINGSLOGG.md` – denne leveransen
+
+### CKAsset-testens omfang
+
+Testen:
+
+1. bruker eksisterende `swiftui-poc-textile-v1`
+2. lar brukeren velge ett bilde via systemets Photos Picker
+3. skriver bildefil til midlertidig lokal URL
+4. oppretter/oppdaterer `swiftui-poc-textile-image-v1`
+5. lagrer bildet i `imageAsset` som `CKAsset`
+6. henter samme record tilbake
+7. leser CloudKits staging-fil umiddelbart
+8. kontrollerer at nedlastede bytes er identiske med valgte bytes
+9. viser bildet som faktisk ble lest tilbake fra CloudKit
+
+### Bevisst ikke implementert
+
+- kamera direkte i appen
+- bildeoptimalisering eller thumbnails
+- full produkt-UI
+- lokal cache
+- generell bildehåndtering/datamodell i Swift
+- Production-deploy
+
+### PWA
+
+Ingen PWA-kode er endret i denne leveransen. PWA-sporet er nå eksplisitt frosset etter B-032.

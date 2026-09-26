@@ -2,7 +2,7 @@
 
 ## 1. Overordnet modell
 
-Tekstilig bygges først som en PWA/webapp, men med en backendmodell som også kan brukes direkte av en senere SwiftUI-app.
+Tekstilig utvikles nå som en native SwiftUI-app med CloudKit som primærlager. Den tidligere PWA/CloudKit JS-klienten beholdes frosset som teknisk PoC og referanse, men er ikke lenger et aktivt implementeringsspor.
 
 ```text
                         +---------------------------+
@@ -74,6 +74,20 @@ Representerer ett fysisk stoffstykke med lengde, bredde og eventuell reservasjon
 
 Representerer metadata om et bilde og en CloudKit Asset med selve bildefilen.
 
+Gjeldende Development-mapping, etablert i PoC-en og gjenbrukt uendret i native steg 7:
+
+| Felt | CloudKit-type | Formål |
+|:---|:---|:---|
+| `imageId` | String | Permanent Tekstilig-ID for bildet |
+| `textileId` | String | Permanent Tekstilig-ID for tilhørende tekstil |
+| `type` | String | Bildetype, f.eks. `fabric` |
+| `primary` | Int64 | `1` for hovedbilde, ellers `0` |
+| `fileName` | String | Filnavn/formatmetadata som CloudKit Asset ikke bevarer |
+| `contentType` | String | MIME-type/innholdstype |
+| `imageAsset` | Asset | Selve bildefilen som `CKAsset` i native klient |
+
+Denne mappingen er fortsatt Development-schema og gjennomgås før Production. Punkt 7 bruker en fast testrecord `swiftui-poc-textile-image-v1` slik at gjentatte tester erstatter samme Asset i stedet for å opprette nye testrecords.
+
 CloudKit-recordnavn og permanente Tekstilig-ID-er skal ikke blandes sammen unødvendig. Tekstilig beholder egne permanente ID-er som `T0042` og `P001`, mens CloudKit håndterer sine system-ID-er og endringsmetadata.
 
 ## 4. Logisk datamodell og fysisk lagring
@@ -117,7 +131,7 @@ Planlagt lokal cache:
 
 ### SwiftUI
 
-En senere native app kan bruke en native lokal database/cache og CloudKit-synk. Eksakt mekanisme avgjøres hvis SwiftUI-sporet aktiveres.
+Den aktive native appen skal senere bruke en native lokal database/cache i tillegg til CloudKit-synk. Eksakt cache-/persistensmekanisme avgjøres etter at den tekniske CloudKit-PoC-en er ferdig.
 
 Synkroniseringslaget skal ta høyde for CloudKit-recordenes systemfelt/change tags, slik at konflikter kan håndteres riktig.
 
@@ -202,7 +216,7 @@ Prioriteres for:
 - redigering
 - sammenligning og oversikt
 
-PWA og eventuell SwiftUI-app skal følge samme UX-prinsipper og logiske datamodell.
+SwiftUI-appen skal følge de etablerte UX-prinsippene og den logiske datamodellen. PWA-en beholdes kun som historisk PoC/referanse.
 
 ## 12. Søk
 
@@ -226,9 +240,9 @@ Det innebærer blant annet:
 - effektiv filtrering
 - unngå unødvendige visuelle effekter
 
-## 14. Veien fra PWA til SwiftUI
+## 14. Overgangen fra PWA til SwiftUI
 
-CloudKit gjør en eventuell senere overgang til SwiftUI forholdsvis ryddig.
+Overgangen til SwiftUI er besluttet og pågår. CloudKit gjør at backend, schema og Development-data kan gjenbrukes mens klientlaget erstattes.
 
 ### Kan gjenbrukes
 
@@ -253,7 +267,7 @@ CloudKit gjør en eventuell senere overgang til SwiftUI forholdsvis ryddig.
 - IndexedDB/OPFS-cache
 - JavaScript-spesifikk UI-kode
 
-Dette betyr at CloudKit-PoC-en ikke er bortkastet dersom prosjektet senere går over til SwiftUI. PoC-en validerer nettopp backend, schema, dataflyt, bilder og synk som den native appen også trenger.
+CloudKit-PoC-en brukes derfor som teknisk referanse for backend og schema, men PWA-klientkoden videreutvikles ikke. Nye klientfunksjoner implementeres i SwiftUI.
 
 ## 15. Fremtidig deling
 
@@ -272,7 +286,7 @@ Deling er ikke en del av første PoC.
 
 ---
 
-## 15. Arkitekturstatus etter CloudKit JS PoC – 2026-09-26
+## 17. Arkitekturstatus etter CloudKit JS PoC – 2026-09-26
 
 CloudKit JS/PWA-sporet er avsluttet som teknisk PoC. Testen validerte autentisering og vanlige record-operasjoner mot privat CloudKit-database, men Asset-opplasting ble stoppet av CORS/preflight på Apples separate `singleFileUpload`-endepunkt i både Safari og Chrome.
 
@@ -310,3 +324,10 @@ PWA / CloudKit JS
 ```
 
 Før videre UI-utvikling skal en minimal native PoC validere eksisterende records og deretter `CKAsset`. Production deployes ikke før schema og native flyt er gjennomgått.
+
+
+## 18. Aktiv klientretning etter native steg 6 – 2026-09-26
+
+Native SwiftUI har på fysisk Apple-enhet validert container, iCloud-konto, privat Development-database og `Textile`. Videre implementering skjer kun i SwiftUI inntil annet eventuelt besluttes.
+
+Neste tekniske validering er `TextileImage.imageAsset` med native `CKAsset`. PWA-filene skal ikke endres som del av denne eller påfølgende SwiftUI-leveranser.

@@ -1,7 +1,7 @@
 # SwiftUI + CloudKit – sekvensiell oppstart
 
-**Status:** Punkt 1–5 fullført · punkt 6 klar til test  
-**Miljø:** Development
+**Status:** Punkt 1–6 fullført · punkt 7 klar til test  
+**Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
 Denne veiledningen skal følges strengt i nummerrekkefølge. Innenfor hvert punkt kommer handlingen først, deretter kontrollen, og til slutt eventuell stopp-/fortsett-beslutning.
 
@@ -190,20 +190,144 @@ Punkt 6 er ferdig når begge disse kontrollene er bestått:
 
 **Ikke gå videre til punkt 7 før begge er bekreftet.**
 
-## 7. Valider CKAsset
+## 7. Valider `TextileImage` + `CKAsset`
 
-**⏭️ SENERE I NATIVE PoC**
+**✅ AKSJON – DU**
 
-Etter at native record-tilgang fungerer:
+Punkt 6 er fullført på fysisk Apple-enhet. Punkt 7 tester nå den ene sentrale CloudKit-funksjonen som PWA-PoC-en ikke fikk validert: opplasting og nedlasting av et faktisk bilde som `CKAsset`.
 
-1. velg eller ta et lite testbilde
-2. skriv bildet til en midlertidig lokal fil
-3. opprett `CKAsset(fileURL:)`
-4. lagre en `TextileImage` i privat database
-5. hent recorden tilbake
-6. les Asset-filen og vis bildet
+Testen bruker eksisterende Development-schema og endrer ikke PWA-koden.
 
-Dette er den viktigste testen som PWA-PoC-en ikke fullførte.
+### 7.1 Legg inn kodeleveranse 0004
+
+1. Lukk Xcode dersom prosjektet er åpent.
+2. Ta en vanlig Git-commit eller lokal sikkerhetskopi av den fungerende versjonen etter punkt 6.
+3. Pakk ut `Tekstilig-endringer-0004.zip`.
+4. Kopier innholdet fra endringspakken inn i den eksisterende Tekstilig-prosjektmappen.
+5. Velg **Erstatt** for filer som allerede finnes.
+6. Ikke slett eller erstatt andre lokale filer i overordnet mappe som er utelatt via `.gitignore`.
+7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+8. Kontroller i Project Navigator at `Tekstilig` nå inneholder:
+
+```text
+TekstiligApp.swift
+ContentView.swift
+CloudKitDiagnosticModel.swift
+CloudKitAssetDiagnosticModel.swift
+Tekstilig.entitlements
+Assets.xcassets
+```
+
+9. Velg Tekstilig-targetet og åpne **Signing & Capabilities**.
+10. Kontroller at **iCloud → CloudKit** fortsatt er aktivert.
+11. Kontroller at containeren fortsatt er:
+
+```text
+iCloud.com.longfjeld.tekstilig
+```
+
+**Ikke kjør testen dersom containeren mangler eller en annen container er valgt.**
+
+### 7.2 Bygg og start på fysisk iPhone/iPad
+
+1. Koble til eller velg den samme fysiske iPhone/iPad-en som ble brukt da punkt 6 ble validert.
+2. Kontroller at enheten fremdeles er logget inn på samme iCloud-konto.
+3. Velg den fysiske enheten som Run Destination øverst i Xcode 27.
+4. Velg **Product → Run** eller trykk Run-knappen.
+5. Vent til Tekstilig åpnes på enheten.
+6. Kontroller at skjermen viser:
+
+```text
+Steg 6: native CloudKit er validert
+```
+
+7. Kontroller at du ser knappen **Velg bilde fra Bilder**.
+
+Hvis appen ikke bygger eller starter, stopp her og noter hele feilmeldingen fra Xcode før andre endringer gjøres.
+
+### 7.3 Velg ett lite testbilde
+
+1. Sørg for at det finnes et lite, ikke-sensitivt testbilde i Bilder-appen på enheten. Ta eventuelt et bilde med Kamera-appen først.
+2. Gå tilbake til Tekstilig.
+3. Trykk **Velg bilde fra Bilder**.
+4. Velg ett bilde.
+5. Vent til bildet vises i Tekstilig.
+6. Kontroller at skjermen viser filnavn, innholdstype og størrelse.
+7. Kontroller at knappen **Lagre og les CKAsset** nå er aktiv.
+
+Denne testen bruker systemets Photos Picker. Kamera direkte i Tekstilig implementeres ikke i punkt 7.
+
+### 7.4 Kjør CKAsset-testen
+
+1. Trykk **Lagre og les CKAsset**.
+2. La testen fullføre uten å bytte app eller koble fra enheten.
+3. Kontroller at resultatlisten viser vellykkede steg 1–7 i denne rekkefølgen:
+   1. iCloud-konto og privat database tilgjengelig
+   2. eksisterende `swiftui-poc-textile-v1` funnet
+   3. midlertidig lokal bildefil skrevet
+   4. `TextileImage` og `CKAsset` lagret
+   5. samme `TextileImage` lest tilbake
+   6. Asset-filen lest lokalt igjen
+   7. nedlastede bytes er identiske med de valgte bytesene
+4. Kontroller at resultatlisten avsluttes med:
+
+```text
+Steg 7 er validert. Klar for kryssenhetstest i steg 8.
+```
+
+5. Kontroller at seksjonen **Bilde lest tilbake fra CloudKit** vises.
+6. Kontroller visuelt at bildet i denne seksjonen er det samme bildet du valgte.
+7. Kontroller at skjermen viser:
+
+```text
+Steg 7 er fullført
+```
+
+Testen gjenbruker én fast record:
+
+```text
+swiftui-poc-textile-image-v1
+```
+
+Gjentatte testkjøringer erstatter derfor Asset-feltet på samme Development-record i stedet for å opprette nye `TextileImage`-records.
+
+### 7.5 Kontroller `TextileImage` i CloudKit Database
+
+1. Åpne CloudKit Database.
+2. Velg containeren `iCloud.com.longfjeld.tekstilig`.
+3. Kontroller at miljøet er **Development**.
+4. Åpne **Private Database**.
+5. Åpne record type **TextileImage**.
+6. Finn recorden med Record Name:
+
+```text
+swiftui-poc-textile-image-v1
+```
+
+7. Kontroller feltene mot tabellen:
+
+| Felt | Forventet verdi |
+|:---|:---|
+| `imageId` | `IMG-SWIFTUI-POC-001` |
+| `textileId` | `T-SWIFTUI-POC-001` |
+| `type` | `fabric` |
+| `primary` | `1` |
+| `fileName` | `swiftui-asset-test.<format>` |
+| `contentType` | bildets MIME-type/innholdstype |
+| `imageAsset` | Asset med lagret bildefil |
+
+8. La både `swiftui-poc-textile-v1` og `swiftui-poc-textile-image-v1` stå i Development-databasen. De brukes i neste validering.
+
+### 7.6 Stoppunkt
+
+Punkt 7 er ferdig først når alle disse er bekreftet:
+
+- appen viser **Steg 7 er fullført**
+- bildet som er lest tilbake vises korrekt i appen
+- `swiftui-poc-textile-image-v1` finnes i privat Development-database
+- `imageAsset` er lagret på recorden
+
+**Ikke gå videre til punkt 8 før alle fire er bekreftet.**
 
 ## 8. Test på en annen Apple-enhet
 
@@ -213,10 +337,17 @@ Etter at punkt 7 fungerer:
 
 1. installer/kjør samme Development-app på en annen Apple-enhet
 2. bruk samme iCloud-konto
-3. hent samme `Textile` og `TextileImage`
-4. kontroller at både metadata og bilde er tilgjengelige
+3. hent `swiftui-poc-textile-v1`
+4. hent `swiftui-poc-textile-image-v1`
+5. kontroller at både metadata og bildet er tilgjengelige
 
-## 9. Stoppunkt før videre apputvikling
+## 9. Valider `Piece` i native klient
+
+**⏭️ SENERE I NATIVE PoC**
+
+`Piece` ble validert i PWA-PoC-en, men skal også verifiseres med native CloudKit før den tekniske PoC-fasen avsluttes.
+
+## 10. Stoppunkt før videre apputvikling
 
 **⏭️ SENERE**
 
@@ -224,9 +355,9 @@ Full UI-/funksjonsutvikling starter først når følgende er validert i native k
 
 - privat CloudKit-database
 - `Textile`
-- `Piece`
 - `TextileImage`
 - `CKAsset`
 - lesing på en annen Apple-enhet
+- `Piece`
 
 Production skal fortsatt ikke deployes på dette tidspunktet.

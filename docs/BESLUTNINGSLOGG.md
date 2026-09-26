@@ -535,3 +535,27 @@ Dette isolerer feil, gjør testen lett å kontrollere for en ny Xcode/SwiftUI-br
 ### Begrunnelse
 
 Dette reduserer risikoen for at visuelle beslutninger blir spredt og motstridende på tvers av dokumentasjonen når SwiftUI-klienten utvikles videre.
+
+---
+
+## B-032 – PWA-sporet fryses; videre klientutvikling skjer i SwiftUI
+
+**Dato:** 2026-09-26  
+**Status:** Besluttet
+
+### Beslutning
+
+Videre klientutvikling i Tekstilig skjer i SwiftUI med native CloudKit. Den eksisterende PWA-koden fryses på dagens PoC-nivå og endres ikke som del av videre funksjonsutvikling.
+
+PWA-filene beholdes foreløpig i repositoryet som historisk teknisk referanse for CloudKit JS, tidligere testresultater og sammenligning av schema/dataflyt.
+
+### Begrunnelse
+
+Native steg 6 har validert reell CloudKit-tilgang fra SwiftUI på fysisk Apple-enhet. Den viktigste gjenværende tekniske usikkerheten er native `CKAsset`, som kan testes direkte uten websporets CORS-begrensninger. Å opprettholde to aktive klientimplementasjoner samtidig vil gi unødvendig dobbeltarbeid i denne fasen.
+
+### Konsekvens
+
+- Nye funksjoner implementeres i SwiftUI.
+- PWA-kode endres ikke uten en ny eksplisitt beslutning.
+- CloudKit-container, Development-schema, datamodell og relevante PoC-data gjenbrukes.
+- Dokumentasjon skal omtale SwiftUI som aktiv klient og PWA som frosset PoC/referanse.
