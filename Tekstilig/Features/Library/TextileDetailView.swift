@@ -30,6 +30,8 @@ struct TextileDetailView: View {
 
                     TextileAttributesSection(textile: textile)
 
+                    TextileLocationSection(textile: textile, model: model)
+
                     Section {
                         if pieceModel.isLoading && pieceModel.pieces.isEmpty {
                             ProgressView("Henter stoffstykker …")

@@ -458,7 +458,7 @@ Datamodellen skal ikke føre til et tungt registreringsskjema.
 
 Fra kodeleveranse 0006 er `Textile` introdusert som faktisk Swift-domenetype. Dette endrer ikke den logiske modellen over.
 
-Første implementerte persistensutsnitt er bevisst begrenset til:
+Første implementerte persistensutsnitt startet bevisst begrenset til:
 
 - `id` / `textileId`
 - `name`
@@ -466,6 +466,12 @@ Første implementerte persistensutsnitt er bevisst begrenset til:
 - `createdAt`
 - `updatedAt`
 - `schemaVersion`
+
+Fra devpatch 0005 er den avtalte plasseringen også mappet direkte på `Textile` som valgfrie felt:
+
+- `locationArea`
+- `locationShelf`
+- `locationContainer`
 
 Permanent ID for nye native records genereres som `T-<UUID>`. Eksempelet `T0042` i datamodellen beskriver fortsatt en mulig lesbar ID-form, men er ikke et krav til formatet. Viktigste krav er stabil og unik permanent Tekstilig-ID som er uavhengig av CloudKit Record Name.
 
@@ -514,3 +520,16 @@ Fra devpatch 0004 er strukturerte materialer og farger introdusert som egne Swif
 - `hex` – valgfri `#RRGGBB`-verdi
 
 Denne fysiske CloudKit-mappingen bevarer struktureringen fra seksjon 4 og 5 uten å låse de sammensatte verdiene til ett fritekstfelt. Flere materialer og flere farger kan knyttes til samme tekstil.
+
+
+### Devpatch 0005 – plassering
+
+Plassering er en 1:1-egenskap ved et tekstil og lagres derfor direkte på `Textile` i CloudKit i stedet for som en egen child-record. Mappingen følger det logiske `location`-objektet:
+
+| Logisk felt | CloudKit-felt | Type |
+|:---|:---|:---|
+| `location.area` | `locationArea` | String, valgfri |
+| `location.shelf` | `locationShelf` | String, valgfri |
+| `location.container` | `locationContainer` | String, valgfri |
+
+Alle tre verdiene kan lagres uavhengig av hverandre. Tomme verdier fjernes fra recorden ved lagring. Query-/search-indekser på disse feltene opprettes først når søk og filtre implementeres.

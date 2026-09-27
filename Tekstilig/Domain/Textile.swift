@@ -8,6 +8,9 @@ struct Textile: Identifiable, Hashable {
     var createdAt: Date
     var updatedAt: Date
     var schemaVersion: Int
+    var locationArea: String = ""
+    var locationShelf: String = ""
+    var locationContainer: String = ""
 
     // CloudKit recordName is the storage identity for persisted records.
     // Fall back to textileID only for drafts that have not been saved yet.
@@ -15,6 +18,12 @@ struct Textile: Identifiable, Hashable {
     // duplicate textileId values.
     var id: String {
         cloudRecordName ?? textileID
+    }
+
+    var hasLocation: Bool {
+        !locationArea.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !locationShelf.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !locationContainer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     static let categoryOptions = [

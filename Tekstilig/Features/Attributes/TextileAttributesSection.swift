@@ -4,10 +4,7 @@ struct TextileAttributesSection: View {
     let textile: Textile
 
     @State private var model = TextileAttributesModel()
-    @State private var showNewMaterial = false
-    @State private var showNewColor = false
-    @State private var editingMaterial: TextileMaterial?
-    @State private var editingColor: TextileColor?
+    @State private var editorRoute: AttributeEditorRoute?
     @State private var deletionTarget: AttributeDeletionTarget?
 
     var body: some View {
@@ -37,7 +34,7 @@ struct TextileAttributesSection: View {
                     } else {
                         ForEach(model.materials) { material in
                             Button {
-                                editingMaterial = material
+                                editorRoute = .editMaterial(material)
                             } label: {
                                 TextileMaterialRow(material: material)
                             }
@@ -51,7 +48,7 @@ struct TextileAttributesSection: View {
                     }
 
                     Button {
-                        showNewMaterial = true
+                        editorRoute = .newMaterial
                     } label: {
                         Label("Legg til materiale", systemImage: "plus")
                     }
@@ -68,7 +65,7 @@ struct TextileAttributesSection: View {
                     } else {
                         ForEach(model.colors) { color in
                             Button {
-                                editingColor = color
+                                editorRoute = .editColor(color)
                             } label: {
                                 TextileColorRow(color: color)
                             }
@@ -82,7 +79,7 @@ struct TextileAttributesSection: View {
                     }
 
                     Button {
-                        showNewColor = true
+                        editorRoute = .newColor
                     } label: {
                         Label("Legg til farge", systemImage: "plus")
                     }
@@ -94,24 +91,24 @@ struct TextileAttributesSection: View {
         .task(id: textile.textileID) {
             await model.loadIfNeeded(for: textile.textileID)
         }
-        .sheet(isPresented: $showNewMaterial) {
-            TextileMaterialEditorView(material: nil, textileID: textile.textileID) { candidate in
-                try await model.saveMaterial(candidate)
-            }
-        }
-        .sheet(item: $editingMaterial) { material in
-            TextileMaterialEditorView(material: material, textileID: textile.textileID) { candidate in
-                try await model.saveMaterial(candidate)
-            }
-        }
-        .sheet(isPresented: $showNewColor) {
-            TextileColorEditorView(color: nil, textileID: textile.textileID) { candidate in
-                try await model.saveColor(candidate)
-            }
-        }
-        .sheet(item: $editingColor) { color in
-            TextileColorEditorView(color: color, textileID: textile.textileID) { candidate in
-                try await model.saveColor(candidate)
+        .sheet(item: $editorRoute) { route in
+            switch route {
+            case .newMaterial:
+                TextileMaterialEditorView(material: nil, textileID: textile.textileID) { candidate in
+                    try await model.saveMaterial(candidate)
+                }
+            case .editMaterial(let material):
+                TextileMaterialEditorView(material: material, textileID: textile.textileID) { candidate in
+                    try await model.saveMaterial(candidate)
+                }
+            case .newColor:
+                TextileColorEditorView(color: nil, textileID: textile.textileID) { candidate in
+                    try await model.saveColor(candidate)
+                }
+            case .editColor(let color):
+                TextileColorEditorView(color: color, textileID: textile.textileID) { candidate in
+                    try await model.saveColor(candidate)
+                }
             }
         }
         .confirmationDialog(
@@ -160,6 +157,23 @@ struct TextileAttributesSection: View {
                 model.errorMessage = error.localizedDescription
                 self.deletionTarget = nil
             }
+        }
+    }
+}
+
+
+private enum AttributeEditorRoute: Identifiable {
+    case newMaterial
+    case editMaterial(TextileMaterial)
+    case newColor
+    case editColor(TextileColor)
+
+    var id: String {
+        switch self {
+        case .newMaterial: return "new-material"
+        case .editMaterial(let material): return "edit-material-\(material.id)"
+        case .newColor: return "new-color"
+        case .editColor(let color): return "edit-color-\(color.id)"
         }
     }
 }

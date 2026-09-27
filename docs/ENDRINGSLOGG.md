@@ -453,3 +453,43 @@ Begge krever `textileId` som `QUERYABLE`; `recordName` anbefales `QUERYABLE` for
 - kamera / flere bilder / bildeoptimalisering
 - Production deploy
 - PWA-endringer
+
+
+## Devpatch 0005 – 2026-09-27
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0006.zip`, der materiale/farge test 30–39 er validert.
+
+### Rettet
+
+- materiale-/farge-editor bruker nå én felles sheet-route i stedet for fire konkurrerende `.sheet(...)`-presentasjoner; dette retter den observerte sporadiske feilen der et nytt materiale- eller fargefelt kunne vises og deretter forsvinne
+- `TextileLibraryModel.upsert` matcher nå den samme tekniske `Textile.id`/CloudKit `recordName` som resten av navigasjonen, i stedet for bare `textileId`; dette gjør også redigering tryggere for gamle PoC-records med duplisert `textileId`
+
+### Opprettet
+
+- `Features/Location/TextileLocationSection.swift`
+- `Features/Location/TextileLocationEditorView.swift`
+
+### Endret
+
+- `Textile` har valgfrie `locationArea`, `locationShelf` og `locationContainer`
+- `CloudKitTextileRepository` leser, lagrer og fjerner plassering på samme Textile-record
+- `TextileDetailView` viser Plassering mellom materialer/farger og stoffstykker
+- dokumentasjon og testplan er oppdatert
+
+### CloudKit
+
+Nye valgfrie String-felt på eksisterende `Textile` record type:
+
+- `locationArea`
+- `locationShelf`
+- `locationContainer`
+
+Ingen nye indekser kreves i dette steget.
+
+### Bevisst utsatt
+
+- søk/filtrering på plassering
+- kamera / flere bilder / bildeoptimalisering
+- øvrige tekstilegenskaper og vedlikehold
+- Production deploy
+- PWA-endringer

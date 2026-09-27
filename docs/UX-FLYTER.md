@@ -165,6 +165,7 @@ Foreslått første skjerm:
 4. **Materiale**
 5. **Farge**
 6. **Plassering**
+   - Devpatch 0005 implementerer område/rom, hylle og beholder/kasse som valgfrie felt på Textile.
 
 Bare navn må alltid være obligatorisk. Stoffstykke kreves når beholdningen er kjent.
 

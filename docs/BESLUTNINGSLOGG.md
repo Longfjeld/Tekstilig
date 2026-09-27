@@ -723,3 +723,25 @@ B-005 og B-012 krever strukturerte verdier. Ett tekstil kan samtidig ha flere ma
 - Søkeindekser på `material`/`group` utsettes til søkefunksjonen implementeres.
 - Nye registreringer får logisk ID `MAT-<UUID>` og `COL-<UUID>`.
 - Den logiske datamodellen i `DATAMODELL.md` endres ikke.
+
+
+## B-041 – Plassering lagres som valgfrie felt på Textile
+
+**Dato:** 2026-09-27  
+**Status:** Besluttet
+
+### Beslutning
+
+Den native produktimplementeringen mapper `location.area`, `location.shelf` og `location.container` direkte til de valgfrie CloudKit-feltene `locationArea`, `locationShelf` og `locationContainer` på `Textile`.
+
+### Begrunnelse
+
+Plassering er en 1:1-egenskap ved tekstilet, i motsetning til materiale, farge, bilder og stoffstykker som kan finnes flere ganger per tekstil. Direkte felt gir enklere lesing/lagring og et bedre utgangspunkt for senere filtrering uten en ekstra child-query.
+
+### Konsekvens
+
+- gamle Textile-records uten plassering leses som tom plassering
+- alle tre delene er valgfrie og kan lagres uavhengig
+- tomme felt fjernes fra CloudKit-recorden
+- `QUERYABLE`/`SEARCHABLE` for plassering utsettes til søk/filter implementeres
+- den logiske modellen i `DATAMODELL.md` beholdes uendret

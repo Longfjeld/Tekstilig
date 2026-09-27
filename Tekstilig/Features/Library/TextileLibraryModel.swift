@@ -46,6 +46,9 @@ final class TextileLibraryModel {
         var normalized = textile
         normalized.name = textile.name.trimmingCharacters(in: .whitespacesAndNewlines)
         normalized.category = textile.category.trimmingCharacters(in: .whitespacesAndNewlines)
+        normalized.locationArea = textile.locationArea.trimmingCharacters(in: .whitespacesAndNewlines)
+        normalized.locationShelf = textile.locationShelf.trimmingCharacters(in: .whitespacesAndNewlines)
+        normalized.locationContainer = textile.locationContainer.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !normalized.name.isEmpty else {
             throw TextileLibraryError.nameRequired
@@ -62,7 +65,7 @@ final class TextileLibraryModel {
     }
 
     private func upsert(_ textile: Textile) {
-        if let index = textiles.firstIndex(where: { $0.textileID == textile.textileID }) {
+        if let index = textiles.firstIndex(where: { $0.id == textile.id }) {
             textiles[index] = textile
         } else {
             textiles.append(textile)

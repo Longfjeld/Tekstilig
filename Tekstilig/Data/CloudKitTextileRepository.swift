@@ -29,7 +29,10 @@ final class CloudKitTextileRepository: TextileRepository {
             "category",
             "createdAt",
             "updatedAt",
-            "schemaVersion"
+            "schemaVersion",
+            "locationArea",
+            "locationShelf",
+            "locationContainer"
         ]
 
         var textiles: [Textile] = []
@@ -103,6 +106,28 @@ final class CloudKitTextileRepository: TextileRepository {
         record["updatedAt"] = now as CKRecordValue
         record["schemaVersion"] = NSNumber(value: textile.schemaVersion)
 
+        let locationArea = textile.locationArea.trimmingCharacters(in: .whitespacesAndNewlines)
+        let locationShelf = textile.locationShelf.trimmingCharacters(in: .whitespacesAndNewlines)
+        let locationContainer = textile.locationContainer.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if locationArea.isEmpty {
+            record["locationArea"] = nil
+        } else {
+            record["locationArea"] = locationArea as CKRecordValue
+        }
+
+        if locationShelf.isEmpty {
+            record["locationShelf"] = nil
+        } else {
+            record["locationShelf"] = locationShelf as CKRecordValue
+        }
+
+        if locationContainer.isEmpty {
+            record["locationContainer"] = nil
+        } else {
+            record["locationContainer"] = locationContainer as CKRecordValue
+        }
+
         let savedRecord = try await database.save(record)
         return try Self.textile(from: savedRecord)
     }
@@ -126,6 +151,9 @@ final class CloudKitTextileRepository: TextileRepository {
         let createdAt = (record["createdAt"] as? Date) ?? record.creationDate ?? Date()
         let updatedAt = (record["updatedAt"] as? Date) ?? record.modificationDate ?? createdAt
         let schemaVersion = (record["schemaVersion"] as? NSNumber)?.intValue ?? 1
+        let locationArea = record["locationArea"] as? String ?? ""
+        let locationShelf = record["locationShelf"] as? String ?? ""
+        let locationContainer = record["locationContainer"] as? String ?? ""
 
         return Textile(
             textileID: textileID,
@@ -134,7 +162,10 @@ final class CloudKitTextileRepository: TextileRepository {
             category: category,
             createdAt: createdAt,
             updatedAt: updatedAt,
-            schemaVersion: schemaVersion
+            schemaVersion: schemaVersion,
+            locationArea: locationArea,
+            locationShelf: locationShelf,
+            locationContainer: locationContainer
         )
     }
 }

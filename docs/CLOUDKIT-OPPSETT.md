@@ -559,3 +559,17 @@ Indekser:
 - `recordName` → `QUERYABLE` for administrasjon/testing
 
 Disse endringene opprettes kun i **Development**. Production skal fortsatt ikke deployes før schemaet er gjennomgått samlet.
+
+## Native produktfelt for plassering – devpatch 0005
+
+Plassering lagres direkte på eksisterende `Textile` record type i Development.
+
+Felt:
+
+| Felt | Type | Påkrevd | Indeks nå |
+|:---|:---|:---|:---|
+| `locationArea` | String | Nei | Ingen |
+| `locationShelf` | String | Nei | Ingen |
+| `locationContainer` | String | Nei | Ingen |
+
+Alle tre feltene er valgfrie. Tomme verdier fjernes fra recorden ved lagring. Query/search-indekser opprettes først når søk og filter implementeres.

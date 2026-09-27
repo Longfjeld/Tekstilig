@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TextileEditorView: View {
+struct TextileLocationEditorView: View {
     @Environment(\.dismiss) private var dismiss
 
     let onSave: (Textile) async throws -> Textile
@@ -10,52 +10,48 @@ struct TextileEditorView: View {
     @State private var errorMessage: String?
 
     init(
-        textile: Textile?,
+        textile: Textile,
         onSave: @escaping (Textile) async throws -> Textile
     ) {
         self.onSave = onSave
-        _draft = State(initialValue: textile ?? Textile.newDraft())
+        _draft = State(initialValue: textile)
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Grunnopplysninger") {
-                    TextField("Navn", text: $draft.name)
+                Section("Plassering") {
+                    TextField("Område / rom", text: $draft.locationArea)
+                        .textInputAutocapitalization(.sentences)
 
-                    Picker("Kategori", selection: $draft.category) {
-                        Text("Ikke valgt").tag("")
-                        ForEach(Textile.categoryOptions, id: \.self) { category in
-                            Text(category).tag(category)
-                        }
-                    }
+                    TextField("Hylle", text: $draft.locationShelf)
+                        .textInputAutocapitalization(.sentences)
+
+                    TextField("Beholder / kasse", text: $draft.locationContainer)
+                        .textInputAutocapitalization(.sentences)
                 }
 
                 Section {
-                    Text("Navn og kategori redigeres her. Plassering, materiale, farge, bilder og stoffstykker redigeres i egne seksjoner på tekstildetaljen.")
+                    Text("Alle tre feltene er valgfrie. Eksempel: Arbeidsrom → Hylle 3 → Kasse B.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle(draft.cloudRecordName == nil ? "Nytt tekstil" : "Rediger tekstil")
+            .navigationTitle("Rediger plassering")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Avbryt") {
-                        dismiss()
-                    }
-                    .disabled(isSaving)
+                    Button("Avbryt") { dismiss() }
+                        .disabled(isSaving)
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Lagre") {
-                        save()
-                    }
-                    .disabled(isSaving || draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    Button("Lagre") { save() }
+                        .disabled(isSaving)
                 }
             }
             .interactiveDismissDisabled(isSaving)
             .alert(
-                "Kunne ikke lagre",
+                "Kunne ikke lagre plassering",
                 isPresented: Binding(
                     get: { errorMessage != nil },
                     set: { if !$0 { errorMessage = nil } }

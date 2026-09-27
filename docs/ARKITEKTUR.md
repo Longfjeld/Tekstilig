@@ -501,3 +501,36 @@ Private CloudKit / Development
 Child-records velges fremfor fritekst/parallelle arrays fordi ett tekstil kan ha flere materialer og farger, og fordi hver registrering har flere sammenhørende strukturerte egenskaper. `textileId` må være `QUERYABLE` på begge record-typer for produktets detalj-query. `recordName` gjøres også `QUERYABLE` for forutsigbar inspeksjon i CloudKit Database.
 
 Søk/filtrering på selve `material` og `group` indekseres ikke i dette steget. Søkeindekser fastsettes når faktisk søkeflyt implementeres, slik at Production-schemaet ikke får unødvendige indekser tidlig.
+
+
+## 25. Produktarkitektur for plassering – devpatch 0005
+
+Plassering er en enkelt, valgfri egenskap ved `Textile` og bruker derfor det eksisterende `TextileRepository` i stedet for en egen child-record/repository-kjede.
+
+```text
+TextileDetailView
+    ↓
+TextileLocationSection
+    ↓
+TextileLocationEditorView
+    ↓
+TextileLibraryModel
+    ↓
+CloudKitTextileRepository
+    ↓
+Private CloudKit / Textile
+```
+
+CloudKit-feltene er:
+
+| Felt | Type | Formål |
+|:---|:---|:---|
+| `locationArea` | String, valgfri | Område/rom |
+| `locationShelf` | String, valgfri | Hylle |
+| `locationContainer` | String, valgfri | Beholder/kasse |
+
+Dette følger det logiske `location`-objektet i `DATAMODELL.md`, men unngår en ekstra 1:1-record og ekstra query for hver detaljvisning. Feltene indekseres ikke ennå; søkeindekser fastsettes sammen med faktisk søk/filter-flyt.
+
+### Stabil presentasjon av materiale/farge-editor
+
+Devpatch 0005 samler de tidligere fire separate `.sheet(...)`-presentasjonene for nytt/rediger materiale/farge til én eksplisitt editor-route. Dette reduserer risikoen for at en sheet-presentasjon blir avbrutt når SwiftUI oppdaterer view-hierarkiet samtidig med asynkron CloudKit-state.
