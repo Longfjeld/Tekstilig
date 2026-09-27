@@ -446,7 +446,7 @@ TextileImage-recordName-queryable
 
 ## 22. Bygg devpatch 0003
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Velg **Product → Build**.
 2. Kontroller at build fullføres uten feil.
@@ -457,7 +457,7 @@ Hvis build feiler, stopp her og noter hele første reelle feilmelding før andre
 
 ## 23. Kontroller tom hovedbildetilstand
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Kjør appen i simulatoren som er logget inn på iCloud.
 2. Åpne fanen **Tekstiler**.
@@ -474,7 +474,7 @@ Velg hovedbilde
 
 ## 24. Sørg for at simulatoren har et testbilde
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **Bilder** i simulatoren.
 2. Kontroller at det finnes minst ett ikke-sensitivt testbilde.
@@ -485,7 +485,7 @@ Dette steget tester valg fra Bilder. Direkte kamera er ikke implementert i devpa
 
 ## 25. Lagre første hovedbilde
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Trykk **Velg hovedbilde**.
 2. Velg ett testbilde fra Bilder.
@@ -503,7 +503,7 @@ Bytt hovedbilde
 
 ## 26. Kontroller TextileImage-recorden i CloudKit
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **CloudKit Database → Development → Private Database**.
 2. Velg record type **TextileImage**.
@@ -525,11 +525,11 @@ IMG-
 | `contentType` | bildets MIME-type |
 | `imageAsset` | Asset med bildefil |
 
-6. Noter recordens **Record Name**. Den brukes i neste test.
+6. Noter recordens **Record Name**. Den brukes i neste test: D3BADAD2-0CEA-4D47-A42E-0E7577E8FCAE
 
 ## 27. Erstatt hovedbildet uten å opprette ny hovedbilderecord
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Sørg for at simulatorens Bilder inneholder et annet testbilde enn det som allerede er lagret.
 2. Åpne samme tekstil i Tekstilig.
@@ -546,7 +546,7 @@ Dette validerer at «Bytt hovedbilde» er en oppdatering av samme bildeobjekt, i
 
 ## 28. Kontroller at bilde og Piece lever sammen
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne tekstilet som nå har hovedbilde.
 2. Kontroller at hovedbildet vises.
