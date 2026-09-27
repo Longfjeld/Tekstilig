@@ -847,46 +847,66 @@ Marineblå
 
 ## 40. Bekreft materiale/farge-steget og legg inn devpatch 0005
 
-**✅ TEST 30–39 FULLFØRT · ❗️ AKSJON – DU**
+**✅ FULLFØRT**
 
-Materiale/farge er validert. Før plassering testes skal den observerte editor-presentasjonsfeilen og ny plassering legges inn samlet.
+Test 30–39 er validert, og devpatch 0005 ble lagt inn på `Tekstilig-SwiftUIActualApp0006`.
+
+## 41. Resultat av første regresjonstest for materiale/farge-editor
+
+**⚠️ FEIL FUNNET I DEVPATCH 0005**
+
+1. Appen bygget og startet korrekt.
+2. **Legg til materiale** åpnet editoren.
+3. Editoren forsvant deretter raskt uten brukerhandling.
+4. Plasseringstestene ble derfor stoppet før punkt 42 i den tidligere planen.
+
+Feilen ble sporet til at `.sheet(item:)` fortsatt var forankret i `TextileAttributesSection`, som ligger i en `List` og bygger flere seksjoner gjennom en transparent `Group`.
+
+## 42. Legg inn devpatch 0006 – stabil presentasjonshost
+
+**❗️ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0007.zip`.
 
 1. Lukk Xcode 27.
-2. Ta Git-commit/sikkerhetskopi av gjeldende `Tekstilig-SwiftUIActualApp0006`-tilstand.
-3. Pakk ut `Tekstilig-devpatch-0005.zip`.
+2. Kontroller at siste Git-commit/snapshot tilsvarer `SwiftUIActualApp0007`.
+3. Pakk ut `Tekstilig-devpatch-0006.zip`.
 4. Kopier innholdet over eksisterende Tekstilig-prosjektmappe.
 5. Velg **Erstatt** for eksisterende filer.
-6. Ikke slett andre lokale filer som er ignorert via `.gitignore`.
+6. Ikke slett lokale filer som er ignorert via `.gitignore`.
 7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
-8. Kontroller at disse nye filene vises under `Features/Location`:
+8. Kontroller at disse filene finnes:
 
 ```text
-TextileLocationSection.swift
-TextileLocationEditorView.swift
+Features/Attributes/TextileAttributesSection.swift
+Features/Library/TextileDetailView.swift
 ```
 
-## 41. Bygg og regresjonstest materiale/farge-editor
+Ingen CloudKit-endring skal gjøres i dette punktet.
+
+## 43. Bygg og regresjonstest materiale/farge-editor på nytt
 
 **❗️ AKSJON – DU**
 
 1. Velg simulatoren som vanlig Run Destination.
 2. Kjør **Product → Build**.
-3. Kontroller at build er vellykket uten nye warnings fra devpatch 0005.
+3. Kontroller at build er vellykket uten nye warnings fra devpatch 0006.
 4. Kjør appen.
 5. Åpne et vanlig Textile opprettet av SwiftUI-appen.
 6. Trykk **Legg til materiale**.
-7. La editoren stå åpen i minst 5 sekunder uten å skrive.
+7. La editoren stå åpen i minst 10 sekunder uten å skrive.
 8. Kontroller at editoren **ikke forsvinner av seg selv**.
 9. Trykk **Avbryt**.
 10. Trykk **Legg til farge**.
-11. La editoren stå åpen i minst 5 sekunder.
+11. La editoren stå åpen i minst 10 sekunder uten å skrive.
 12. Kontroller at editoren **ikke forsvinner av seg selv**.
-13. Avbryt.
+13. Trykk **Avbryt**.
 14. Gjenta punkt 6–13 én gang til.
+15. Åpne deretter et eksisterende materiale og en eksisterende farge for redigering, og kontroller at også disse editorene forblir åpne til du selv velger **Avbryt**.
 
-**Stopp her dersom en editor fortsatt forsvinner uten brukerhandling.**
+**Stopp her dersom en editor fortsatt forsvinner uten brukerhandling. Ikke gå videre til plassering før punkt 43 er bestått.**
 
-## 42. Opprett plasseringfeltene i CloudKit Development
+## 44. Opprett plasseringsfeltene i CloudKit Development
 
 **❗️ AKSJON – DU**
 
@@ -898,159 +918,111 @@ Plassering lagres på eksisterende `Textile` record type. Det opprettes ingen ny
 4. Åpne schemaet for record type **Textile**.
 5. Legg til disse tre feltene som **String** dersom de ikke allerede finnes:
 
-```text
-locationArea
-locationShelf
-locationContainer
-```
+| Felt | Type |
+|:---|:---|
+| `locationArea` | String |
+| `locationShelf` | String |
+| `locationContainer` | String |
 
 6. Lagre schemaendringen.
-7. Ikke opprett `QUERYABLE`, `SORTABLE` eller `SEARCHABLE`-indekser på disse feltene ennå.
+7. Kontroller at alle tre feltene vises på `Textile`.
 
-Indekser fastsettes sammen med faktisk søk/filter-flyt.
+Det skal ikke opprettes nye indekser for plassering i dette steget.
 
-## 43. Valider tom plassering
+## 45. Valider tom plassering
 
 **❗️ AKSJON – DU**
 
 1. Kjør appen i simulatoren.
-2. Åpne et vanlig Textile som ikke har plassering.
+2. Åpne et native-opprettet tekstil.
 3. Finn seksjonen **Plassering**.
-4. Kontroller at den viser:
+4. Kontroller at et tekstil uten plasseringsdata viser en tom/ikke registrert tilstand.
+5. Kontroller at handlingen for å redigere plassering er tilgjengelig.
 
-```text
-Ingen plassering registrert
-```
-
-5. Kontroller at knappen **Legg til plassering** vises.
-
-## 44. Lagre komplett plassering
+## 46. Lagre komplett plassering
 
 **❗️ AKSJON – DU**
 
-1. Trykk **Legg til plassering**.
-2. Fyll inn:
+1. Åpne **Rediger plassering**.
+2. Sett eksempelvis:
 
 ```text
-Område / rom: Arbeidsrom
-Hylle: Hylle 3
+Område / rom: Syrom
+Hylle: Hylle 2
 Beholder / kasse: Kasse B
 ```
 
-3. Trykk **Lagre**.
+3. Lagre.
 4. Kontroller at editoren lukkes.
-5. Kontroller at Plassering-seksjonen viser alle tre verdiene.
-6. Gå tilbake til tekstilbiblioteket.
-7. Åpne samme tekstil igjen.
-8. Kontroller at alle tre verdiene lastes tilbake fra CloudKit.
+5. Kontroller at detaljvisningen viser alle tre verdiene.
+6. Gå tilbake til biblioteket og åpne samme tekstil igjen.
+7. Kontroller at plasseringen fortsatt vises.
 
-## 45. Kontroller plassering i CloudKit
+## 47. Kontroller plassering i CloudKit
 
 **❗️ AKSJON – DU**
 
 1. Åpne **CloudKit Database → Development → Private Database → Textile**.
-2. Finn samme Textile ved å kontrollere Record Name / `textileId`.
+2. Finn samme Textile-record.
 3. Kontroller:
 
-| Felt | Forventet verdi |
+| Felt | Forventet |
 |:---|:---|
-| `locationArea` | `Arbeidsrom` |
-| `locationShelf` | `Hylle 3` |
+| `locationArea` | `Syrom` |
+| `locationShelf` | `Hylle 2` |
 | `locationContainer` | `Kasse B` |
 
-4. Kontroller at eksisterende navn, kategori og øvrige Textile-felt fortsatt er intakte.
+4. Kontroller at samme Textile-record er oppdatert og at ingen ny Textile-record er opprettet.
 
-## 46. Valider delvis plassering og redigering
+## 48. Valider delvis plassering og redigering
 
 **❗️ AKSJON – DU**
 
-1. Gå tilbake til samme tekstil i appen.
-2. Trykk **Rediger plassering**.
-3. Tøm **Hylle** og **Beholder / kasse**.
-4. Endre **Område / rom** til:
+1. Åpne **Rediger plassering** igjen.
+2. Tøm **Hylle**.
+3. Endre **Beholder / kasse** til `Kasse C`.
+4. Behold **Område / rom** som `Syrom`.
+5. Lagre.
+6. Kontroller at detaljvisningen viser område og beholder, men ikke en falsk/tom hylleverdi.
+7. Kontroller i CloudKit at `locationShelf` er fjernet/tomt og at øvrige verdier er korrekte.
 
-```text
-Syrom
-```
-
-5. Trykk **Lagre**.
-6. Kontroller at Plassering-seksjonen bare viser **Syrom**.
-7. Åpne samme Textile i CloudKit.
-8. Kontroller at `locationArea = Syrom`.
-9. Kontroller at tomme `locationShelf` og `locationContainer` ikke lenger har lagrede verdier.
-
-## 47. Valider at plassering kan fjernes helt
+## 49. Valider at plassering kan fjernes helt
 
 **❗️ AKSJON – DU**
 
 1. Åpne **Rediger plassering**.
 2. Tøm alle tre feltene.
-3. Trykk **Lagre**.
-4. Kontroller at seksjonen igjen viser **Ingen plassering registrert**.
-5. Gå ut av detaljvisningen og åpne tekstilet på nytt.
-6. Kontroller at plasseringen fortsatt er tom.
-7. Kontroller i CloudKit at de tre plasseringfeltene ikke inneholder gamle verdier.
+3. Lagre.
+4. Kontroller at detaljvisningen igjen viser tom/ikke registrert plassering.
+5. Kontroller i CloudKit at de valgfrie plasseringsfeltene ikke lenger inneholder de gamle verdiene.
 
-## 48. Kontroller at eksisterende data lever sammen med plassering
+## 50. Kontroller at eksisterende data lever sammen med plassering
 
 **❗️ AKSJON – DU**
 
-1. Legg inn plassering på nytt, for eksempel `Arbeidsrom / Hylle 3 / Kasse B`.
+1. Registrer eller behold en gyldig plassering på testtekstilet.
 2. Kontroller at hovedbildet fortsatt vises.
-3. Kontroller at materialer og farger fortsatt vises.
-4. Kontroller at eksisterende Piece-data fortsatt vises.
-5. Rediger tekstilets navn via vanlig **Rediger** og lagre.
-6. Kontroller at plasseringen fortsatt er bevart etter navneendringen.
-7. Åpne og avbryt materiale- og fargeeditorene én gang til.
-8. Kontroller at ingen av dem forsvinner automatisk.
+3. Kontroller at eksisterende materialer fortsatt vises.
+4. Kontroller at eksisterende farger fortsatt vises.
+5. Kontroller at eksisterende stoffstykker fortsatt vises.
+6. Åpne vanlig **Rediger** for selve tekstilet.
+7. Endre navn eller kategori og lagre.
+8. Kontroller at plassering, bilde, materialer, farger og stoffstykker fortsatt er bevart.
+9. Gå ut og inn av detaljvisningen én gang til og kontroller samme resultat.
 
-## 49. Stoppunkt for plassering
+## 51. Stoppunkt for plassering
 
-Devpatch 0005 er godkjent når alle disse er bekreftet:
+**❗️ AKSJON – DU**
 
-- appen bygger uten nye warnings/feil fra patchen
-- materiale- og fargeeditoren forblir stabilt presentert
-- `locationArea`, `locationShelf` og `locationContainer` finnes på Textile i Development
-- full plassering kan lagres og leses tilbake
-- enkeltfelt kan være tomme
-- alle plasseringfelt kan fjernes igjen
-- eksisterende bilde, materiale, farge og Piece-data beholdes
-- vanlig redigering av Textile overskriver ikke plassering
+Devpatch 0005 + 0006 og plassering er godkjent når alle disse er bekreftet:
 
-**Ikke gå videre til kamera/bildeoptimalisering før test 40–48 er validert.**
+- materiale-/fargeeditor forblir åpen til bruker avslutter den
+- appen bygger uten nye warnings fra rettingen
+- tom plassering fungerer på eldre Textile-records
+- komplett plassering kan lagres og leses tilbake
+- delvis plassering fungerer
+- plassering kan tømmes igjen
+- samme Textile-record oppdateres
+- bilde, materialer, farger og Piece-data bevares gjennom Textile-redigering
 
-## 50. Neste planlagte implementering
-
-**⏭️ SENERE**
-
-Når plassering er validert fortsetter produktutviklingen i denne rekkefølgen:
-
-1. kamera og bildeoptimalisering / flere bilder
-2. øvrige tekstilegenskaper og vedlikehold
-3. søk og filtre når tilstrekkelig strukturerte produktdata er på plass
-
-`quantity`, Piece-notat, splitting av rester og egen «registrer bruk»-flyt vurderes som senere utvidelser av Piece-modellen. Production deployes ikke før produksjonsmodellen og schemaet er gjennomgått samlet.
-
-## Feilretting: eldre PoC-records med samme `textileId`
-
-Under første produktvalidering ble det avdekket at eldre PWA-PoC-data kan inneholde flere separate CloudKit-records med samme logiske `textileId` (for eksempel `T0001`). PWA-PoC-en brukte `T0001` som standardverdi og opprettet en ny CloudKit-record hver gang **Opprett Textile** ble kjørt.
-
-Dette er to separate forhold:
-
-1. CloudKit-recordene er reelt forskjellige fordi de har ulike `recordName`.
-2. Første SwiftUI-produktversjon brukte `textileId` som SwiftUI-identitet og detaljoppslagsnøkkel. Når flere eldre records hadde samme `textileId`, kunne flere rader derfor peke til samme detaljrecord.
-
-Fra devpatch 0001 brukes CloudKit `recordName` som SwiftUI/storage-identitet for lagrede records. `textileId` beholdes som permanent logisk Tekstilig-ID og endres ikke av denne rettingen.
-
-### Rydding av gamle testdata
-
-Etter at devpatch 0001 er installert:
-
-1. Åpne hver av de tilsynelatende like radene i appen.
-2. Kontroller feltet **Record name**. Radene skal nå vise sin faktiske CloudKit-record.
-3. Åpne **CloudKit Database → Development → Private Database → Textile**.
-4. Identifiser gamle PoC-records du ikke vil beholde.
-5. Slett bare de gamle testrecordene du har bekreftet som overflødige.
-6. Oppdater tekstilbiblioteket i appen.
-
-Nye native tekstiler får `textileId` i formatet `T-<UUID>` og skal derfor ikke få samme logiske ID.
+**Ikke gå videre til neste produktområde før punkt 51 er bekreftet.**

@@ -745,3 +745,24 @@ Plassering er en 1:1-egenskap ved tekstilet, i motsetning til materiale, farge, 
 - tomme felt fjernes fra CloudKit-recorden
 - `QUERYABLE`/`SEARCHABLE` for plassering utsettes til søk/filter implementeres
 - den logiske modellen i `DATAMODELL.md` beholdes uendret
+
+
+## B-042 – Modal editor for materiale/farge eies av TextileDetailView
+
+**Dato:** 2026-09-27  
+**Status:** Besluttet
+
+### Beslutning
+
+Presentasjonstilstanden for nytt/rediger materiale og farge skal eies av `TextileDetailView`, ikke av `TextileAttributesSection`. `TextileAttributesSection` skal motta modell og callbacks fra forelderen og skal ikke selv være vert for `.sheet(...)`.
+
+### Begrunnelse
+
+Test 41 viste at én samlet sheet-route i `TextileAttributesSection` ikke var tilstrekkelig. Seksjonen ligger i en `List` og bygger to `Section`-noder via en transparent `Group`; ved asynkrone state-oppdateringer kan denne delen av view-hierarkiet rekonstrueres og presentasjonen bli avbrutt. `TextileDetailView` er den stabile navigasjons-/detaljroten for samme tekstil og er derfor riktig eier av modal presentasjon.
+
+### Konsekvens
+
+- `TextileAttributesModel` eies av `TextileDetailView` for samme detaljsides levetid.
+- `TextileAttributesSection` beholder lasting, visning og sletting, men sender add/edit-handlinger opp til forelderen.
+- én `AttributeEditorRoute` på `TextileDetailView` velger riktig materiale-/fargeeditor.
+- ingen CloudKit-schemaendring følger av denne rettingen.

@@ -29,7 +29,7 @@ PoC-resultatene er dokumentert i `docs/SWIFTUI-OPPSTART.md`.
 
 ## Nåværende appfase
 
-Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29 og materialer/farger gjennom test 30–39. Devpatch 0005 starter neste produktsteg: fysisk plassering i ordinær app-UI, samtidig som en sporadisk sheet-presentasjonsfeil for materiale/farge rettes. Arkitekturen er nå:
+Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29 og materialer/farger gjennom test 30–39. Devpatch 0006 retter den gjenstående sheet-presentasjonsfeilen for materiale/farge før plasseringstesten fortsetter. Selve plassering-funksjonen fra devpatch 0005 beholdes uendret. Arkitekturen er nå:
 
 ```text
 SwiftUI-visning

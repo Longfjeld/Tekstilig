@@ -493,3 +493,24 @@ Ingen nye indekser kreves i dette steget.
 - øvrige tekstilegenskaper og vedlikehold
 - Production deploy
 - PWA-endringer
+
+
+## Devpatch 0006 – 2026-09-27
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0007.zip`. Test 40 var vellykket, mens test 41 viste at materiale-/fargeeditoren fortsatt kunne åpnes og deretter forsvinne straks.
+
+### Rettet
+
+- `.sheet(item:)` for materiale/farge er flyttet fra `TextileAttributesSection` til den stabile forelderen `TextileDetailView`.
+- `TextileAttributesModel` eies nå av `TextileDetailView`, slik at samme modellinstans brukes av seksjonen og editorens save-callbacks.
+- `TextileAttributesSection` sender add/edit-handlinger opp via callbacks og er ikke lenger modal presentasjonshost.
+
+### Uendret
+
+- plassering-funksjonen fra devpatch 0005 beholdes uendret
+- CloudKit-schema og indekser endres ikke
+- PWA-koden endres ikke
+
+### Testrekkefølge
+
+Devpatch 0006 skal først bekrefte at materiale- og fargeeditorene forblir åpne. Deretter fortsetter de utsatte plasseringstestene.

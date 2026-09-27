@@ -533,4 +533,6 @@ Dette følger det logiske `location`-objektet i `DATAMODELL.md`, men unngår en 
 
 ### Stabil presentasjon av materiale/farge-editor
 
-Devpatch 0005 samler de tidligere fire separate `.sheet(...)`-presentasjonene for nytt/rediger materiale/farge til én eksplisitt editor-route. Dette reduserer risikoen for at en sheet-presentasjon blir avbrutt når SwiftUI oppdaterer view-hierarkiet samtidig med asynkron CloudKit-state.
+Devpatch 0005 samlet de tidligere fire separate `.sheet(...)`-presentasjonene for nytt/rediger materiale/farge til én eksplisitt editor-route, men test 41 viste at editoren fortsatt kunne lukkes straks etter presentasjon. Årsaken var at selve `.sheet`-modifikatoren fortsatt lå på `TextileAttributesSection`, som bygger innholdet sitt gjennom en transparent `Group` med flere `Section`-noder inne i en `List`. Denne view-strukturen kan rekonstrueres når asynkron CloudKit-state endres.
+
+Devpatch 0006 flytter derfor både `TextileAttributesModel`-eierskap og `AttributeEditorRoute` til den stabile forelderen `TextileDetailView`. `TextileAttributesSection` er nå bare innhold/handlinger og ber forelderen om å åpne editoren. Selve `.sheet(item:)` er forankret på `List`-nivået i `TextileDetailView`, slik at presentasjonshosten består når attributtseksjonene oppdateres.

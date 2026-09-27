@@ -9,6 +9,8 @@ struct TextileDetailView: View {
     @State private var editingPiece: Piece?
     @State private var piecePendingDeletion: Piece?
     @State private var pieceModel = PieceInventoryModel()
+    @State private var attributesModel = TextileAttributesModel()
+    @State private var attributeEditorRoute: AttributeEditorRoute?
 
     private var textile: Textile? {
         model.textile(withIdentity: textileIdentity)
@@ -28,7 +30,22 @@ struct TextileDetailView: View {
 
                     TextileMainImageSection(textile: textile)
 
-                    TextileAttributesSection(textile: textile)
+                    TextileAttributesSection(
+                        textile: textile,
+                        model: attributesModel,
+                        onAddMaterial: {
+                            attributeEditorRoute = .newMaterial
+                        },
+                        onEditMaterial: { material in
+                            attributeEditorRoute = .editMaterial(material)
+                        },
+                        onAddColor: {
+                            attributeEditorRoute = .newColor
+                        },
+                        onEditColor: { color in
+                            attributeEditorRoute = .editColor(color)
+                        }
+                    )
 
                     TextileLocationSection(textile: textile, model: model)
 
@@ -116,6 +133,26 @@ struct TextileDetailView: View {
                         try await model.save(candidate)
                     }
                 }
+                .sheet(item: $attributeEditorRoute) { route in
+                    switch route {
+                    case .newMaterial:
+                        TextileMaterialEditorView(material: nil, textileID: textile.textileID) { candidate in
+                            try await attributesModel.saveMaterial(candidate)
+                        }
+                    case .editMaterial(let material):
+                        TextileMaterialEditorView(material: material, textileID: textile.textileID) { candidate in
+                            try await attributesModel.saveMaterial(candidate)
+                        }
+                    case .newColor:
+                        TextileColorEditorView(color: nil, textileID: textile.textileID) { candidate in
+                            try await attributesModel.saveColor(candidate)
+                        }
+                    case .editColor(let color):
+                        TextileColorEditorView(color: color, textileID: textile.textileID) { candidate in
+                            try await attributesModel.saveColor(candidate)
+                        }
+                    }
+                }
                 .sheet(isPresented: $showNewPiece) {
                     PieceEditorView(piece: nil, textileID: textile.textileID) { candidate in
                         try await pieceModel.save(candidate)
@@ -171,6 +208,26 @@ struct TextileDetailView: View {
                 pieceModel.errorMessage = error.localizedDescription
                 piecePendingDeletion = nil
             }
+        }
+    }
+}
+
+private enum AttributeEditorRoute: Identifiable {
+    case newMaterial
+    case editMaterial(TextileMaterial)
+    case newColor
+    case editColor(TextileColor)
+
+    var id: String {
+        switch self {
+        case .newMaterial:
+            return "new-material"
+        case .editMaterial(let material):
+            return "edit-material-\(material.id)"
+        case .newColor:
+            return "new-color"
+        case .editColor(let color):
+            return "edit-color-\(color.id)"
         }
     }
 }
