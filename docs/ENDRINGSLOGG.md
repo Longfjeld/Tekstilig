@@ -283,3 +283,54 @@ Testen:
 - lokal cache/synkroniseringslag
 - Production-deploy
 - PWA-endringer
+
+## Kodeleveranse 0006 – 2026-09-26
+
+Den tekniske native CloudKit-PoC-en er fullført. Leveransen starter første faktiske produktarkitektur og reelle brukerflyt i SwiftUI.
+
+### Opprettet
+
+- `Tekstilig/Domain/Textile.swift` – første faktiske Swift-domenemodell
+- `Tekstilig/Data/TextileRepository.swift` – lagringsgrensesnitt for Textile
+- `Tekstilig/Data/CloudKitTextileRepository.swift` – CloudKit-implementasjon med query, mapping og save/update
+- `Tekstilig/Features/Library/TextileLibraryModel.swift` – feature state og lagringskoordinering
+- `Tekstilig/Features/Library/TextileLibraryView.swift` – første reelle tekstilbibliotek
+- `Tekstilig/Features/Library/TextileDetailView.swift` – detaljvisning
+- `Tekstilig/Features/Library/TextileEditorView.swift` – opprett/rediger navn og kategori
+- `Tekstilig/Diagnostics/DeveloperDiagnosticsView.swift` – PoC-flaten flyttet ut av produktets hovedflyt
+- `docs/SWIFTUI-IMPLEMENTERING.md` – ny sekvensiell veiledning for produktfasen
+
+### Endret
+
+- `Tekstilig/ContentView.swift` – produkt-UI er nå hovedflate; diagnostikk er egen Debug-fane
+- `README.md` – PoC markert fullført og produktfase aktiv
+- `docs/SWIFTUI-OPPSTART.md` – punkt 8 og 9 dokumentert fullført og teknisk PoC lukket
+- `docs/ARKITEKTUR.md` – repository-arkitektur og første produktstykke dokumentert
+- `docs/DATAMODELL.md` – native implementeringsstatus og permanent ID-strategi presisert
+- `docs/UX-FLYTER.md` – første implementerte brukerflyt markert
+- `docs/BESLUTNINGSLOGG.md` – B-034, B-035 og B-036
+- `docs/README.md` – aktiv veiledning flyttet til `SWIFTUI-IMPLEMENTERING.md`
+- `docs/ENDRINGSLOGG.md` – denne leveransen
+
+### Første produktflyt
+
+```text
+Tekstilbibliotek
+    -> tekstildetalj
+    -> opprett/rediger Textile
+    -> TextileRepository
+    -> CloudKitTextileRepository
+    -> privat Development-database
+```
+
+### Bevisst ikke implementert
+
+- `Piece` i produkt-UI
+- bilder i produkt-UI
+- full Textile-schemautvidelse
+- søk og filtre
+- lokal cache/offline
+- sletting
+- Production-deploy
+- PWA-endringer
+

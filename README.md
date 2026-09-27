@@ -1,10 +1,10 @@
 # Tekstilig
 
-Tekstilig er i en tidlig utviklingsfase. Målet er en privat tekstiloversikt for registrering, søk og filtrering av tekstiler til syprosjekter.
+Tekstilig er i aktiv native utvikling. Målet er en privat tekstiloversikt for registrering, søk og filtrering av tekstiler til syprosjekter.
 
 ## Aktivt utviklingsspor
 
-CloudKit er valgt som primærlager. Videre klientutvikling skjer nå **utelukkende i SwiftUI med native CloudKit** mot containeren:
+CloudKit er primærlager. Videre klientutvikling skjer **utelukkende i SwiftUI med native CloudKit** mot containeren:
 
 ```text
 iCloud.com.longfjeld.tekstilig
@@ -12,22 +12,47 @@ iCloud.com.longfjeld.tekstilig
 
 Den tidligere PWA-en er frosset som teknisk PoC/referanse. PWA-filene beholdes foreløpig i repositoryet, men skal ikke videreutvikles mens SwiftUI-sporet bygges ut.
 
-App Store-distribusjon er et mål for en senere full native versjon, men prosjektet er ikke på distribusjonsstadiet ennå.
+## Teknisk PoC er fullført
 
-## Validert så langt
-
-Native SwiftUI/CloudKit er nå validert på fysisk Apple-enhet for:
+Følgende er validert native i Development:
 
 - signering og CloudKit-entitlements
 - iCloud account status
-- privat Development-database
-- oppretting/lesing av fast `Textile`-testrecord
-- `TextileImage` med native `CKAsset`, inkludert byte-for-byte tur/retur av bildefilen
+- privat CloudKit-database
+- `Textile`
+- `TextileImage` med native `CKAsset`
+- byte-for-byte tur/retur av bildefil
+- tilgang fra separat Apple-klientinstans via iOS-simulator med samme iCloud-konto
+- `Piece`, inkludert dimensjoner og reservasjon
 
-Kryssenhetstesten i punkt 8 er utsatt til en annen fysisk Apple-enhet er tilgjengelig. Den blokkerer ikke den videre valideringen av `Piece`.
+PoC-resultatene er dokumentert i `docs/SWIFTUI-OPPSTART.md`.
 
-## Neste steg
+## Nåværende appfase
 
-Punkt 1–7 i `docs/SWIFTUI-OPPSTART.md` er fullført. Punkt 8 er utsatt. Kodeleveranse 0005 implementerer punkt 9: valider `Piece` native mot samme private Development-database, inkludert kobling til `Textile`, dimensjoner og reservasjon.
+Kodeleveranse 0006 starter den faktiske appimplementeringen. Første vertikale produktstykke er:
+
+```text
+SwiftUI-visning
+    ↓
+TextileLibraryModel
+    ↓
+TextileRepository
+    ↓
+CloudKitTextileRepository
+    ↓
+Private CloudKit / Development
+```
+
+Første reelle brukerflyt er:
+
+```text
+Tekstilbibliotek → Tekstildetalj → Nytt/rediger tekstil
+```
+
+Denne første produktflyten lagrer foreløpig bare den validerte kjernen av `Textile`: navn, kategori, permanente ID-er og metadata. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
+
+## Videre test
+
+Følg `docs/SWIFTUI-IMPLEMENTERING.md` i nummerrekkefølge.
 
 Production skal ikke deployes ennå.

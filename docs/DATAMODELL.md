@@ -453,3 +453,21 @@ Datamodellen skal ikke føre til et tungt registreringsskjema.
   ]
 }
 ```
+
+## 19. Native implementeringsstatus
+
+Fra kodeleveranse 0006 er `Textile` introdusert som faktisk Swift-domenetype. Dette endrer ikke den logiske modellen over.
+
+Første implementerte persistensutsnitt er bevisst begrenset til:
+
+- `id` / `textileId`
+- `name`
+- `category`
+- `createdAt`
+- `updatedAt`
+- `schemaVersion`
+
+Permanent ID for nye native records genereres som `T-<UUID>`. Eksempelet `T0042` i datamodellen beskriver fortsatt en mulig lesbar ID-form, men er ikke et krav til formatet. Viktigste krav er stabil og unik permanent Tekstilig-ID som er uavhengig av CloudKit Record Name.
+
+`Piece`, bilder, materialer, farger og øvrige felt kobles på domenet i senere vertikale implementeringssteg.
+

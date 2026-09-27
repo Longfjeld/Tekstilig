@@ -348,6 +348,61 @@ Neste tekniske validering er `TextileImage.imageAsset` med native `CKAsset`. PWA
 
 ## 19. Native Piece-validering – 2026-09-26
 
-Etter fullført native `Textile`- og `TextileImage`/`CKAsset`-validering går teknisk PoC videre med `Piece`. Kryssenhetstesten er midlertidig utsatt fordi en annen fysisk Apple-enhet ikke er tilgjengelig; dette blokkerer ikke valideringen av record-type og felter på samme fysiske klient.
+Etter fullført native `Textile`- og `TextileImage`/`CKAsset`-validering gikk teknisk PoC videre med `Piece`. På dette tidspunktet var kryssenhetstesten midlertidig utsatt. `Piece` ble deretter validert på fysisk klient, og separat klienttilgang ble senere validert fra iOS-simulator som dokumentert i seksjon 20 og B-034.
 
 PWA-koden forblir frosset og endres ikke.
+
+## 20. Native CloudKit-PoC fullført – 2026-09-26
+
+Den tekniske native PoC-en er avsluttet etter vellykket validering av `Textile`, `TextileImage`/`CKAsset`, `Piece` og tilgang fra en separat iOS-simulator med samme iCloud-konto.
+
+PoC-diagnostikken beholdes foreløpig, men er ikke lenger appens hovedarkitektur.
+
+## 21. Produktarkitektur fra kodeleveranse 0006
+
+Første reelle appstruktur skiller UI, applikasjonstilstand, domenemodell og CloudKit-tilgang:
+
+```text
+SwiftUI Views
+    |
+    v
+TextileLibraryModel
+    |
+    v
+TextileRepository
+    |
+    v
+CloudKitTextileRepository
+    |
+    v
+Private CloudKit / Development
+```
+
+Ansvarsdeling:
+
+| Lag | Ansvar |
+|:---|:---|
+| `Domain` | Swift-typer som beskriver Tekstilig-domenet |
+| `Data` | Repository-grensesnitt og CloudKit-mapping |
+| `Features` | Brukerflyter, visninger og feature-spesifikk tilstand |
+| `Diagnostics` | Utviklingsverktøy fra teknisk PoC |
+
+`ContentView` er nå kun appens rot. I Debug-build viser den produktflyten og en separat utviklingsfane. I Release-build skal diagnostikkfanen ikke kompileres inn i hovedgrensesnittet.
+
+### Første produktstykke
+
+Kodeleveranse 0006 implementerer bare den allerede validerte `Textile`-kjernen:
+
+- `textileId`
+- `name`
+- `category`
+- `createdAt`
+- `updatedAt`
+- `schemaVersion`
+
+Dette er en bevisst vertikal implementering, ikke en reduksjon av den logiske datamodellen. Flere felt og record-typer kobles på etter at liste → detalj → opprett/rediger er validert.
+
+### CloudKit-oppdatering
+
+Ved redigering henter repository-laget eksisterende `CKRecord` før lagring. Dermed beholdes CloudKit-systemfelter og gjeldende record change tag. Nye records får en permanent Tekstilig-ID med prefikset `T-` og UUID. Record Name behandles fortsatt som lagringsmetadata og ikke som domenets permanente ID.
+

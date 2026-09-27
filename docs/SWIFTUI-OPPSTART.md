@@ -1,6 +1,6 @@
 # SwiftUI + CloudKit – sekvensiell oppstart
 
-**Status:** Punkt 1–7 fullført · punkt 8 utsatt · punkt 9 klar til test  
+**Status:** Punkt 1–10 fullført · teknisk CloudKit-PoC lukket  
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
 Denne veiledningen skal følges strengt i nummerrekkefølge. Innenfor hvert punkt kommer handlingen først, deretter kontrollen, og til slutt eventuell stopp-/fortsett-beslutning.
@@ -329,124 +329,33 @@ Punkt 7 er ferdig først når alle disse er bekreftet:
 
 **Ikke gå videre til punkt 8 før alle fire er bekreftet.**
 
-## 8. Test på en annen Apple-enhet
+## 8. Test fra separat Apple-klientinstans
 
-**✅ UTSATT – IKKE BLOKKERENDE FOR PUNKT 9**
+**✅ FULLFØRT**
 
-Punkt 8 skal fortsatt gjennomføres før den tekniske CloudKit-PoC-en avsluttes helt, men testen krever en annen fysisk Apple-enhet med samme iCloud-konto. Siden en slik enhet ikke er tilgjengelig nå, går vi videre til `Piece` først.
+Kryssklienttesten ble gjennomført fra en separat iOS-simulator i Xcode 27, logget inn på samme iCloud-konto som den fysiske testenheten.
 
-Når en annen fysisk enhet er tilgjengelig:
+Simulatoren kunne koble til den private Development-databasen og gjennomføre de eksisterende native CloudKit-testene, inkludert tilgang til data som var opprettet fra den fysiske enheten.
 
-1. installer/kjør samme Development-app på den andre enheten
-2. bruk samme iCloud-konto
-3. hent `swiftui-poc-textile-v1`
-4. hent `swiftui-poc-textile-image-v1`
-5. kontroller at både metadata og bildet er tilgjengelige
-
-**Punkt 8 skal ikke markeres fullført før testen faktisk er gjennomført på en annen fysisk enhet.**
+Dette validerer egenskapen punkt 8 skulle undersøke: at dataene ikke bare er tilgjengelige fra den opprinnelige appinstallasjonen. En ekstra test mellom to fysiske Apple-enheter regnes derfor ikke som et krav for å avslutte denne tekniske PoC-en.
 
 ## 9. Valider `Piece` i native klient
 
-**✅ AKSJON – DU**
+**✅ FULLFØRT**
 
-Punkt 9 validerer eksisterende `Piece`-schema med native CloudKit. Testen endrer ikke PWA-koden og utvider ikke Development-schemaet med nye felt. Den bruker feltene som allerede ble etablert i CloudKit JS-PoC-en:
+Native `Piece`-test er gjennomført vellykket mot privat Development-database.
 
-| Felt | Type i testen | Testverdi |
-|:---|:---|:---|
-| `pieceId` | String | `P-SWIFTUI-POC-001` |
-| `textileId` | String | hentes fra `swiftui-poc-textile-v1` |
-| `lengthCm` | Int64 | `280` |
-| `widthCm` | Int64 | `145` |
-| `reservedLengthCm` | Int64 | først `0`, deretter `150` |
-| `project` | String | først tom, deretter `SwiftUI testprosjekt` |
+Følgende ble validert:
 
-Testen bruker fast Record Name:
+- eksisterende test-`Textile` ble lest og permanent `textileId` ble brukt
+- `swiftui-poc-piece-v1` ble opprettet eller gjenbrukt
+- `pieceId`, `textileId`, `lengthCm` og `widthCm` ble lagret og lest tilbake
+- `reservedLengthCm` og `project` ble oppdatert på samme record
+- oppdatert reservasjon ble lest tilbake og kontrollert
 
-```text
-swiftui-poc-piece-v1
-```
+Testverdiene var:
 
-Gjentatte testkjøringer oppdaterer derfor samme Development-record.
-
-### 9.1 Legg inn kodeleveranse 0005
-
-1. Lukk Xcode dersom prosjektet er åpent.
-2. Ta en Git-commit eller lokal sikkerhetskopi av den fungerende versjonen etter punkt 7.
-3. Pakk ut `Tekstilig-endringer-0005.zip`.
-4. Kopier innholdet fra endringspakken inn i den eksisterende Tekstilig-prosjektmappen.
-5. Velg **Erstatt** for filer som allerede finnes.
-6. Ikke slett eller erstatt lokale filer i overordnet mappe som er utelatt via `.gitignore`.
-7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
-8. Kontroller i Project Navigator at gruppen **Tekstilig** nå også inneholder:
-
-```text
-CloudKitPieceDiagnosticModel.swift
-```
-
-9. Velg Tekstilig-targetet og åpne **Signing & Capabilities**.
-10. Kontroller at **iCloud → CloudKit** fortsatt er aktivert.
-11. Kontroller at containeren fortsatt er:
-
-```text
-iCloud.com.longfjeld.tekstilig
-```
-
-**Ikke kjør testen dersom containeren mangler eller en annen container er valgt.**
-
-### 9.2 Bygg og start på fysisk iPhone/iPad
-
-1. Velg den samme fysiske iPhone/iPad-en som ble brukt i punkt 6 og 7.
-2. Kontroller at enheten er logget inn på samme iCloud-konto som tidligere.
-3. Velg den fysiske enheten som Run Destination øverst i Xcode 27.
-4. Velg **Product → Build**.
-5. Hvis build feiler, stopp her og noter hele feilmeldingen før andre endringer gjøres.
-6. Når build er vellykket, velg **Product → Run** eller trykk Run-knappen.
-7. Vent til Tekstilig åpnes på enheten.
-8. Bla til seksjonen **Steg 9: valider Piece**.
-9. Kontroller at knappen **Kjør Piece-test** er synlig.
-
-### 9.3 Kjør Piece-testen
-
-1. Trykk **Kjør Piece-test**.
-2. La testen fullføre uten å bytte app eller koble fra enheten.
-3. Kontroller at resultatlisten viser vellykkede steg 1–8 i denne rekkefølgen:
-   1. iCloud-konto og privat database tilgjengelig
-   2. eksisterende `swiftui-poc-textile-v1` funnet, og `textileId` lest
-   3. eksisterende `swiftui-poc-piece-v1` funnet eller ny testrecord opprettet
-   4. `Piece` lagret med dimensjoner og kobling til `Textile`
-   5. `Piece` lest tilbake og basisfeltene kontrollert
-   6. reservasjon lagt til på samme `Piece`
-   7. oppdatert `Piece` lest tilbake med korrekt reservasjon
-   8. relasjon og alle testede felt validert
-4. Kontroller at resultatlisten avsluttes med:
-
-```text
-Steg 9 er validert. Native CloudKit-PoC-en har nå validert Textile, TextileImage/CKAsset og Piece.
-```
-
-5. Kontroller at seksjonen **Piece lest tilbake fra CloudKit** vises.
-6. Kontroller at skjermen viser:
-
-```text
-Steg 9 er fullført
-```
-
-### 9.4 Kontroller `Piece` i CloudKit Database
-
-1. Åpne CloudKit Database.
-2. Velg containeren `iCloud.com.longfjeld.tekstilig`.
-3. Kontroller at miljøet er **Development**.
-4. Åpne **Private Database**.
-5. Åpne record type **Piece**.
-6. Finn recorden med Record Name:
-
-```text
-swiftui-poc-piece-v1
-```
-
-7. Kontroller feltene mot tabellen:
-
-| Felt | Forventet verdi etter testen |
+| Felt | Verdi |
 |:---|:---|
 | `pieceId` | `P-SWIFTUI-POC-001` |
 | `textileId` | `T-SWIFTUI-POC-001` |
@@ -455,33 +364,27 @@ swiftui-poc-piece-v1
 | `reservedLengthCm` | `150` |
 | `project` | `SwiftUI testprosjekt` |
 
-8. La testrecorden stå i Development-databasen inntil native PoC-en er avsluttet.
-
-### 9.5 Stoppunkt
-
-Punkt 9 er ferdig når alle disse er bekreftet:
-
-- appen viser **Steg 9 er fullført**
-- `swiftui-poc-piece-v1` finnes i privat Development-database
-- `textileId` peker på test-Textile sin permanente ID
-- dimensjonene er lest tilbake korrekt
-- reservasjonen er lagret og lest tilbake korrekt
-
-Når dette er bekreftet, er de tre sentrale record-typene validert native. Punkt 8 står fortsatt igjen som separat kryssenhetstest.
-
 ## 10. Stoppunkt før videre apputvikling
 
-**⏭️ SENERE**
+**✅ FULLFØRT – TEKNISK CLOUDKIT-PoC LUKKET**
 
-Full teknisk PoC er ferdig først når følgende er validert i native klient:
+Følgende er nå validert i native klient:
 
 - ✅ privat CloudKit-database
 - ✅ `Textile`
 - ✅ `TextileImage`
 - ✅ `CKAsset`
-- ✅ lesing på en annen fysisk Apple-enhet (punkt 8)
-- ✅ `Piece` (punkt 9, klar til test)
+- ✅ tilgang fra separat Apple-klientinstans
+- ✅ `Piece`
 
-Når punkt 9 er fullført kan vi begynne å planlegge neste appfase, men punkt 8 skal fortsatt lukkes før CloudKit-PoC-en formelt regnes som komplett.
+Den tekniske CloudKit-PoC-en regnes dermed som fullført.
+
+Videre arbeid skal ikke bygge produkt-UI direkte på diagnostikkmodellene. Neste fase etablerer domenemodeller, repository-lag og reell SwiftUI-brukerflyt. Diagnostikk-koden beholdes foreløpig som utviklingsverktøy.
+
+Fortsett i:
+
+```text
+docs/SWIFTUI-IMPLEMENTERING.md
+```
 
 Production skal fortsatt ikke deployes på dette tidspunktet.

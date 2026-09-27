@@ -1,27 +1,25 @@
-# Tekstilig – dokumentasjon
+# Dokumentasjon
 
-Tekstilig er et tekstilregister i tidlig utvikling. CloudKit er valgt som primærlager, og aktivt klientspor er SwiftUI med native CloudKit. Den tidligere PWA-en er frosset og beholdes kun som teknisk PoC/referanse.
+Dokumentasjonen i denne mappen er den autoritative prosjektbeskrivelsen for Tekstilig.
 
-## Autoritative dokumenter
+## Gjeldende fase
 
-- `ARKITEKTUR.md` – teknisk arkitektur, lagringsprinsipper og klientspor
-- `DATAMODELL.md` – autoritativ logisk datamodell
-- `DESIGN.md` – autoritativ visuell design- og typografiretning
-- `UX-FLYTER.md` – hovedskjermer, navigasjon og brukerflyter
-- `BESLUTNINGSLOGG.md` – beslutninger og begrunnelser
+Den native CloudKit-PoC-en er fullført. Aktiv utvikling er nå faktisk SwiftUI-produktkode mot privat CloudKit Development-database.
 
-## Oppsett og test
+Start her for videre arbeid:
 
-- `CLOUDKIT-OPPSETT.md` – kontoer, container, token og tidligere GitHub Pages-forberedelser
-- `CLOUDKIT-POC-TEST.md` – resultatlogg fra avsluttet CloudKit JS/PWA-PoC
-- `SWIFTUI-OPPSTART.md` – strengt sekvensiell oppstart og validering av native SwiftUI/CloudKit-PoC
+1. `SWIFTUI-IMPLEMENTERING.md` – sekvensiell arbeids- og testplan for aktiv kodeleveranse
+2. `DATAMODELL.md` – autoritativ logisk datamodell
+3. `ARKITEKTUR.md` – teknisk arkitektur og CloudKit-mapping
+4. `UX-FLYTER.md` – brukerflyter og informasjonsstruktur
+5. `DESIGN.md` – visuell designretning
+6. `BESLUTNINGSLOGG.md` – arkitektur- og produktbeslutninger
+7. `ENDRINGSLOGG.md` – leveransehistorikk
 
-## Historikk
+## Historisk/teknisk referanse
 
-- `ENDRINGSLOGG.md` – endringer mellom dokumentasjons- og kodeleveranser
+- `SWIFTUI-OPPSTART.md` – fullført native CloudKit-PoC
+- `CLOUDKIT-POC-TEST.md` – resultat fra tidligere CloudKit JS/PWA-PoC
+- `CLOUDKIT-OPPSETT.md` – CloudKit-oppsett og miljø
 
-## Status
-
-Punkt 1–7 i `SWIFTUI-OPPSTART.md` er fullført. Punkt 8 (kryssenhetstest) er utsatt til en annen fysisk Apple-enhet er tilgjengelig og blokkerer ikke punkt 9. Neste handling er å validere `Piece` native mot privat Development-database.
-
-PWA-koden skal ikke videreutvikles i denne fasen. Full produkt-UI og Production-deploy starter ikke før den native CloudKit-valideringen er ferdig.
+PWA-koden er frosset og skal ikke videreutvikles uten en ny eksplisitt beslutning.

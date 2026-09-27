@@ -566,7 +566,7 @@ Native steg 6 har validert reell CloudKit-tilgang fra SwiftUI på fysisk Apple-e
 ## B-033 – Kryssenhetstest utsettes; Piece-validering fortsetter
 
 **Dato:** 2026-09-26  
-**Status:** Besluttet
+**Status:** Erstattet av B-034
 
 ### Beslutning
 
@@ -580,7 +580,59 @@ Kryssenhetstesten validerer en annen egenskap enn `Piece`: at samme private Clou
 
 ### Konsekvens
 
-- Punkt 8 står som eksplisitt gjenstående og skal ikke markeres fullført uten faktisk annen fysisk enhet.
-- Punkt 9 kan gjennomføres nå.
+- Denne beslutningen beskrev mellomstatusen før simulator-testen ble gjennomført.
+- B-034 erstatter kravet om en ny fysisk enhet etter vellykket separat simulatorvalidering.
 - Production deployes fortsatt ikke.
 - PWA-koden forblir frosset.
+
+---
+
+## B-034 – Separat iOS-simulator godtas som kryssklientvalidering
+
+**Dato:** 2026-09-26  
+**Status:** Besluttet
+
+### Beslutning
+
+Punkt 8 regnes som fullført etter at en separat iOS-simulator i Xcode 27 ble logget inn på samme iCloud-konto og kunne gjennomføre native CloudKit-testene mot data i den private Development-databasen.
+
+En ny fysisk Apple-enhet er ikke et krav for å lukke den tekniske PoC-en.
+
+### Begrunnelse
+
+Testformålet var å validere at data ikke var bundet til den opprinnelige appinstallasjonen, men kunne nås fra en separat Apple-klientinstans gjennom samme private iCloud-database. Simulatoren ga en separat installasjon og klientkontekst og validerte denne egenskapen.
+
+---
+
+## B-035 – Produktkoden skilles fra CloudKit-diagnostikken med repository-lag
+
+**Dato:** 2026-09-26  
+**Status:** Besluttet
+
+### Beslutning
+
+Videre produktkode skal ikke bruke diagnostikkmodellene som applikasjonsarkitektur. Domenemodeller, repository-grensesnitt, CloudKit-implementasjon og feature-UI skilles i egne lag.
+
+Diagnostikken beholdes midlertidig i en egen Debug-flate.
+
+### Begrunnelse
+
+PoC-koden er laget for isolert teknisk validering. Et repository-lag gjør CloudKit-mapping eksplisitt, reduserer koblingen mellom SwiftUI og lagringsmekanismen og gir et bedre grunnlag for senere cache, testing og eventuell synkroniseringslogikk.
+
+---
+
+## B-036 – Første produktimplementering er et smalt Textile-vertikalsnitt
+
+**Dato:** 2026-09-26  
+**Status:** Besluttet
+
+### Beslutning
+
+Første reelle appflyt implementerer bibliotek → detalj → opprett/rediger for `Textile`, men lagrer foreløpig bare den allerede validerte kjernen: navn, kategori, permanente ID-er og metadata.
+
+Den logiske datamodellen i `DATAMODELL.md` beholdes uendret og utvides i produktkoden trinnvis. `Piece` er neste planlagte vertikalsnitt etter at denne grunnflyten er validert.
+
+### Begrunnelse
+
+Dette gir tidlig validering av faktisk apparkitektur, navigasjon og CloudKit CRUD uten samtidig å introdusere mange nye schemafelt. Feil blir enklere å isolere, og den eksisterende PoC-valideringen utnyttes direkte.
+

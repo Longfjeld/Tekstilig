@@ -368,3 +368,18 @@ Første fungerende versjon bør implementere følgende flyter i denne rekkefølg
 10. videre vedlikeholds- og administrasjonsfunksjoner
 
 Dette prioriterer teknisk risiko rundt lokal/iCloud-lagring tidlig, før resten av brukergrensesnittet blir omfattende.
+
+## Implementeringsstatus – native produktfase 1
+
+Kodeleveranse 0006 etablerer første fungerende del av de planlagte flytene:
+
+```text
+Tekstiler
+  -> tekstilbibliotek
+  -> tekstildetalj
+  -> nytt tekstil
+  -> rediger tekstil
+```
+
+Denne første UI-en er funksjonell struktur, ikke ferdig visuell implementering av kort, bilder, søk eller filtre. Den skal først validere apparkitektur og grunnleggende lagring. `DESIGN.md` og resten av dette dokumentet er fortsatt målbildet for den videre produktutviklingen.
+
