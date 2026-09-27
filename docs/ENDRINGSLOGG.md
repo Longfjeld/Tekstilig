@@ -351,3 +351,34 @@ Rettet identitetsfeil som ble synlig med eldre PoC-data der flere CloudKit `Text
 ### Viktig
 
 Patchen sletter eller skjuler ikke gamle CloudKit-records automatisk. Eventuelle overflødige PoC-records ryddes manuelt etter kontroll av `recordName`.
+
+
+## Devpatch 0002 – 2026-09-27
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0002.zip`, der Textile-produktflyt test 1–9 er validert.
+
+### Opprettet
+
+- `Tekstilig/Domain/Piece.swift` – native domenetype for fysisk stoffstykke
+- `Tekstilig/Data/PieceRepository.swift` – repository-grensesnitt
+- `Tekstilig/Data/CloudKitPieceRepository.swift` – CloudKit query, mapping, save/update og delete
+- `Tekstilig/Features/Pieces/PieceInventoryModel.swift` – feature state for valgt tekstils beholdning
+- `Tekstilig/Features/Pieces/PieceEditorView.swift` – opprett/rediger dimensjoner og reservasjon
+
+### Endret
+
+- `Tekstilig/Features/Library/TextileDetailView.swift` – viser, oppretter, redigerer, oppdaterer og sletter stoffstykker
+- `README.md` og dokumentasjon – Textile test 1–9 registrert som validert og Piece satt som aktivt produktsteg
+
+### CloudKit
+
+Ingen nye record-felt opprettes i denne leveransen. Produktkoden bruker eksisterende `Piece`-schema. `Piece.textileId` må markeres `QUERYABLE` i Development før den nye beholdningslisten testes.
+
+### Bevisst utsatt
+
+- `quantity` og Piece-notat
+- mer avansert reservasjonsmodell
+- splitting av rester / egen «registrer bruk»-flyt
+- bilder i produkt-UI
+- Production deploy
+- PWA-endringer

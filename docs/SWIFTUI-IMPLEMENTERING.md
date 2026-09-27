@@ -1,6 +1,6 @@
 # SwiftUI – videre implementering
 
-**Status:** Produktfase 1 · kodeleveranse 0006 klar til test  
+**Status:** Produktfase 1 validert (test 1–9) · Produktfase 2 `Piece` klar til test via devpatch 0002  
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
@@ -173,19 +173,223 @@ Kodeleveranse 0006 er godkjent når alle disse er bekreftet:
 
 **Ikke utvid CloudKit-schemaet eller implementer bilder/Piece i produkt-UI før dette stoppunktet er bekreftet.**
 
-## 10. Neste planlagte implementering
+## 10. Legg inn devpatch 0002 – Piece i produkt-UI
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0002.zip`, der test 1–9 er fullført.
+
+1. Lukk Xcode 27 dersom prosjektet er åpent.
+2. Kontroller at siste Git-commit/snapshot er `SwiftUIActualApp0002`.
+3. Pakk ut `Tekstilig-devpatch-0002.zip`.
+4. Kopier innholdet fra patchen inn i den eksisterende Tekstilig-prosjektmappen.
+5. Velg **Erstatt** for filer som allerede finnes.
+6. Ikke slett lokale filer som er utelatt via `.gitignore`.
+7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+8. Kontroller at disse nye filene vises i Project Navigator:
+
+```text
+Domain/Piece.swift
+Data/PieceRepository.swift
+Data/CloudKitPieceRepository.swift
+Features/Pieces/PieceInventoryModel.swift
+Features/Pieces/PieceEditorView.swift
+```
+
+9. Kontroller at `Features/Library/TextileDetailView.swift` fortsatt finnes.
+
+**Ikke opprett filer eller grupper manuelt dersom filene allerede vises via Xcode-prosjektets synkroniserte mappegruppe.**
+
+## 11. Opprett nødvendig CloudKit-indeks for Piece
+
+**✅ AKSJON – DU**
+
+Produktkoden henter bare stoffstykker som tilhører det valgte tekstilet. Det krever query på `Piece.textileId`.
+
+1. Åpne CloudKit Database.
+2. Velg containeren `iCloud.com.longfjeld.tekstilig`.
+3. Kontroller at miljøet er **Development**.
+4. Gå til **Schema → Indexes**.
+5. Opprett en ny indeks for record type **Piece**.
+6. Velg feltet `textileId`.
+7. Sett indekstypen til **QUERYABLE**.
+8. Gi indeksen et forståelig navn, for eksempel:
+
+```text
+Piece-textileId-queryable
+```
+
+9. Lagre.
+10. Kontroller at indeksen vises for `Piece.textileId`.
+
+Ingen `SORTABLE`-indeks er nødvendig i dette steget; klienten sorterer stoffstykkene lokalt.
+
+**Ikke kjør Piece-produktflyten før `Piece.textileId` er QUERYABLE.**
+
+## 12. Bygg devpatch 0002
+
+**✅ AKSJON – DU**
+
+1. Velg iOS-simulatoren som Run Destination. Simulator er nå primær testenhet for denne produktfasen.
+2. Velg **Product → Build**.
+3. Vent til build er ferdig.
+4. Kontroller at build er vellykket.
+
+Hvis build feiler, stopp her. Ikke bruk **Apply Fix** før feilen er gjennomgått.
+
+## 13. Kontroller tom Piece-tilstand
+
+**✅ AKSJON – DU**
+
+1. Kjør appen.
+2. Åpne fanen **Tekstiler**.
+3. Åpne tekstilet du opprettet i test 5–9, eller et annet **native-opprettet** tekstil der Tekstilig-ID starter med `T-`. Ikke bruk de gamle PoC-recordene med `textileId = T0001` i denne testen, fordi flere legacy-records deler den ID-en.
+4. Finn seksjonen **Stoffstykker**.
+5. Kontroller at den viser:
+
+```text
+Ingen stoffstykker registrert
+```
+
+6. Kontroller at **Legg til stoffstykke** er tilgjengelig.
+
+Hvis du får CloudKit-feil om at `Piece` eller `textileId` ikke er indexable/queryable, stopp her og kontroller punkt 11.
+
+## 14. Opprett første stoffstykke
+
+**✅ AKSJON – DU**
+
+1. Trykk **Legg til stoffstykke**.
+2. Sett lengde til:
+
+```text
+280
+```
+
+3. Sett bredde til:
+
+```text
+145
+```
+
+4. La **Reserver del av stykket** være av.
+5. Trykk **Lagre**.
+6. Kontroller at editoren lukkes.
+7. Kontroller at detaljvisningen nå viser et stoffstykke med:
+
+```text
+280 × 145 cm
+Tilgjengelig: 280 cm
+```
+
+## 15. Kontroller første Piece-record i CloudKit
+
+**✅ AKSJON – DU**
+
+1. Åpne **CloudKit Database → Development → Private Database → Piece**.
+2. Finn den nye recorden.
+3. Kontroller at `pieceId` starter med `P-`.
+4. Kontroller at `textileId` er lik Tekstilig-ID-en til tekstilet du åpnet i appen.
+5. Kontroller feltene:
+
+| Felt | Forventet verdi |
+|:---|:---|
+| `lengthCm` | `280` |
+| `widthCm` | `145` |
+| `reservedLengthCm` | `0` |
+| `project` | tom streng |
+
+6. Noter gjerne Record Name, men ikke endre recorden manuelt.
+(26D3EB62-2A9C-425E-A4D6-78E7F9E6079B)
+
+## 16. Rediger og reserver samme stoffstykke
+
+**✅ AKSJON – DU**
+
+1. Gå tilbake til samme tekstildetalj.
+2. Trykk på stoffstykket `280 × 145 cm`.
+3. Aktiver **Reserver del av stykket**.
+4. Sett reservert lengde til:
+
+```text
+150
+```
+
+5. Sett prosjekt til:
+
+```text
+Testprosjekt
+```
+
+6. Trykk **Lagre**.
+7. Kontroller at samme rad nå viser:
+
+```text
+Reservert 150 cm til Testprosjekt
+Tilgjengelig: 130 cm
+```
+
+8. Åpne samme Piece-record i CloudKit Database.
+9. Kontroller at samme Record Name er beholdt og at `reservedLengthCm`/`project` er oppdatert.
+
+## 17. Test flere separate stoffstykker
+
+**✅ AKSJON – DU**
+
+1. Trykk **Legg til stoffstykke** igjen.
+2. Opprett et nytt stykke med:
+
+```text
+Lengde: 90 cm
+Bredde: 145 cm
+```
+
+3. Lagre uten reservasjon.
+4. Kontroller at tekstildetaljen viser **to separate stoffstykker**.
+5. Åpne begge etter tur og kontroller at riktig stykke åpnes.
+6. Kontroller i CloudKit at det finnes to forskjellige Piece-records med samme `textileId`, men forskjellige `pieceId` og Record Name.
+
+Dette validerer den sentrale modellbeslutningen om at beholdning består av separate fysiske stykker, ikke bare én total lengde.
+
+## 18. Test sletting av ett stoffstykke
+
+**✅ AKSJON – DU**
+
+1. I tekstildetaljen, sveip det nye `90 × 145 cm`-stykket mot venstre.
+2. Trykk **Slett**.
+3. Kontroller at appen viser en eksplisitt bekreftelse.
+4. Bekreft sletting.
+5. Kontroller at `90 × 145 cm` forsvinner fra appen.
+6. Kontroller i CloudKit Database at akkurat denne Piece-recorden er slettet.
+7. Kontroller at tekstilet og det første `280 × 145 cm`-stykket fortsatt finnes.
+
+## 19. Stoppunkt for Piece-produktsteget
+
+Devpatch 0002 er godkjent når alle disse er bekreftet:
+
+- appen bygger i Xcode 27
+- `Piece.textileId` er QUERYABLE i Development
+- tom Piece-tilstand fungerer
+- et stoffstykke kan opprettes og vises på riktig tekstil
+- samme Piece kan redigeres uten å opprette en ekstra record
+- delvis reservasjon viser korrekt gjenværende tilgjengelig lengde
+- flere separate Piece-records kan tilhøre samme tekstil
+- ett Piece kan slettes med bekreftelse uten å påvirke Textile eller andre Piece-records
+
+**Ikke gå videre til bilder i produkt-UI før punkt 10–18 er validert.**
+
+## 20. Neste planlagte implementering
 
 **⏭️ SENERE**
 
-Når 0006 er validert, går vi videre med den logiske datamodellen i kontrollerte vertikale steg. Planlagt rekkefølge er:
+Når Piece-steget er validert, fortsetter produktutviklingen i denne rekkefølgen:
 
-1. `Piece` som faktisk beholdning i produkt-UI
-2. hovedbilde med `TextileImage` + `CKAsset`
-3. materiale og farge
-4. plassering
-5. deretter øvrige tekstilegenskaper og vedlikehold
+1. hovedbilde med `TextileImage` + `CKAsset`
+2. materiale og farge
+3. plassering
+4. deretter øvrige tekstilegenskaper og vedlikehold
 
-Hvert steg skal først utvide domenemodell/repository, deretter UI og til slutt CloudKit-validering. Production deployes ikke før produksjonsmodellen og schemaet er gjennomgått samlet.
+`quantity`, Piece-notat, splitting av rester og egen «registrer bruk»-flyt vurderes som senere utvidelser av Piece-modellen. Production deployes ikke før produksjonsmodellen og schemaet er gjennomgått samlet.
 
 ## Feilretting: eldre PoC-records med samme `textileId`
 

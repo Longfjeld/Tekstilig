@@ -406,3 +406,32 @@ Dette er en bevisst vertikal implementering, ikke en reduksjon av den logiske da
 
 Ved redigering henter repository-laget eksisterende `CKRecord` før lagring. Dermed beholdes CloudKit-systemfelter og gjeldende record change tag. Nye records får en permanent Tekstilig-ID med prefikset `T-` og UUID. Record Name behandles fortsatt som lagringsmetadata og ikke som domenets permanente ID.
 
+
+
+## 22. Produktarkitektur for Piece – devpatch 0002
+
+Etter at Textile-flyten er validert utvides samme lagdeling til fysisk beholdning:
+
+```text
+TextileDetailView
+    |
+    v
+PieceInventoryModel
+    |
+    v
+PieceRepository
+    |
+    v
+CloudKitPieceRepository
+    |
+    v
+Private CloudKit / Piece
+```
+
+`Piece` kobles til `Textile` via den permanente logiske `textileId`. CloudKit `recordName` brukes som teknisk identitet for lagrede Piece-records, på samme måte som for `Textile`.
+
+Første produktimplementering bruker bare allerede eksisterende Piece-felt i Development-schemaet. Ingen nye CloudKit-felt introduseres i devpatch 0002.
+
+Produktkoden henter bare Piece-records for valgt tekstil med query på `textileId`. Feltet `Piece.textileId` må derfor ha en `QUERYABLE`-indeks i Development. Sortering skjer lokalt i klienten og krever ingen `SORTABLE`-indeks.
+
+Diagnostikkrecorden `swiftui-poc-piece-v1` beholdes for utvikling, men filtreres ut av produktflyten.

@@ -29,7 +29,7 @@ PoC-resultatene er dokumentert i `docs/SWIFTUI-OPPSTART.md`.
 
 ## Nåværende appfase
 
-Kodeleveranse 0006 starter den faktiske appimplementeringen. Første vertikale produktstykke er:
+Det første Textile-vertikalsnittet er validert gjennom test 1–9. Devpatch 0002 starter neste produktsteg: `Piece` som faktisk beholdning knyttet til et tekstil. Arkitekturen er nå:
 
 ```text
 SwiftUI-visning
@@ -43,13 +43,13 @@ CloudKitTextileRepository
 Private CloudKit / Development
 ```
 
-Første reelle brukerflyt er:
+Aktiv produktflyt er nå:
 
 ```text
-Tekstilbibliotek → Tekstildetalj → Nytt/rediger tekstil
+Tekstilbibliotek → Tekstildetalj → Stoffstykker → Nytt/rediger/slett Piece
 ```
 
-Denne første produktflyten lagrer foreløpig bare den validerte kjernen av `Textile`: navn, kategori, permanente ID-er og metadata. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
+`Piece` bruker eksisterende Development-schema med `pieceId`, `textileId`, `lengthCm`, `widthCm`, `reservedLengthCm` og `project`. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
 
 ## Videre test
 

@@ -383,3 +383,19 @@ Tekstiler
 
 Denne første UI-en er funksjonell struktur, ikke ferdig visuell implementering av kort, bilder, søk eller filtre. Den skal først validere apparkitektur og grunnleggende lagring. `DESIGN.md` og resten av dette dokumentet er fortsatt målbildet for den videre produktutviklingen.
 
+
+
+## 17. Implementert Piece-flyt – devpatch 0002
+
+Første native produktversjon av stoffstykker implementerer nå denne flyten fra tekstildetaljen:
+
+```text
+Tekstildetalj
+    -> se stoffstykker
+    -> legg til stoffstykke
+    -> rediger stoffstykke
+    -> valgfri reservasjon til prosjekt
+    -> slett stoffstykke med bekreftelse
+```
+
+Visningen viser total lengde og bredde, og ved reservasjon både reservert og gjenværende tilgjengelig lengde. Dette er første funksjonelle beholdningssteg; senere UX for «registrer bruk», splitting av rester og rikere Piece-data beholdes som planlagt videreutvikling.

@@ -4,7 +4,7 @@ Dokumentasjonen i denne mappen er den autoritative prosjektbeskrivelsen for Teks
 
 ## Gjeldende fase
 
-Den native CloudKit-PoC-en er fullført. Aktiv utvikling er nå faktisk SwiftUI-produktkode mot privat CloudKit Development-database.
+Den native CloudKit-PoC-en er fullført. Textile-produktflyten er validert gjennom test 1–9, og aktiv utvikling går videre med `Piece` som reell beholdning i SwiftUI mot privat CloudKit Development-database.
 
 Start her for videre arbeid:
 

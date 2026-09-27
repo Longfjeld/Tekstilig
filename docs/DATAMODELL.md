@@ -469,5 +469,14 @@ Første implementerte persistensutsnitt er bevisst begrenset til:
 
 Permanent ID for nye native records genereres som `T-<UUID>`. Eksempelet `T0042` i datamodellen beskriver fortsatt en mulig lesbar ID-form, men er ikke et krav til formatet. Viktigste krav er stabil og unik permanent Tekstilig-ID som er uavhengig av CloudKit Record Name.
 
-`Piece`, bilder, materialer, farger og øvrige felt kobles på domenet i senere vertikale implementeringssteg.
+Fra devpatch 0002 er `Piece` også introdusert som faktisk Swift-domenetype. Første native persistensutsnitt for `Piece` bruker eksisterende CloudKit-schema:
+
+- `pieceId`
+- `textileId`
+- `lengthCm`
+- `widthCm`
+- `reservedLengthCm`
+- `project`
+
+`quantity`, notat og eventuell rikere reservasjonsmodell fra den logiske modellen over er **ikke fjernet som krav**, men utsettes til en senere eksplisitt schemautvidelse. Bilder, materialer, farger og øvrige felt kobles på i senere vertikale implementeringssteg.
 

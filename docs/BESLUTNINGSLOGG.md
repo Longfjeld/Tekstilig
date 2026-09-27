@@ -653,3 +653,26 @@ Dette gir tidlig validering av faktisk apparkitektur, navigasjon og CloudKit CRU
 PWA-PoC-en kunne opprette flere separate CloudKit-records med standardverdien `textileId = T0001`. Første native produktversjon brukte `textileId` som `Identifiable.id` og detaljoppslagsnøkkel. Legacy-records med samme `textileId` ga dermed dupliserte SwiftUI-identiteter og kunne føre flere rader til samme detaljrecord.
 
 CloudKit `recordName` er unikt innen record-zonen og er derfor riktig teknisk nøkkel for en allerede lagret record. Dette endrer ikke kravet om at nye `textileId` skal være stabile og unike.
+
+
+## B-038 – Piece implementeres som eget vertikalsnitt uten schemautvidelse
+
+**Dato:** 2026-09-27  
+**Status:** Besluttet
+
+### Beslutning
+
+Etter validert Textile-produktflyt implementeres `Piece` som neste ordinære SwiftUI-funksjon gjennom eget domenelag, repository og feature-tilstand. Første produktversjon bruker bare de Piece-feltene som allerede finnes og er validert i CloudKit Development: `pieceId`, `textileId`, `lengthCm`, `widthCm`, `reservedLengthCm` og `project`.
+
+`quantity`, notat og rikere reservasjonsdata fra den langsiktige logiske datamodellen innføres ikke i samme leveranse.
+
+### Begrunnelse
+
+Dette holder schemaendringer adskilt fra overgangen fra diagnostikk til faktisk produktkode. Relasjon, CRUD og reservasjon kan dermed valideres med kjent backend før datamodellen utvides videre.
+
+### Konsekvens
+
+- `Piece.textileId` indekseres som `QUERYABLE` i Development fordi produktkoden henter stoffstykker per tekstil.
+- Nye Piece-records får permanent `pieceId` i formatet `P-<UUID>`.
+- Lagrede Piece-records bruker CloudKit `recordName` som teknisk SwiftUI-/storage-identitet.
+- Sletting krever eksplisitt bekreftelse i UI.
