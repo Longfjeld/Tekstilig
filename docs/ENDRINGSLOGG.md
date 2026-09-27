@@ -334,3 +334,20 @@ Tekstilbibliotek
 - Production-deploy
 - PWA-endringer
 
+
+
+## Devpatch 0001 – 2026-09-27
+
+Rettet identitetsfeil som ble synlig med eldre PoC-data der flere CloudKit `Textile`-records hadde samme `textileId`.
+
+### Endret
+
+- `Textile.id` bruker `cloudRecordName` for lagrede records og `textileId` som fallback for ulagrede drafts.
+- `TextileLibraryView` navigerer med den tekniske record-identiteten i stedet for `textileId`.
+- `TextileLibraryModel` slår opp detaljrecord på samme identitet som listen bruker.
+- `TextileDetailView` viser dermed korrekt CloudKit-record selv når legacy-data har duplisert `textileId`.
+- Dokumentasjon beskriver årsaken og trygg opprydding av gamle PoC-records.
+
+### Viktig
+
+Patchen sletter eller skjuler ikke gamle CloudKit-records automatisk. Eventuelle overflødige PoC-records ryddes manuelt etter kontroll av `recordName`.

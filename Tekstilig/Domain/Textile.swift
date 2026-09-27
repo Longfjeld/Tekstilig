@@ -9,8 +9,12 @@ struct Textile: Identifiable, Hashable {
     var updatedAt: Date
     var schemaVersion: Int
 
+    // CloudKit recordName is the storage identity for persisted records.
+    // Fall back to textileID only for drafts that have not been saved yet.
+    // This keeps SwiftUI identity unique even if legacy/PoC data contains
+    // duplicate textileId values.
     var id: String {
-        textileID
+        cloudRecordName ?? textileID
     }
 
     static let categoryOptions = [

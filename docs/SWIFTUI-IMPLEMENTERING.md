@@ -13,7 +13,7 @@ Statusmarkeringer:
 
 ## 1. Legg inn kodeleveranse 0006
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Lukk Xcode 27 dersom Tekstilig-prosjektet er åpent.
 2. Ta en Git-commit eller lokal sikkerhetskopi av den fungerende versjonen etter fullført PoC.
@@ -52,7 +52,7 @@ Diagnostics/DeveloperDiagnosticsView.swift
 
 ## 2. Bygg før appen kjøres
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Velg den fysiske iPhone-en som tidligere fungerte som Run Destination.
 2. Velg **Product → Build**.
@@ -63,7 +63,7 @@ Hvis build feiler, stopp her. Ikke bruk automatiske kodeendringer via **Apply Fi
 
 ## 3. Start den nye hovedflyten
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Velg **Product → Run**.
 2. Vent til Tekstilig åpnes på telefonen.
@@ -76,7 +76,7 @@ Diagnostikkfanen er kompilert bare i Debug. Den skal ikke være del av en senere
 
 ## 4. Valider lesing av tekstilbiblioteket
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Vent til **Tekstiler** har lastet ferdig.
 2. Kontroller at `swiftui-poc-textile-v1` ikke vises som et vanlig tekstil i biblioteket.
@@ -87,7 +87,7 @@ Den faste diagnostikkrecorden skjules bevisst fra produkt-UI, men beholdes i Clo
 
 ## 5. Opprett første reelle tekstil
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Trykk **Nytt tekstil** eller `+`.
 2. Skriv et tydelig testnavn som du kjenner igjen, for eksempel:
@@ -106,7 +106,7 @@ Ikke legg inn flere testtekstiler før dette ene vises korrekt.
 
 ## 6. Kontroller detaljvisning
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Trykk tekstilet du nettopp opprettet.
 2. Kontroller at detaljsiden viser:
@@ -120,7 +120,7 @@ Ikke legg inn flere testtekstiler før dette ene vises korrekt.
 
 ## 7. Rediger samme tekstil
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Trykk **Rediger**.
 2. Endre navnet, for eksempel til:
@@ -139,7 +139,7 @@ Dette tester at appen først henter eksisterende `CKRecord` før oppdatering, sl
 
 ## 8. Kontroller recorden i CloudKit Database
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne CloudKit Database.
 2. Velg `iCloud.com.longfjeld.tekstilig`.
@@ -186,3 +186,27 @@ Når 0006 er validert, går vi videre med den logiske datamodellen i kontrollert
 5. deretter øvrige tekstilegenskaper og vedlikehold
 
 Hvert steg skal først utvide domenemodell/repository, deretter UI og til slutt CloudKit-validering. Production deployes ikke før produksjonsmodellen og schemaet er gjennomgått samlet.
+
+## Feilretting: eldre PoC-records med samme `textileId`
+
+Under første produktvalidering ble det avdekket at eldre PWA-PoC-data kan inneholde flere separate CloudKit-records med samme logiske `textileId` (for eksempel `T0001`). PWA-PoC-en brukte `T0001` som standardverdi og opprettet en ny CloudKit-record hver gang **Opprett Textile** ble kjørt.
+
+Dette er to separate forhold:
+
+1. CloudKit-recordene er reelt forskjellige fordi de har ulike `recordName`.
+2. Første SwiftUI-produktversjon brukte `textileId` som SwiftUI-identitet og detaljoppslagsnøkkel. Når flere eldre records hadde samme `textileId`, kunne flere rader derfor peke til samme detaljrecord.
+
+Fra devpatch 0001 brukes CloudKit `recordName` som SwiftUI/storage-identitet for lagrede records. `textileId` beholdes som permanent logisk Tekstilig-ID og endres ikke av denne rettingen.
+
+### Rydding av gamle testdata
+
+Etter at devpatch 0001 er installert:
+
+1. Åpne hver av de tilsynelatende like radene i appen.
+2. Kontroller feltet **Record name**. Radene skal nå vise sin faktiske CloudKit-record.
+3. Åpne **CloudKit Database → Development → Private Database → Textile**.
+4. Identifiser gamle PoC-records du ikke vil beholde.
+5. Slett bare de gamle testrecordene du har bekreftet som overflødige.
+6. Oppdater tekstilbiblioteket i appen.
+
+Nye native tekstiler får `textileId` i formatet `T-<UUID>` og skal derfor ikke få samme logiske ID.

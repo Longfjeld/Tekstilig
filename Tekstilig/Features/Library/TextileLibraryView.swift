@@ -36,7 +36,7 @@ struct TextileLibraryView: View {
                     List(model.textiles) { textile in
                         NavigationLink {
                             TextileDetailView(
-                                textileID: textile.textileID,
+                                textileIdentity: textile.id,
                                 model: model
                             )
                         } label: {

@@ -57,8 +57,8 @@ final class TextileLibraryModel {
         return saved
     }
 
-    func textile(withID textileID: String) -> Textile? {
-        textiles.first { $0.textileID == textileID }
+    func textile(withIdentity identity: String) -> Textile? {
+        textiles.first { $0.id == identity }
     }
 
     private func upsert(_ textile: Textile) {

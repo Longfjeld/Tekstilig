@@ -636,3 +636,20 @@ Den logiske datamodellen i `DATAMODELL.md` beholdes uendret og utvides i produkt
 
 Dette gir tidlig validering av faktisk apparkitektur, navigasjon og CloudKit CRUD uten samtidig å introdusere mange nye schemafelt. Feil blir enklere å isolere, og den eksisterende PoC-valideringen utnyttes direkte.
 
+
+---
+
+## B-037 – CloudKit recordName brukes som UI-/storage-identitet for lagrede Textile-records
+
+**Dato:** 2026-09-27  
+**Status:** Besluttet
+
+### Beslutning
+
+`textileId` forblir permanent logisk Tekstilig-ID. For lagrede `Textile`-objekter bruker SwiftUI-klienten CloudKit `recordName` som teknisk identitet ved listevisning og navigasjon. Ulagrede drafts faller tilbake til `textileId`.
+
+### Begrunnelse
+
+PWA-PoC-en kunne opprette flere separate CloudKit-records med standardverdien `textileId = T0001`. Første native produktversjon brukte `textileId` som `Identifiable.id` og detaljoppslagsnøkkel. Legacy-records med samme `textileId` ga dermed dupliserte SwiftUI-identiteter og kunne føre flere rader til samme detaljrecord.
+
+CloudKit `recordName` er unikt innen record-zonen og er derfor riktig teknisk nøkkel for en allerede lagret record. Dette endrer ikke kravet om at nye `textileId` skal være stabile og unike.

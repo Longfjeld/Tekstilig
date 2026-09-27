@@ -1,13 +1,13 @@
 import SwiftUI
 
 struct TextileDetailView: View {
-    let textileID: String
+    let textileIdentity: String
     let model: TextileLibraryModel
 
     @State private var showEditor = false
 
     private var textile: Textile? {
-        model.textile(withID: textileID)
+        model.textile(withIdentity: textileIdentity)
     }
 
     var body: some View {
