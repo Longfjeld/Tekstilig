@@ -26,6 +26,8 @@ struct TextileDetailView: View {
                         )
                     }
 
+                    TextileMainImageSection(textile: textile)
+
                     Section {
                         if pieceModel.isLoading && pieceModel.pieces.isEmpty {
                             ProgressView("Henter stoffstykker …")

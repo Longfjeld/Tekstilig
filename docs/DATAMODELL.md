@@ -478,5 +478,17 @@ Fra devpatch 0002 er `Piece` også introdusert som faktisk Swift-domenetype. Fø
 - `reservedLengthCm`
 - `project`
 
-`quantity`, notat og eventuell rikere reservasjonsmodell fra den logiske modellen over er **ikke fjernet som krav**, men utsettes til en senere eksplisitt schemautvidelse. Bilder, materialer, farger og øvrige felt kobles på i senere vertikale implementeringssteg.
+`quantity`, notat og eventuell rikere reservasjonsmodell fra den logiske modellen over er **ikke fjernet som krav**, men utsettes til en senere eksplisitt schemautvidelse.
+
+Fra devpatch 0003 er `TextileImage` introdusert som faktisk Swift-domenetype. Første produktutsnitt bruker det allerede validerte Development-schemaet:
+
+- `imageId`
+- `textileId`
+- `type`
+- `primary`
+- `fileName`
+- `contentType`
+- `imageAsset`
+
+Første produktimplementering håndterer ett hovedbilde per tekstil. Bildet velges fra Bilder og lagres som `CKAsset`. Flere bilder, bildetyper, kamera, thumbnails og lokal bildeoptimalisering kommer senere. Materialer, farger og øvrige tekstilegenskaper kobles på i senere vertikale implementeringssteg.
 

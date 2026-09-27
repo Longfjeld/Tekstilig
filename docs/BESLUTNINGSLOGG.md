@@ -673,6 +673,29 @@ Dette holder schemaendringer adskilt fra overgangen fra diagnostikk til faktisk 
 ### Konsekvens
 
 - `Piece.textileId` indekseres som `QUERYABLE` i Development fordi produktkoden henter stoffstykker per tekstil.
+- `Piece.recordName` er også satt `QUERYABLE` for stabil inspeksjon via CloudKit Database.
 - Nye Piece-records får permanent `pieceId` i formatet `P-<UUID>`.
 - Lagrede Piece-records bruker CloudKit `recordName` som teknisk SwiftUI-/storage-identitet.
 - Sletting krever eksplisitt bekreftelse i UI.
+
+## B-039 – Første bildeproduktsteg bruker ett hovedbilde per Textile uten schemautvidelse
+
+**Dato:** 2026-09-27  
+**Status:** Besluttet
+
+### Beslutning
+
+Etter validert Piece-produktflyt implementeres `TextileImage` som neste ordinære SwiftUI-funksjon. Første produktversjon håndterer ett hovedbilde per tekstil og bruker det eksisterende Development-schemaet fra native CloudKit-PoC-en uten nye record-felt.
+
+Bildet velges via systemets Bilder-velger og lagres som `CKAsset`. Ved erstatning oppdateres den eksisterende primære `TextileImage`-recorden dersom den finnes, slik at nytt bilde ikke oppretter en ny hovedbilderecord hver gang.
+
+### Begrunnelse
+
+`CKAsset` er allerede teknisk validert. Dette steget flytter samme mekanisme inn i faktisk produktarkitektur og verifiserer relasjonen `Textile` → `TextileImage` før mer avansert bildehåndtering introduseres.
+
+### Konsekvens
+
+- `TextileImage.textileId` må være `QUERYABLE` i Development.
+- `TextileImage.recordName` gjøres også `QUERYABLE` for praktisk inspeksjon i CloudKit Database.
+- Første versjon lagrer valgt originaldata uten lokal nedskalering/thumbnail-generering.
+- Kamera, flere bilder, sletting av bilde og bildeoptimalisering kommer i senere steg.

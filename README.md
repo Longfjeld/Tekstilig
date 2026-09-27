@@ -29,7 +29,7 @@ PoC-resultatene er dokumentert i `docs/SWIFTUI-OPPSTART.md`.
 
 ## Nåværende appfase
 
-Det første Textile-vertikalsnittet er validert gjennom test 1–9. Devpatch 0002 starter neste produktsteg: `Piece` som faktisk beholdning knyttet til et tekstil. Arkitekturen er nå:
+Textile-produktflyten er validert gjennom test 1–9, og Piece-produktflyten er validert gjennom test 10–18. Devpatch 0003 starter neste produktsteg: hovedbilde med `TextileImage` + `CKAsset` i ordinær app-UI. Arkitekturen er nå:
 
 ```text
 SwiftUI-visning
@@ -46,10 +46,13 @@ Private CloudKit / Development
 Aktiv produktflyt er nå:
 
 ```text
-Tekstilbibliotek → Tekstildetalj → Stoffstykker → Nytt/rediger/slett Piece
+Tekstilbibliotek
+  → Tekstildetalj
+     → Hovedbilde (TextileImage + CKAsset)
+     → Stoffstykker → Nytt/rediger/slett Piece
 ```
 
-`Piece` bruker eksisterende Development-schema med `pieceId`, `textileId`, `lengthCm`, `widthCm`, `reservedLengthCm` og `project`. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
+`TextileImage` bruker eksisterende Development-schema fra PoC-en. Denne leveransen legger til valg/erstatning av hovedbilde fra Bilder, men ikke kamera, thumbnails eller bildeoptimalisering ennå. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
 
 ## Videre test
 

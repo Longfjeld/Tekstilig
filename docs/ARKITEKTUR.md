@@ -435,3 +435,27 @@ Første produktimplementering bruker bare allerede eksisterende Piece-felt i Dev
 Produktkoden henter bare Piece-records for valgt tekstil med query på `textileId`. Feltet `Piece.textileId` må derfor ha en `QUERYABLE`-indeks i Development. Sortering skjer lokalt i klienten og krever ingen `SORTABLE`-indeks.
 
 Diagnostikkrecorden `swiftui-poc-piece-v1` beholdes for utvikling, men filtreres ut av produktflyten.
+
+## 19. Produktarkitektur for TextileImage – devpatch 0003
+
+Etter validert Piece-flyt er hovedbilde neste vertikale produktsteg. Det følger samme lagdeling som Textile og Piece:
+
+```text
+TextileDetailView
+    ↓
+TextileMainImageSection
+    ↓
+TextileImageModel
+    ↓
+TextileImageRepository
+    ↓
+CloudKitTextileImageRepository
+    ↓
+Private CloudKit / Development
+```
+
+`TextileImage` bruker CloudKit `recordName` som teknisk identitet for lagrede records og `imageId` som permanent logisk Tekstilig-ID.
+
+Produktkoden spør etter `TextileImage` via `textileId`, leser `CKAsset.fileURL` umiddelbart inn i `Data`, og beholder ikke CloudKits staging-URL som langsiktig filreferanse.
+
+Første produktversjon velger siste endrede record som er markert `primary = 1` dersom eldre Development-data mot formodning inneholder flere hovedbilder for samme tekstil. Koden sletter eller skjuler ikke slike records automatisk. Normal lagring oppdaterer eksisterende primærrecord og oppretter bare ny record når tekstilet ikke har hovedbilde fra før.

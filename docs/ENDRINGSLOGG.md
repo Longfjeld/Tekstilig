@@ -382,3 +382,38 @@ Ingen nye record-felt opprettes i denne leveransen. Produktkoden bruker eksister
 - bilder i produkt-UI
 - Production deploy
 - PWA-endringer
+
+## Devpatch 0003 – 2026-09-27
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0003.zip`, der Textile test 1–9 og Piece test 10–18 er validert.
+
+### Opprettet
+
+- `Tekstilig/Domain/TextileImage.swift` – domenetype for bilde og lastet Asset-data
+- `Tekstilig/Data/TextileImageRepository.swift` – repository-grensesnitt
+- `Tekstilig/Data/CloudKitTextileImageRepository.swift` – query, CKAsset-lesing og save/update av hovedbilde
+- `Tekstilig/Features/Images/TextileImageModel.swift` – feature state for valgt tekstils hovedbilde
+- `Tekstilig/Features/Images/TextileMainImageSection.swift` – produkt-UI for visning, valg og erstatning av hovedbilde
+
+### Endret
+
+- `Tekstilig/Features/Library/TextileDetailView.swift` – hovedbilde vises som første produktseksjon etter grunnopplysninger
+- `Tekstilig/Features/Pieces/PieceEditorView.swift` – Lengde og Bredde har nå persistente synlige etiketter i stedet for bare TextField-placeholder
+- `README.md` og dokumentasjon – Piece markert validert og TextileImage satt som aktivt produktsteg
+
+### CloudKit
+
+Ingen nye record-felt opprettes. Produktkoden bruker eksisterende `TextileImage`-schema. Før testing må:
+
+- `TextileImage.textileId` være `QUERYABLE`
+- `TextileImage.recordName` være `QUERYABLE`
+
+### Bevisst utsatt
+
+- direkte kamera
+- flere bilder per tekstil i produkt-UI
+- sletting av hovedbilde
+- thumbnails og lokal bildeoptimalisering
+- lokal cache/offline
+- Production deploy
+- PWA-endringer

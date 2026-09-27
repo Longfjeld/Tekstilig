@@ -365,10 +365,15 @@ Dette validerer den sentrale modellbeslutningen om at beholdning består av sepa
 
 ## 19. Stoppunkt for Piece-produktsteget
 
-Devpatch 0002 er godkjent når alle disse er bekreftet:
+**✅ FULLFØRT 2026-09-27**
+
+Test 10–18 er gjennomført og validert i simulator mot privat CloudKit Development-database.
+
+Bekreftet:
 
 - appen bygger i Xcode 27
 - `Piece.textileId` er QUERYABLE i Development
+- `Piece.recordName` er QUERYABLE for CloudKit Database-inspeksjon
 - tom Piece-tilstand fungerer
 - et stoffstykke kan opprettes og vises på riktig tekstil
 - samme Piece kan redigeres uten å opprette en ekstra record
@@ -376,17 +381,207 @@ Devpatch 0002 er godkjent når alle disse er bekreftet:
 - flere separate Piece-records kan tilhøre samme tekstil
 - ett Piece kan slettes med bekreftelse uten å påvirke Textile eller andre Piece-records
 
-**Ikke gå videre til bilder i produkt-UI før punkt 10–18 er validert.**
+Devpatch 0003 retter i tillegg den observerte UI-uklarheten i Piece-editoren: **Lengde** og **Bredde** får permanente synlige etiketter og er ikke lenger bare placeholders i tekstfeltene.
 
-## 20. Neste planlagte implementering
+## 20. Legg inn devpatch 0003 – hovedbilde i produkt-UI
+
+**✅ AKSJON – DU**
+
+1. Lukk Xcode 27 dersom prosjektet er åpent.
+2. Ta en Git-commit eller lokal sikkerhetskopi av den fungerende `SwiftUIActualApp0003`-versjonen.
+3. Pakk ut `Tekstilig-devpatch-0003.zip`.
+4. Kopier innholdet fra patchen inn i den eksisterende Tekstilig-prosjektmappen.
+5. Velg **Erstatt** for filer som allerede finnes.
+6. Ikke slett eller erstatt andre lokale filer i overordnet mappe som er utelatt via `.gitignore`.
+7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+8. Kontroller i Project Navigator at disse nye filene er synlige:
+
+```text
+Tekstilig/Domain/TextileImage.swift
+Tekstilig/Data/TextileImageRepository.swift
+Tekstilig/Data/CloudKitTextileImageRepository.swift
+Tekstilig/Features/Images/TextileImageModel.swift
+Tekstilig/Features/Images/TextileMainImageSection.swift
+```
+
+## 21. Opprett nødvendige CloudKit-indekser for TextileImage
+
+**✅ AKSJON – DU**
+
+1. Åpne CloudKit Database.
+2. Velg containeren `iCloud.com.longfjeld.tekstilig`.
+3. Kontroller at miljøet er **Development**.
+4. Gå til **Schema → Indexes**.
+5. Opprett eller kontroller denne indeksen:
+
+```text
+Record Type: TextileImage
+Field:       textileId
+Type:        QUERYABLE
+```
+
+6. Bruk gjerne navnet:
+
+```text
+TextileImage-textileId-queryable
+```
+
+7. Opprett eller kontroller også:
+
+```text
+Record Type: TextileImage
+Field:       recordName
+Type:        QUERYABLE
+```
+
+8. Bruk gjerne navnet:
+
+```text
+TextileImage-recordName-queryable
+```
+
+`textileId` brukes av appen for å hente bildene til valgt tekstil. `recordName` er ikke nødvendig for denne app-queryen, men gjør inspeksjon via **Query Records** i CloudKit Database forutsigbar og unngår samme administrasjonsfeil som ble observert for `Piece`.
+
+**Ikke kjør bildeproduktsteget før `textileId` er QUERYABLE.**
+
+## 22. Bygg devpatch 0003
+
+**❗️ AKSJON – DU**
+
+1. Velg **Product → Build**.
+2. Kontroller at build fullføres uten feil.
+3. Åpne `PieceEditorView.swift` i simulatoren via et eksisterende stoffstykke dersom du vil kontrollere UI-rettingen.
+4. Kontroller at **Lengde** og **Bredde** nå står synlig ved hvert sitt felt også etter at verdier er skrevet inn.
+
+Hvis build feiler, stopp her og noter hele første reelle feilmelding før andre endringer gjøres.
+
+## 23. Kontroller tom hovedbildetilstand
+
+**❗️ AKSJON – DU**
+
+1. Kjør appen i simulatoren som er logget inn på iCloud.
+2. Åpne fanen **Tekstiler**.
+3. Åpne et native-opprettet tekstil med Tekstilig-ID som starter med `T-`.
+4. Finn seksjonen **Hovedbilde**.
+5. Dersom tekstilet ikke har bilde fra før, kontroller at seksjonen viser:
+
+```text
+Ingen bilder registrert
+Velg hovedbilde
+```
+
+6. Kontroller at resten av tekstildetaljen og Piece-listen fortsatt vises og fungerer.
+
+## 24. Sørg for at simulatoren har et testbilde
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Bilder** i simulatoren.
+2. Kontroller at det finnes minst ett ikke-sensitivt testbilde.
+3. Hvis Bilder er tom, legg et vanlig testbilde inn i simulatorens Bilder-bibliotek med den metoden du normalt bruker for simulatoren.
+4. Gå tilbake til Tekstilig.
+
+Dette steget tester valg fra Bilder. Direkte kamera er ikke implementert i devpatch 0003.
+
+## 25. Lagre første hovedbilde
+
+**❗️ AKSJON – DU**
+
+1. Trykk **Velg hovedbilde**.
+2. Velg ett testbilde fra Bilder.
+3. Vent til eventuell tekst **Lagrer i CloudKit …** er borte.
+4. Kontroller at det valgte bildet vises i seksjonen **Hovedbilde**.
+5. Kontroller at knappen nå heter:
+
+```text
+Bytt hovedbilde
+```
+
+6. Naviger tilbake til tekstilbiblioteket.
+7. Åpne samme tekstil på nytt.
+8. Kontroller at bildet lastes på nytt fra CloudKit og fortsatt vises.
+
+## 26. Kontroller TextileImage-recorden i CloudKit
+
+**❗️ AKSJON – DU**
+
+1. Åpne **CloudKit Database → Development → Private Database**.
+2. Velg record type **TextileImage**.
+3. Finn recorden der `textileId` er Tekstilig-ID-en til tekstilet du brukte i test 25.
+4. Kontroller at `imageId` starter med:
+
+```text
+IMG-
+```
+
+5. Kontroller feltene:
+
+| Felt | Forventet |
+|:---|:---|
+| `textileId` | ID-en til valgt tekstil |
+| `type` | `fabric` |
+| `primary` | `1` |
+| `fileName` | `tekstilig-main-...` med filendelse |
+| `contentType` | bildets MIME-type |
+| `imageAsset` | Asset med bildefil |
+
+6. Noter recordens **Record Name**. Den brukes i neste test.
+
+## 27. Erstatt hovedbildet uten å opprette ny hovedbilderecord
+
+**❗️ AKSJON – DU**
+
+1. Sørg for at simulatorens Bilder inneholder et annet testbilde enn det som allerede er lagret.
+2. Åpne samme tekstil i Tekstilig.
+3. Trykk **Bytt hovedbilde**.
+4. Velg det andre bildet.
+5. Vent til lagringen er ferdig.
+6. Kontroller visuelt at det nye bildet vises.
+7. Åpne samme `TextileImage` i CloudKit Database.
+8. Kontroller at **Record Name er den samme som i test 26**.
+9. Kontroller at `imageAsset`, `fileName` og `contentType` er oppdatert.
+10. Kontroller at det ikke er opprettet en ekstra primær `TextileImage` for samme `textileId`.
+
+Dette validerer at «Bytt hovedbilde» er en oppdatering av samme bildeobjekt, ikke en ny hovedbilderecord hver gang.
+
+## 28. Kontroller at bilde og Piece lever sammen
+
+**❗️ AKSJON – DU**
+
+1. Åpne tekstilet som nå har hovedbilde.
+2. Kontroller at hovedbildet vises.
+3. Kontroller at eksisterende **Stoffstykker** fortsatt vises.
+4. Åpne et stoffstykke og avbryt redigeringen uten endring.
+5. Gå tilbake til biblioteket og åpne tekstilet igjen.
+6. Kontroller at både hovedbilde og Piece-data fortsatt er tilgjengelige.
+
+Denne testen bekrefter at bildevertikalsnittet ikke har brutt den allerede validerte beholdningsflyten.
+
+## 29. Stoppunkt for første TextileImage-produktsteg
+
+Devpatch 0003 er godkjent når alle disse er bekreftet:
+
+- appen bygger i Xcode 27
+- Piece-editoren viser permanente etiketter for Lengde og Bredde
+- `TextileImage.textileId` er QUERYABLE i Development
+- et tekstil uten bilde viser korrekt tom tilstand
+- bilde kan velges fra Bilder og lagres som `CKAsset`
+- bildet vises etter ny navigasjon inn på samme tekstil
+- riktig `TextileImage` kan inspiseres i CloudKit Database
+- **Bytt hovedbilde** oppdaterer samme CloudKit-record
+- eksisterende Piece-data fungerer fortsatt sammen med hovedbildet
+
+**Ikke gå videre til materiale/farge før test 20–28 er validert.**
+
+## 30. Neste planlagte implementering
 
 **⏭️ SENERE**
 
-Når Piece-steget er validert, fortsetter produktutviklingen i denne rekkefølgen:
+Når første bildeproduktsteg er validert, fortsetter produktutviklingen i denne rekkefølgen:
 
-1. hovedbilde med `TextileImage` + `CKAsset`
-2. materiale og farge
-3. plassering
+1. materiale og farge
+2. plassering
+3. kamera og bildeoptimalisering / flere bilder
 4. deretter øvrige tekstilegenskaper og vedlikehold
 
 `quantity`, Piece-notat, splitting av rester og egen «registrer bruk»-flyt vurderes som senere utvidelser av Piece-modellen. Production deployes ikke før produksjonsmodellen og schemaet er gjennomgått samlet.

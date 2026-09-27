@@ -207,6 +207,10 @@ Når brukeren velger bilde, bør appen prioritere:
 
 Det skal være mulig å legge til flere bilder senere og angi bildetype, eksempelvis stoffprøve eller vaskelapp.
 
+### Implementeringsstatus 2026-09-27
+
+Devpatch 0003 implementerer første produktversjon av hovedbilde på tekstildetaljen. Brukeren kan velge eller erstatte hovedbildet fra Bilder. Direkte kamera, flere bilder, thumbnails og lokal bildeoptimalisering er bevisst utsatt til senere bildesteg.
+
 ## 7. Finn stoff til prosjekt
 
 Dette er en egen arbeidsflyt for når brukeren kjenner kravene til et prosjekt, men ikke hvilket stoff som skal brukes.

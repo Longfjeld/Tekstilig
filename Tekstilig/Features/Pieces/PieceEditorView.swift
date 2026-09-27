@@ -25,11 +25,17 @@ struct PieceEditorView: View {
         NavigationStack {
             Form {
                 Section("Størrelse") {
-                    TextField("Lengde (cm)", value: $draft.lengthCm, format: .number)
-                        .keyboardType(.numberPad)
+                    LabeledContent("Lengde") {
+                        TextField("cm", value: $draft.lengthCm, format: .number)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
 
-                    TextField("Bredde (cm)", value: $draft.widthCm, format: .number)
-                        .keyboardType(.numberPad)
+                    LabeledContent("Bredde") {
+                        TextField("cm", value: $draft.widthCm, format: .number)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
                 }
 
                 Section("Reservasjon") {
