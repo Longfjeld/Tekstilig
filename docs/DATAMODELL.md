@@ -492,3 +492,25 @@ Fra devpatch 0003 er `TextileImage` introdusert som faktisk Swift-domenetype. F�
 
 Første produktimplementering håndterer ett hovedbilde per tekstil. Bildet velges fra Bilder og lagres som `CKAsset`. Flere bilder, bildetyper, kamera, thumbnails og lokal bildeoptimalisering kommer senere. Materialer, farger og øvrige tekstilegenskaper kobles på i senere vertikale implementeringssteg.
 
+
+
+### Devpatch 0004 – native materiale og farge
+
+Fra devpatch 0004 er strukturerte materialer og farger introdusert som egne Swift-domenetyper og egne CloudKit child-records. Den logiske modellen over er uendret.
+
+`TextileMaterial` bruker:
+
+- `materialId` – permanent ID (`MAT-<UUID>`)
+- `textileId` – relasjon til Textile
+- `material` – fibertype/materialnavn
+- `percent` – valgfri prosentandel 0–100
+
+`TextileColor` bruker:
+
+- `colorId` – permanent ID (`COL-<UUID>`)
+- `textileId` – relasjon til Textile
+- `group` – søkbar fargegruppe
+- `name` – valgfritt beskrivende navn
+- `hex` – valgfri `#RRGGBB`-verdi
+
+Denne fysiske CloudKit-mappingen bevarer struktureringen fra seksjon 4 og 5 uten å låse de sammensatte verdiene til ett fritekstfelt. Flere materialer og flere farger kan knyttes til samme tekstil.

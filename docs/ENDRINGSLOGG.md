@@ -417,3 +417,39 @@ Ingen nye record-felt opprettes. Produktkoden bruker eksisterende `TextileImage`
 - lokal cache/offline
 - Production deploy
 - PWA-endringer
+
+
+## Devpatch 0004 – 2026-09-27
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0005.zip`, der bildeproduktsteget test 23–29 er validert.
+
+### Opprettet
+
+- `Domain/TextileMaterial.swift` og `Domain/TextileColor.swift`
+- repository-grensesnitt og CloudKit-implementasjoner for begge child-record-typene
+- `Features/Attributes/TextileAttributesModel.swift`
+- editorer og detaljseksjon for materiale/farge
+
+### Endret
+
+- `TextileDetailView` viser Materialer og Farger i ordinær produktflyt
+- `TextileMainImageSection` tar en lokal snapshot av `isSaving` før `PhotosPicker`-labelen, slik at Xcode 27 ikke refererer direkte til en MainActor-isolert property fra en Sendable closure
+- dokumentasjonen markerer bildeproduktsteget som validert og beskriver ny CloudKit-mapping
+- feil seksjonsnummer i `ARKITEKTUR.md` for TextileImage er korrigert fra 19 til 23
+
+### CloudKit
+
+Nye Development-record-typer:
+
+- `TextileMaterial(materialId, textileId, material, percent)`
+- `TextileColor(colorId, textileId, group, name, hex)`
+
+Begge krever `textileId` som `QUERYABLE`; `recordName` anbefales `QUERYABLE` for administrasjon/testing.
+
+### Bevisst utsatt
+
+- søk/filtrering på materiale og farge
+- plassering
+- kamera / flere bilder / bildeoptimalisering
+- Production deploy
+- PWA-endringer

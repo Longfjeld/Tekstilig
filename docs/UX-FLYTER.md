@@ -403,3 +403,31 @@ Tekstildetalj
 ```
 
 Visningen viser total lengde og bredde, og ved reservasjon både reservert og gjenværende tilgjengelig lengde. Dette er første funksjonelle beholdningssteg; senere UX for «registrer bruk», splitting av rester og rikere Piece-data beholdes som planlagt videreutvikling.
+
+
+## 18. Implementert materiale- og fargeflyt – devpatch 0004
+
+Tekstildetaljen får egne seksjoner for strukturerte materialer og farger.
+
+Materialflyt:
+
+```text
+Tekstildetalj
+    → Materialer
+       → legg til standardmateriale eller eget materialenavn
+       → valgfri prosentandel
+       → rediger / slett
+```
+
+Fargeflyt:
+
+```text
+Tekstildetalj
+    → Farger
+       → velg fargegruppe
+       → valgfritt beskrivende navn
+       → valgfri #RRGGBB-verdi
+       → rediger / slett
+```
+
+UI viser en liten fargeprøve når gyldig hex-verdi finnes, men tekstlig fargegruppe/navn beholdes alltid slik at farge ikke er eneste betydningsbærer.

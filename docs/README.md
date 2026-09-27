@@ -4,7 +4,7 @@ Dokumentasjonen i denne mappen er den autoritative prosjektbeskrivelsen for Teks
 
 ## Gjeldende fase
 
-Den native CloudKit-PoC-en er fullført. Textile-produktflyten er validert gjennom test 1–9 og Piece-produktflyten gjennom test 10–18. Aktiv utvikling går nå videre med hovedbilde i ordinær SwiftUI-UI via `TextileImage` + `CKAsset` mot privat CloudKit Development-database.
+Den native CloudKit-PoC-en er fullført. Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18 og første hovedbildeproduktsteg gjennom test 20–29. Aktiv utvikling går nå videre med strukturerte materialer og farger i ordinær SwiftUI-UI mot privat CloudKit Development-database.
 
 Start her for videre arbeid:
 

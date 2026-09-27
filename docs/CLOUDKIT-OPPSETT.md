@@ -522,3 +522,40 @@ Xcode er ikke nødvendig for å fullføre punkt 1–9 i denne CloudKit/PWA-forbe
 - Apple: CloudKit JS configuration: https://developer.apple.com/documentation/cloudkitjs/cloudkit
 - Apple: CloudKit JS authentication: https://developer.apple.com/documentation/cloudkitjs/cloudkit.container/setupauth
 - GitHub Pages HTTPS: https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https
+
+---
+
+## Native produktutvidelse – devpatch 0004
+
+Etter at den tekniske PoC-en er avsluttet, introduserer devpatch 0004 to nye Development record types for strukturert materiale og farge:
+
+### TextileMaterial
+
+| Felt | Type |
+|:---|:---|
+| `materialId` | String |
+| `textileId` | String |
+| `material` | String |
+| `percent` | Int64 |
+
+Indekser:
+
+- `textileId` → `QUERYABLE`
+- `recordName` → `QUERYABLE` for administrasjon/testing
+
+### TextileColor
+
+| Felt | Type |
+|:---|:---|
+| `colorId` | String |
+| `textileId` | String |
+| `group` | String |
+| `name` | String |
+| `hex` | String |
+
+Indekser:
+
+- `textileId` → `QUERYABLE`
+- `recordName` → `QUERYABLE` for administrasjon/testing
+
+Disse endringene opprettes kun i **Development**. Production skal fortsatt ikke deployes før schemaet er gjennomgått samlet.

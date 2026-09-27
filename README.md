@@ -29,7 +29,7 @@ PoC-resultatene er dokumentert i `docs/SWIFTUI-OPPSTART.md`.
 
 ## Nåværende appfase
 
-Textile-produktflyten er validert gjennom test 1–9, og Piece-produktflyten er validert gjennom test 10–18. Devpatch 0003 starter neste produktsteg: hovedbilde med `TextileImage` + `CKAsset` i ordinær app-UI. Arkitekturen er nå:
+Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18 og første hovedbildeproduktsteg gjennom test 20–29. Devpatch 0004 starter neste produktsteg: strukturerte materialer og farger i ordinær app-UI. Arkitekturen er nå:
 
 ```text
 SwiftUI-visning
@@ -49,10 +49,11 @@ Aktiv produktflyt er nå:
 Tekstilbibliotek
   → Tekstildetalj
      → Hovedbilde (TextileImage + CKAsset)
+     → Materialer / farger
      → Stoffstykker → Nytt/rediger/slett Piece
 ```
 
-`TextileImage` bruker eksisterende Development-schema fra PoC-en. Denne leveransen legger til valg/erstatning av hovedbilde fra Bilder, men ikke kamera, thumbnails eller bildeoptimalisering ennå. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
+Materialer og farger lagres strukturert som egne child-records (`TextileMaterial` og `TextileColor`) knyttet til `textileId`. Dette bevarer materialprosent og fargegruppe/navn/hex uten å redusere dataene til fritekst. Kamera, thumbnails og bildeoptimalisering er fortsatt utsatt. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
 
 ## Videre test
 

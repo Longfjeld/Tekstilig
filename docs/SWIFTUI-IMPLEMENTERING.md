@@ -1,6 +1,6 @@
 # SwiftUI – videre implementering
 
-**Status:** Produktfase 1 validert (test 1–9) · Produktfase 2 `Piece` klar til test via devpatch 0002  
+**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge klar til test via devpatch 0004  
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
@@ -559,30 +559,318 @@ Denne testen bekrefter at bildevertikalsnittet ikke har brutt den allerede valid
 
 ## 29. Stoppunkt for første TextileImage-produktsteg
 
-Devpatch 0003 er godkjent når alle disse er bekreftet:
+**✅ FULLFØRT 2026-09-27**
+
+Test 20–29 er gjennomført og validert i simulator mot privat CloudKit Development-database.
+
+Bekreftet:
 
 - appen bygger i Xcode 27
 - Piece-editoren viser permanente etiketter for Lengde og Bredde
-- `TextileImage.textileId` er QUERYABLE i Development
-- et tekstil uten bilde viser korrekt tom tilstand
+- `TextileImage.textileId` og `TextileImage.recordName` er QUERYABLE i Development
+- tom hovedbildetilstand fungerer
 - bilde kan velges fra Bilder og lagres som `CKAsset`
-- bildet vises etter ny navigasjon inn på samme tekstil
-- riktig `TextileImage` kan inspiseres i CloudKit Database
+- bildet lastes tilbake etter ny navigasjon
 - **Bytt hovedbilde** oppdaterer samme CloudKit-record
-- eksisterende Piece-data fungerer fortsatt sammen med hovedbildet
+- Piece-data fungerer samtidig med hovedbildet
 
-**Ikke gå videre til materiale/farge før test 20–28 er validert.**
+Det ble observert ett ikke-blokkerende Xcode 27 concurrency-varsel i `PhotosPicker`-labelen fordi `model.isSaving` ble lest direkte fra en Sendable closure. Devpatch 0004 rydder dette før neste funksjonelle steg.
 
-## 30. Neste planlagte implementering
+## 30. Legg inn devpatch 0004 – materiale og farge
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0005.zip`, der test 23–29 er validert.
+
+1. Lukk Xcode 27 dersom prosjektet er åpent.
+2. Kontroller at siste Git-commit/snapshot er `SwiftUIActualApp0005`.
+3. Pakk ut `Tekstilig-devpatch-0004.zip`.
+4. Kopier innholdet fra patchen inn i den eksisterende Tekstilig-prosjektmappen.
+5. Velg **Erstatt** for filer som allerede finnes.
+6. Ikke slett lokale filer som er utelatt via `.gitignore`.
+7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+8. Kontroller at disse nye filene vises i Project Navigator:
+
+```text
+Domain/TextileMaterial.swift
+Domain/TextileColor.swift
+Data/TextileMaterialRepository.swift
+Data/TextileColorRepository.swift
+Data/CloudKitTextileMaterialRepository.swift
+Data/CloudKitTextileColorRepository.swift
+Features/Attributes/TextileAttributesModel.swift
+Features/Attributes/TextileAttributesSection.swift
+Features/Attributes/TextileMaterialEditorView.swift
+Features/Attributes/TextileColorEditorView.swift
+```
+
+## 31. Opprett CloudKit-schema for TextileMaterial
+
+**✅ AKSJON – DU**
+
+Dette er første produktsteg som introduserer en ny record-type etter PoC-en. Opprett schemaet før appen kjøres, slik at første detalj-query ikke møter en ukjent record-type.
+
+1. Åpne **CloudKit Database**.
+2. Velg container `iCloud.com.longfjeld.tekstilig`.
+3. Kontroller at miljøet er **Development**.
+4. Gå til **Schema → Record Types**.
+5. Opprett record type:
+
+```text
+TextileMaterial
+```
+
+6. Opprett feltene:
+
+| Felt | Type |
+|:---|:---|
+| `materialId` | String |
+| `textileId` | String |
+| `material` | String |
+| `percent` | Int64 |
+
+7. Gå til **Schema → Indexes**.
+8. Opprett:
+
+```text
+Record Type: TextileMaterial
+Field:       textileId
+Type:        QUERYABLE
+Navn:        TextileMaterial-textileId-queryable
+```
+
+9. Opprett også:
+
+```text
+Record Type: TextileMaterial
+Field:       recordName
+Type:        QUERYABLE
+Navn:        TextileMaterial-recordName-queryable
+```
+
+10. Kontroller at begge indeksene vises før du går videre.
+
+## 32. Opprett CloudKit-schema for TextileColor
+
+**✅ AKSJON – DU**
+
+1. Fortsett i **Development → Schema → Record Types**.
+2. Opprett record type:
+
+```text
+TextileColor
+```
+
+3. Opprett feltene:
+
+| Felt | Type |
+|:---|:---|
+| `colorId` | String |
+| `textileId` | String |
+| `group` | String |
+| `name` | String |
+| `hex` | String |
+
+4. Gå til **Schema → Indexes**.
+5. Opprett:
+
+```text
+Record Type: TextileColor
+Field:       textileId
+Type:        QUERYABLE
+Navn:        TextileColor-textileId-queryable
+```
+
+6. Opprett også:
+
+```text
+Record Type: TextileColor
+Field:       recordName
+Type:        QUERYABLE
+Navn:        TextileColor-recordName-queryable
+```
+
+7. Kontroller at begge indeksene vises før du går videre.
+
+Ingen `SORTABLE`-indekser eller søkeindekser på `material`/`group` opprettes i dette steget.
+
+## 33. Bygg devpatch 0004 og kontroller concurrency-varselet
+
+**✅ AKSJON – DU**
+
+1. Velg simulatoren som Run Destination.
+2. Velg **Product → Build**.
+3. Kontroller at build fullføres uten feil.
+4. Kontroller spesielt `TextileMainImageSection.swift`.
+5. Bekreft at tidligere varsel:
+
+```text
+Main actor-isolated property 'isSaving' can not be referenced from a Sendable closure
+```
+
+ikke lenger vises på `PhotosPicker`-labelen.
+
+Hvis build feiler eller samme varsel fortsatt vises, stopp her før appen kjøres.
+
+## 34. Kontroller tom materiale- og fargetilstand
+
+**✅ AKSJON – DU**
+
+1. Kjør appen i simulatoren.
+2. Åpne et native-opprettet tekstil med `textileId` som starter med `T-`.
+3. Finn seksjonene **Materialer** og **Farger**.
+4. Kontroller at et tekstil uten registrerte verdier viser:
+
+```text
+Ingen materialer registrert
+Ingen farger registrert
+```
+
+5. Kontroller at knappene **Legg til materiale** og **Legg til farge** er tilgjengelige.
+6. Kontroller at eksisterende hovedbilde og stoffstykker fortsatt vises.
+
+## 35. Registrer første materiale
+
+**✅ AKSJON – DU**
+
+1. Trykk **Legg til materiale**.
+2. Velg **Ull**.
+3. Sett **Andel** til:
+
+```text
+80
+```
+
+4. Trykk **Lagre**.
+5. Kontroller at Materialer-seksjonen viser:
+
+```text
+Ull    80 %
+```
+
+6. Åpne **CloudKit Database → Development → Private Database → TextileMaterial**.
+7. Finn den nye recorden.
+8. Kontroller:
+
+| Felt | Forventet |
+|:---|:---|
+| `materialId` | starter med `MAT-` |
+| `textileId` | samme ID som valgt Textile |
+| `material` | `Ull` |
+| `percent` | `80` |
+
+## 36. Registrer flere materialer og valgfri prosent
+
+**✅ AKSJON – DU**
+
+1. Legg til **Polyester** med andel `20`.
+2. Kontroller at begge materialene vises som separate rader.
+3. Legg deretter til et tredje materiale ved å velge **Annet**.
+4. Skriv et tydelig testenavn, for eksempel:
+
+```text
+Testfiber
+```
+
+5. La prosentandel stå tom.
+6. Lagre.
+7. Kontroller at `Testfiber` vises uten prosent.
+8. Åpne `Testfiber` igjen, endre navnet til `Testfiber redigert` og lagre.
+9. Kontroller at samme CloudKit-record er oppdatert og ikke duplisert.
+10. Sveip `Testfiber redigert`, velg **Slett**, og bekreft sletting.
+11. Kontroller at Ull og Polyester fortsatt finnes.
+
+## 37. Registrer første farge
+
+**✅ AKSJON – DU**
+
+1. Trykk **Legg til farge**.
+2. Velg fargegruppe **Blå**.
+3. Sett beskrivende navn til:
+
+```text
+Marineblå
+```
+
+4. Sett hex til:
+
+```text
+#273448
+```
+
+5. Trykk **Lagre**.
+6. Kontroller at Farger-seksjonen viser **Marineblå**, fargegruppen **Blå** og hex-verdien.
+7. Kontroller at en liten fargeprøve vises.
+8. Åpne **CloudKit Database → Development → Private Database → TextileColor**.
+9. Kontroller:
+
+| Felt | Forventet |
+|:---|:---|
+| `colorId` | starter med `COL-` |
+| `textileId` | samme ID som valgt Textile |
+| `group` | `Blå` |
+| `name` | `Marineblå` |
+| `hex` | `#273448` |
+
+## 38. Valider farge uten hex og redigering
+
+**✅ AKSJON – DU**
+
+1. Legg til en ny farge med gruppe **Grå**.
+2. La navn og hex stå tomme.
+3. Lagre.
+4. Kontroller at raden viser **Grå** uten krav om fargeprøve.
+5. Åpne Grå-raden igjen.
+6. Sett navn til `Mellomgrå` og hex til `808080` uten `#`.
+7. Lagre.
+8. Kontroller at appen normaliserer verdien til:
+
+```text
+#808080
+```
+
+9. Kontroller at samme CloudKit-record er oppdatert.
+10. Slett den grå testen og bekreft at Marineblå fortsatt finnes.
+
+## 39. Kontroller at alle vertikalsnitt lever sammen
+
+**✅ AKSJON – DU**
+
+1. Åpne samme tekstil på nytt.
+2. Kontroller at hovedbildet fortsatt vises.
+3. Kontroller at **Ull 80 %** og **Polyester 20 %** vises.
+4. Kontroller at **Marineblå** vises.
+5. Kontroller at eksisterende stoffstykker fortsatt vises.
+6. Åpne ett stoffstykke og avbryt uten endring.
+7. Gå tilbake til biblioteket og inn på samme tekstil igjen.
+8. Kontroller at bilde, materialer, farger og Piece-data fortsatt lastes fra CloudKit.
+
+## 40. Stoppunkt for materiale- og fargeproduktsteget
+
+Devpatch 0004 er godkjent når alle disse er bekreftet:
+
+- appen bygger i Xcode 27 uten det tidligere `isSaving`/Sendable-varselet
+- `TextileMaterial` og `TextileColor` finnes i Development-schemaet
+- begge `textileId`-feltene er QUERYABLE
+- standardmateriale med prosent kan opprettes og leses tilbake
+- eget materialenavn uten prosent kan opprettes, redigeres og slettes
+- fargegruppe/navn/hex kan opprettes og leses tilbake
+- hex uten `#` normaliseres til `#RRGGBB`
+- farge uten navn/hex fungerer
+- eksisterende hovedbilde og Piece-flyt fungerer samtidig
+
+**Ikke gå videre til plassering før test 30–39 er validert.**
+
+## 41. Neste planlagte implementering
 
 **⏭️ SENERE**
 
-Når første bildeproduktsteg er validert, fortsetter produktutviklingen i denne rekkefølgen:
+Når materiale/farge er validert fortsetter produktutviklingen i denne rekkefølgen:
 
-1. materiale og farge
-2. plassering
-3. kamera og bildeoptimalisering / flere bilder
-4. deretter øvrige tekstilegenskaper og vedlikehold
+1. plassering
+2. kamera og bildeoptimalisering / flere bilder
+3. øvrige tekstilegenskaper og vedlikehold
+4. søk og filtre når tilstrekkelig strukturerte produktdata er på plass
 
 `quantity`, Piece-notat, splitting av rester og egen «registrer bruk»-flyt vurderes som senere utvidelser av Piece-modellen. Production deployes ikke før produksjonsmodellen og schemaet er gjennomgått samlet.
 

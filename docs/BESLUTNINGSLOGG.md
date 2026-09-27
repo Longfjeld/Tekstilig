@@ -699,3 +699,27 @@ Bildet velges via systemets Bilder-velger og lagres som `CKAsset`. Ved erstatnin
 - `TextileImage.recordName` gjøres også `QUERYABLE` for praktisk inspeksjon i CloudKit Database.
 - Første versjon lagrer valgt originaldata uten lokal nedskalering/thumbnail-generering.
 - Kamera, flere bilder, sletting av bilde og bildeoptimalisering kommer i senere steg.
+
+
+## B-040 – Materialer og farger lagres som egne strukturerte child-records
+
+**Dato:** 2026-09-27  
+**Status:** Besluttet
+
+### Beslutning
+
+Den native produktimplementeringen mapper materialer og farger til egne CloudKit-record-typer, `TextileMaterial` og `TextileColor`, koblet til foreldrenes permanente `textileId`.
+
+Materialregistreringen inneholder materialnavn og valgfri prosentandel. Fargeregistreringen inneholder fargegruppe og valgfrie navn/hex-verdi.
+
+### Begrunnelse
+
+B-005 og B-012 krever strukturerte verdier. Ett tekstil kan samtidig ha flere materialer og flere farger. Egne child-records gjør relasjonen eksplisitt, unngår parallelle arrays og bevarer de sammenhørende verdiene uten å redusere dem til fritekst.
+
+### Konsekvens
+
+- `TextileMaterial.textileId` og `TextileColor.textileId` må være `QUERYABLE` i Development.
+- `recordName` gjøres også `QUERYABLE` på begge typer for CloudKit Database-inspeksjon.
+- Søkeindekser på `material`/`group` utsettes til søkefunksjonen implementeres.
+- Nye registreringer får logisk ID `MAT-<UUID>` og `COL-<UUID>`.
+- Den logiske datamodellen i `DATAMODELL.md` endres ikke.

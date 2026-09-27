@@ -436,7 +436,7 @@ Produktkoden henter bare Piece-records for valgt tekstil med query på `textileI
 
 Diagnostikkrecorden `swiftui-poc-piece-v1` beholdes for utvikling, men filtreres ut av produktflyten.
 
-## 19. Produktarkitektur for TextileImage – devpatch 0003
+## 23. Produktarkitektur for TextileImage – devpatch 0003
 
 Etter validert Piece-flyt er hovedbilde neste vertikale produktsteg. Det følger samme lagdeling som Textile og Piece:
 
@@ -459,3 +459,45 @@ Private CloudKit / Development
 Produktkoden spør etter `TextileImage` via `textileId`, leser `CKAsset.fileURL` umiddelbart inn i `Data`, og beholder ikke CloudKits staging-URL som langsiktig filreferanse.
 
 Første produktversjon velger siste endrede record som er markert `primary = 1` dersom eldre Development-data mot formodning inneholder flere hovedbilder for samme tekstil. Koden sletter eller skjuler ikke slike records automatisk. Normal lagring oppdaterer eksisterende primærrecord og oppretter bare ny record når tekstilet ikke har hovedbilde fra før.
+
+
+## 24. Produktarkitektur for materiale og farge – devpatch 0004
+
+Etter validert bildevertikalsnitt introduseres materialer og farger som egne child-records. Dette følger samme repository-mønster som øvrig produktkode:
+
+```text
+TextileDetailView
+    ↓
+TextileAttributesSection
+    ↓
+TextileAttributesModel
+    ↓
+TextileMaterialRepository / TextileColorRepository
+    ↓
+CloudKitTextileMaterialRepository / CloudKitTextileColorRepository
+    ↓
+Private CloudKit / Development
+```
+
+### TextileMaterial
+
+| Felt | CloudKit-type | Formål |
+|:---|:---|:---|
+| `materialId` | String | Permanent ID for materialregistreringen |
+| `textileId` | String | Relasjon til Textile |
+| `material` | String | Fibertype/materialnavn |
+| `percent` | Int64, valgfri | Prosentandel 0–100 |
+
+### TextileColor
+
+| Felt | CloudKit-type | Formål |
+|:---|:---|:---|
+| `colorId` | String | Permanent ID for fargeregistreringen |
+| `textileId` | String | Relasjon til Textile |
+| `group` | String | Standardisert fargegruppe |
+| `name` | String | Valgfritt beskrivende navn |
+| `hex` | String | Valgfri `#RRGGBB`-verdi |
+
+Child-records velges fremfor fritekst/parallelle arrays fordi ett tekstil kan ha flere materialer og farger, og fordi hver registrering har flere sammenhørende strukturerte egenskaper. `textileId` må være `QUERYABLE` på begge record-typer for produktets detalj-query. `recordName` gjøres også `QUERYABLE` for forutsigbar inspeksjon i CloudKit Database.
+
+Søk/filtrering på selve `material` og `group` indekseres ikke i dette steget. Søkeindekser fastsettes når faktisk søkeflyt implementeres, slik at Production-schemaet ikke får unødvendige indekser tidlig.

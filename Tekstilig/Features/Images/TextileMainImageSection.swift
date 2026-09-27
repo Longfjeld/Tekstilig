@@ -15,6 +15,8 @@ struct TextileMainImageSection: View {
                 ProgressView("Henter hovedbilde …")
             } else if let primaryImage = model.primaryImage,
                       let uiImage = UIImage(data: primaryImage.data) {
+                let isSaving = model.isSaving
+
                 VStack(alignment: .leading, spacing: 12) {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -24,11 +26,11 @@ struct TextileMainImageSection: View {
 
                     PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                         Label(
-                            model.isSaving ? "Lagrer bilde …" : "Bytt hovedbilde",
+                            isSaving ? "Lagrer bilde …" : "Bytt hovedbilde",
                             systemImage: "photo.badge.plus"
                         )
                     }
-                    .disabled(model.isSaving)
+                    .disabled(isSaving)
                 }
                 .padding(.vertical, 4)
             } else if let errorMessage = model.errorMessage {
