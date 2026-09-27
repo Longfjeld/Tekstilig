@@ -536,3 +536,20 @@ Dette følger det logiske `location`-objektet i `DATAMODELL.md`, men unngår en 
 Devpatch 0005 samlet de tidligere fire separate `.sheet(...)`-presentasjonene for nytt/rediger materiale/farge til én eksplisitt editor-route, men test 41 viste at editoren fortsatt kunne lukkes straks etter presentasjon. Årsaken var at selve `.sheet`-modifikatoren fortsatt lå på `TextileAttributesSection`, som bygger innholdet sitt gjennom en transparent `Group` med flere `Section`-noder inne i en `List`. Denne view-strukturen kan rekonstrueres når asynkron CloudKit-state endres.
 
 Devpatch 0006 flytter derfor både `TextileAttributesModel`-eierskap og `AttributeEditorRoute` til den stabile forelderen `TextileDetailView`. `TextileAttributesSection` er nå bare innhold/handlinger og ber forelderen om å åpne editoren. Selve `.sheet(item:)` er forankret på `List`-nivået i `TextileDetailView`, slik at presentasjonshosten består når attributtseksjonene oppdateres.
+
+
+### Stabil presentasjon av plasseringseditor – devpatch 0007
+
+Første plasseringsimplementasjon presenterte `TextileLocationEditorView` med `.sheet(isPresented:)` direkte fra `TextileLocationSection`. Test viste samme symptom som tidligere for materiale/farge: editoren kunne åpnes og deretter forsvinne uten brukerhandling når detaljvisningen ble rekonstruert.
+
+Devpatch 0007 flytter presentasjonstilstanden til `TextileDetailView`. `TextileLocationSection` er nå en ren visnings-/handlingsseksjon som sender `onEditLocation` opp til forelderen. `TextileDetailView` eier `showLocationEditor` og presenterer `TextileLocationEditorView` fra den stabile detaljroten.
+
+```text
+TextileDetailView
+    ├─ eier showLocationEditor
+    ├─ presenterer TextileLocationEditorView
+    └─ TextileLocationSection
+         └─ sender onEditLocation opp
+```
+
+Dette endrer ikke CloudKit-mappingen. `locationArea`, `locationShelf` og `locationContainer` forblir valgfrie felt på `Textile`.

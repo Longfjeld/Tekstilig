@@ -862,15 +862,26 @@ Test 30–39 er validert, og devpatch 0005 ble lagt inn på `Tekstilig-SwiftUIAc
 
 Feilen ble sporet til at `.sheet(item:)` fortsatt var forankret i `TextileAttributesSection`, som ligger i en `List` og bygger flere seksjoner gjennom en transparent `Group`.
 
-## 42. Legg inn devpatch 0006 – stabil presentasjonshost
+## 42. Devpatch 0006 lagt inn – materiale/farge presenteres stabilt
 
-**❗️ AKSJON – DU**
+**✅ FULLFØRT**
 
-Denne patchen bygger på `Tekstilig-SwiftUIActualApp0007.zip`.
+1. Devpatch 0006 ble lagt inn på prosjektkilden som senere ble snapshot `Tekstilig-SwiftUIActualApp0008.zip`.
+2. **Legg til materiale** og **Legg til farge** ble kontrollert på nytt.
+3. Editorene stod nå åpne etter første klikk og viste ikke den tidligere umiddelbare lukkingen.
+4. Samme symptom ble derimot observert på **Legg til plassering**.
+
+Plassering skal derfor rettes med samme stabile presentasjonsmønster før CloudKit-feltene opprettes.
+
+## 43. Legg inn devpatch 0007 – stabil plasseringseditor
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0008.zip`.
 
 1. Lukk Xcode 27.
-2. Kontroller at siste Git-commit/snapshot tilsvarer `SwiftUIActualApp0007`.
-3. Pakk ut `Tekstilig-devpatch-0006.zip`.
+2. Kontroller at siste Git-commit/snapshot tilsvarer `SwiftUIActualApp0008`.
+3. Pakk ut `Tekstilig-devpatch-0007.zip`.
 4. Kopier innholdet over eksisterende Tekstilig-prosjektmappe.
 5. Velg **Erstatt** for eksisterende filer.
 6. Ikke slett lokale filer som er ignorert via `.gitignore`.
@@ -878,37 +889,35 @@ Denne patchen bygger på `Tekstilig-SwiftUIActualApp0007.zip`.
 8. Kontroller at disse filene finnes:
 
 ```text
-Features/Attributes/TextileAttributesSection.swift
 Features/Library/TextileDetailView.swift
+Features/Location/TextileLocationSection.swift
+Features/Location/TextileLocationEditorView.swift
 ```
 
 Ingen CloudKit-endring skal gjøres i dette punktet.
 
-## 43. Bygg og regresjonstest materiale/farge-editor på nytt
+## 44. Bygg og regresjonstest plasseringseditoren
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Velg simulatoren som vanlig Run Destination.
 2. Kjør **Product → Build**.
-3. Kontroller at build er vellykket uten nye warnings fra devpatch 0006.
+3. Kontroller at build er vellykket uten nye warnings fra devpatch 0007.
 4. Kjør appen.
-5. Åpne et vanlig Textile opprettet av SwiftUI-appen.
-6. Trykk **Legg til materiale**.
-7. La editoren stå åpen i minst 10 sekunder uten å skrive.
-8. Kontroller at editoren **ikke forsvinner av seg selv**.
-9. Trykk **Avbryt**.
-10. Trykk **Legg til farge**.
-11. La editoren stå åpen i minst 10 sekunder uten å skrive.
-12. Kontroller at editoren **ikke forsvinner av seg selv**.
-13. Trykk **Avbryt**.
-14. Gjenta punkt 6–13 én gang til.
-15. Åpne deretter et eksisterende materiale og en eksisterende farge for redigering, og kontroller at også disse editorene forblir åpne til du selv velger **Avbryt**.
+5. Åpne et vanlig `Textile` opprettet av SwiftUI-appen.
+6. Finn seksjonen **Plassering**.
+7. Trykk **Legg til plassering**.
+8. La editoren stå åpen i minst 10 sekunder uten å skrive.
+9. Kontroller at editoren **ikke forsvinner av seg selv**.
+10. Trykk **Avbryt**.
+11. Gjenta punkt 7–10 minst én gang.
+12. Åpne **Legg til materiale** og **Legg til farge** én gang hver og kontroller at disse fortsatt står åpne til du selv velger **Avbryt**.
 
-**Stopp her dersom en editor fortsatt forsvinner uten brukerhandling. Ikke gå videre til plassering før punkt 43 er bestått.**
+**Stopp her dersom plasseringseditoren eller attributt-editorene fortsatt forsvinner uten brukerhandling. Ikke opprett CloudKit-feltene før punkt 44 er bestått.**
 
-## 44. Opprett plasseringsfeltene i CloudKit Development
+## 45. Opprett plasseringsfeltene i CloudKit Development
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 Plassering lagres på eksisterende `Textile` record type. Det opprettes ingen ny record type.
 
@@ -929,21 +938,21 @@ Plassering lagres på eksisterende `Textile` record type. Det opprettes ingen ny
 
 Det skal ikke opprettes nye indekser for plassering i dette steget.
 
-## 45. Valider tom plassering
+## 46. Valider tom plassering
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Kjør appen i simulatoren.
-2. Åpne et native-opprettet tekstil.
+2. Åpne et native-opprettet tekstil som ikke har plasseringsdata.
 3. Finn seksjonen **Plassering**.
-4. Kontroller at et tekstil uten plasseringsdata viser en tom/ikke registrert tilstand.
-5. Kontroller at handlingen for å redigere plassering er tilgjengelig.
+4. Kontroller at den viser **Ingen plassering registrert**.
+5. Kontroller at **Legg til plassering** er tilgjengelig.
 
-## 46. Lagre komplett plassering
+## 47. Lagre komplett plassering
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
-1. Åpne **Rediger plassering**.
+1. Trykk **Legg til plassering** eller **Rediger plassering**.
 2. Sett eksempelvis:
 
 ```text
@@ -952,18 +961,19 @@ Hylle: Hylle 2
 Beholder / kasse: Kasse B
 ```
 
-3. Lagre.
+3. Trykk **Lagre**.
 4. Kontroller at editoren lukkes.
 5. Kontroller at detaljvisningen viser alle tre verdiene.
-6. Gå tilbake til biblioteket og åpne samme tekstil igjen.
-7. Kontroller at plasseringen fortsatt vises.
+6. Gå tilbake til biblioteket.
+7. Åpne samme tekstil igjen.
+8. Kontroller at plasseringen fortsatt vises.
 
-## 47. Kontroller plassering i CloudKit
+## 48. Kontroller plassering i CloudKit
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **CloudKit Database → Development → Private Database → Textile**.
-2. Finn samme Textile-record.
+2. Finn samme `Textile`-record.
 3. Kontroller:
 
 | Felt | Forventet |
@@ -974,31 +984,31 @@ Beholder / kasse: Kasse B
 
 4. Kontroller at samme Textile-record er oppdatert og at ingen ny Textile-record er opprettet.
 
-## 48. Valider delvis plassering og redigering
+## 49. Valider delvis plassering og redigering
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **Rediger plassering** igjen.
 2. Tøm **Hylle**.
 3. Endre **Beholder / kasse** til `Kasse C`.
 4. Behold **Område / rom** som `Syrom`.
 5. Lagre.
-6. Kontroller at detaljvisningen viser område og beholder, men ikke en falsk/tom hylleverdi.
+6. Kontroller at detaljvisningen viser område og beholder, men ikke en tom hylleverdi.
 7. Kontroller i CloudKit at `locationShelf` er fjernet/tomt og at øvrige verdier er korrekte.
 
-## 49. Valider at plassering kan fjernes helt
+## 50. Valider at plassering kan fjernes helt
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **Rediger plassering**.
 2. Tøm alle tre feltene.
 3. Lagre.
-4. Kontroller at detaljvisningen igjen viser tom/ikke registrert plassering.
+4. Kontroller at detaljvisningen igjen viser **Ingen plassering registrert**.
 5. Kontroller i CloudKit at de valgfrie plasseringsfeltene ikke lenger inneholder de gamle verdiene.
 
-## 50. Kontroller at eksisterende data lever sammen med plassering
+## 51. Kontroller at eksisterende data lever sammen med plassering
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Registrer eller behold en gyldig plassering på testtekstilet.
 2. Kontroller at hovedbildet fortsatt vises.
@@ -1010,13 +1020,26 @@ Beholder / kasse: Kasse B
 8. Kontroller at plassering, bilde, materialer, farger og stoffstykker fortsatt er bevart.
 9. Gå ut og inn av detaljvisningen én gang til og kontroller samme resultat.
 
-## 51. Stoppunkt for plassering
+## 52. Regresjonstest modalpresentasjon etter lagring
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
-Devpatch 0005 + 0006 og plassering er godkjent når alle disse er bekreftet:
+1. Etter at plasseringsdata er lagret, trykk **Rediger plassering**.
+2. La editoren stå åpen i minst 10 sekunder.
+3. Kontroller at den fortsatt ikke lukkes automatisk.
+4. Avbryt uten endring.
+5. Åpne et eksisterende materiale og en eksisterende farge.
+6. La hver editor stå åpen i minst 10 sekunder og avbryt.
+7. Kontroller at ingen av de tre editorene lukkes uten brukerhandling.
+
+## 53. Stoppunkt for plassering
+
+**✅ AKSJON – DU**
+
+Devpatch 0007 og plassering er godkjent når alle disse er bekreftet:
 
 - materiale-/fargeeditor forblir åpen til bruker avslutter den
+- plasseringseditor forblir åpen til bruker avslutter den
 - appen bygger uten nye warnings fra rettingen
 - tom plassering fungerer på eldre Textile-records
 - komplett plassering kan lagres og leses tilbake
@@ -1025,4 +1048,4 @@ Devpatch 0005 + 0006 og plassering er godkjent når alle disse er bekreftet:
 - samme Textile-record oppdateres
 - bilde, materialer, farger og Piece-data bevares gjennom Textile-redigering
 
-**Ikke gå videre til neste produktområde før punkt 51 er bekreftet.**
+**Ikke gå videre til neste produktområde før punkt 53 er bekreftet.**

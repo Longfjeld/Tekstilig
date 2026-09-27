@@ -2,9 +2,7 @@ import SwiftUI
 
 struct TextileLocationSection: View {
     let textile: Textile
-    let model: TextileLibraryModel
-
-    @State private var showEditor = false
+    let onEditLocation: () -> Void
 
     var body: some View {
         Section {
@@ -23,9 +21,7 @@ struct TextileLocationSection: View {
                     .foregroundStyle(.secondary)
             }
 
-            Button {
-                showEditor = true
-            } label: {
+            Button(action: onEditLocation) {
                 Label(
                     textile.hasLocation ? "Rediger plassering" : "Legg til plassering",
                     systemImage: "shippingbox"
@@ -33,11 +29,6 @@ struct TextileLocationSection: View {
             }
         } header: {
             Text("Plassering")
-        }
-        .sheet(isPresented: $showEditor) {
-            TextileLocationEditorView(textile: textile) { candidate in
-                try await model.save(candidate)
-            }
         }
     }
 }

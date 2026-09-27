@@ -766,3 +766,25 @@ Test 41 viste at én samlet sheet-route i `TextileAttributesSection` ikke var ti
 - `TextileAttributesSection` beholder lasting, visning og sletting, men sender add/edit-handlinger opp til forelderen.
 - én `AttributeEditorRoute` på `TextileDetailView` velger riktig materiale-/fargeeditor.
 - ingen CloudKit-schemaendring følger av denne rettingen.
+
+
+## B-043 – Modal editor for plassering eies av TextileDetailView
+
+**Dato:** 2026-09-27  
+**Status:** Besluttet
+
+### Beslutning
+
+Presentasjonstilstanden for plasseringseditoren skal eies av `TextileDetailView`, ikke av `TextileLocationSection`. `TextileLocationSection` skal kun vise plasseringsdata og sende en eksplisitt `onEditLocation`-handling til forelderen.
+
+### Begrunnelse
+
+Etter at devpatch 0006 stabiliserte materiale-/fargeeditorene, viste samme testmønster at `TextileLocationEditorView` kunne åpnes og deretter forsvinne uten brukerhandling. Plasseringsseksjonen var fortsatt selv vert for `.sheet(isPresented:)`. Dermed hadde den samme arkitektoniske svakheten som tidligere attributt-editorene.
+
+### Konsekvens
+
+- `TextileDetailView` eier `showLocationEditor`.
+- `.sheet(isPresented:)` for plassering forankres på den stabile detaljroten.
+- `TextileLocationSection` har ikke lenger egen modal state eller avhengighet til `TextileLibraryModel`.
+- CloudKit-schemaet endres ikke av rettingen.
+- Plasseringsfeltene opprettes/testes først etter at editoren er bekreftet stabil.

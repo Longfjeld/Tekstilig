@@ -11,6 +11,7 @@ struct TextileDetailView: View {
     @State private var pieceModel = PieceInventoryModel()
     @State private var attributesModel = TextileAttributesModel()
     @State private var attributeEditorRoute: AttributeEditorRoute?
+    @State private var showLocationEditor = false
 
     private var textile: Textile? {
         model.textile(withIdentity: textileIdentity)
@@ -47,7 +48,12 @@ struct TextileDetailView: View {
                         }
                     )
 
-                    TextileLocationSection(textile: textile, model: model)
+                    TextileLocationSection(
+                        textile: textile,
+                        onEditLocation: {
+                            showLocationEditor = true
+                        }
+                    )
 
                     Section {
                         if pieceModel.isLoading && pieceModel.pieces.isEmpty {
@@ -151,6 +157,11 @@ struct TextileDetailView: View {
                         TextileColorEditorView(color: color, textileID: textile.textileID) { candidate in
                             try await attributesModel.saveColor(candidate)
                         }
+                    }
+                }
+                .sheet(isPresented: $showLocationEditor) {
+                    TextileLocationEditorView(textile: textile) { candidate in
+                        try await model.save(candidate)
                     }
                 }
                 .sheet(isPresented: $showNewPiece) {

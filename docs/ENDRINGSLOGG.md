@@ -514,3 +514,24 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0007.zip`. Test 40 var v
 ### Testrekkefølge
 
 Devpatch 0006 skal først bekrefte at materiale- og fargeeditorene forblir åpne. Deretter fortsetter de utsatte plasseringstestene.
+
+
+## Devpatch 0007 – 2026-09-27
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0008.zip`. Devpatch 0006 stabiliserte materiale-/fargeeditoren, mens samme presentasjonsfeil ble observert på **Legg til plassering**.
+
+### Rettet
+
+- `.sheet(isPresented:)` for plassering er flyttet fra `TextileLocationSection` til den stabile forelderen `TextileDetailView`.
+- `TextileDetailView` eier nå `showLocationEditor`.
+- `TextileLocationSection` sender bare `onEditLocation` opp til forelderen og har ikke egen modal state.
+
+### Uendret
+
+- plasseringsmodellen og `TextileLocationEditorView`
+- CloudKit-mappingen `locationArea`, `locationShelf`, `locationContainer`
+- PWA-koden
+
+### Testrekkefølge
+
+Plasseringseditorens stabilitet skal bekreftes før de tre CloudKit-feltene opprettes og faktisk lagring testes.
