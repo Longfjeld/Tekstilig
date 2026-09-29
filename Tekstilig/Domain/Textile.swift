@@ -11,6 +11,7 @@ struct Textile: Identifiable, Hashable {
     var locationArea: String = ""
     var locationShelf: String = ""
     var locationContainer: String = ""
+    var care: TextileCare = .empty
 
     // CloudKit recordName is the storage identity for persisted records.
     // Fall back to textileID only for drafts that have not been saved yet.

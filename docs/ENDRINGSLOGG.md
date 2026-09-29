@@ -535,3 +535,45 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0008.zip`. Devpatch 0006
 ### Testrekkefølge
 
 Plasseringseditorens stabilitet skal bekreftes før de tre CloudKit-feltene opprettes og faktisk lagring testes.
+
+## Devpatch 0008 – 2026-09-29
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0009.zip`, der plassering test 43–53 er validert.
+
+### Opprettet
+
+- `Domain/TextileCare.swift`
+- `Features/Care/TextileCareSection.swift`
+- `Features/Care/TextileCareEditorView.swift`
+
+### Endret
+
+- `Textile` inneholder nå strukturert `care` med tom standardverdi for bakoverkompatibilitet.
+- `CloudKitTextileRepository` leser og lagrer ni valgfrie vedlikeholdsfelt på samme Textile-record.
+- `TextileLibraryModel` normaliserer vedlikeholdsdata før lagring.
+- `TextileDetailView` viser Vedlikehold før Plassering og presenterer editoren fra den stabile detaljroten.
+- dokumentasjon og testplan er oppdatert etter fullført plassering.
+
+### CloudKit
+
+Nye valgfrie felt på eksisterende `Textile` record type i Development:
+
+- `careWashAllowed` (Int64)
+- `careWashTemperatureC` (Int64)
+- `careWashCycle` (String)
+- `careBleach` (String)
+- `careTumbleDry` (String)
+- `careDrying` (String)
+- `careIron` (String)
+- `careDryClean` (String)
+- `careNotes` (String)
+
+Ingen nye indekser kreves i dette steget.
+
+### Bevisst utsatt
+
+- nøyaktig grafisk standardisering av tekstilpleiesymboler
+- bilde av vaskelapp
+- søk/filter på vedlikehold
+- Production deploy
+- PWA-endringer

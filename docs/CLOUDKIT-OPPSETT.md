@@ -573,3 +573,21 @@ Felt:
 | `locationContainer` | String | Nei | Ingen |
 
 Alle tre feltene er valgfrie. Tomme verdier fjernes fra recorden ved lagring. Query/search-indekser opprettes først når søk og filter implementeres.
+
+## Native produktfelt for vedlikehold – devpatch 0008
+
+Vedlikehold lagres direkte på eksisterende `Textile` record type i **Development**. Opprett feltene før første lagringstest:
+
+| Felt | Type | Påkrevd | Indeks nå |
+|:---|:---|:---|:---|
+| `careWashAllowed` | Int64 | Nei | Ingen |
+| `careWashTemperatureC` | Int64 | Nei | Ingen |
+| `careWashCycle` | String | Nei | Ingen |
+| `careBleach` | String | Nei | Ingen |
+| `careTumbleDry` | String | Nei | Ingen |
+| `careDrying` | String | Nei | Ingen |
+| `careIron` | String | Nei | Ingen |
+| `careDryClean` | String | Nei | Ingen |
+| `careNotes` | String | Nei | Ingen |
+
+`careWashAllowed` bruker `1` for vask tillatt og `0` for eksplisitt «skal ikke vaskes». Manglende felt betyr «ikke registrert». Ingen query-/search-indekser opprettes i dette steget; de fastsettes når søk og filtre implementeres. Production deployes fortsatt ikke.

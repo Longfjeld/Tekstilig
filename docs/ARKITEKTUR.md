@@ -553,3 +553,41 @@ TextileDetailView
 ```
 
 Dette endrer ikke CloudKit-mappingen. `locationArea`, `locationShelf` og `locationContainer` forblir valgfrie felt på `Textile`.
+
+## 26. Produktarkitektur for vedlikehold – devpatch 0008
+
+Vedlikehold er en strukturert 1:1-egenskap ved `Textile` og bruker derfor eksisterende `TextileRepository`, på samme måte som plassering. Den logiske `care`-strukturen beholdes i Swift som `TextileCare`, mens CloudKit-feltene flates ut på `Textile`-recorden.
+
+```text
+TextileDetailView
+    ↓
+TextileCareSection
+    ↓
+TextileCareEditorView
+    ↓
+TextileLibraryModel
+    ↓
+CloudKitTextileRepository
+    ↓
+Private CloudKit / Textile
+```
+
+CloudKit-mapping:
+
+| Felt | Type | Betydning |
+|:---|:---|:---|
+| `careWashAllowed` | Int64, valgfri | `1` = vask tillatt, `0` = skal ikke vaskes, mangler = ukjent |
+| `careWashTemperatureC` | Int64, valgfri | vasketemperatur i °C |
+| `careWashCycle` | String, valgfri | `normal`, `gentle`, `veryGentle` |
+| `careBleach` | String, valgfri | `allowed`, `nonChlorine`, `notAllowed` |
+| `careTumbleDry` | String, valgfri | `low`, `normal`, `notAllowed` |
+| `careDrying` | String, valgfri | `line`, `drip`, `flat`, `shade` |
+| `careIron` | String, valgfri | `low`, `medium`, `high`, `notAllowed` |
+| `careDryClean` | String, valgfri | `P`, `F`, `W`, `notAllowed` |
+| `careNotes` | String, valgfri | fritekstmerknad |
+
+Alle feltene er valgfrie slik at eldre records og delvis registrert vedlikehold kan leses uten migrering. Vaskens temperatur og program fjernes dersom vask ikke er satt til tillatt. Tomme String-felt fjernes fra CloudKit ved lagring.
+
+Editoren presenteres fra den stabile `TextileDetailView`, ikke fra selve vedlikeholdsseksjonen. Dette viderefører presentasjonsmønsteret som ble validert for materiale/farge og plassering.
+
+Første native UI viser enkle semantiske symbolmarkører sammen med forklarende tekst. Nøyaktig grafisk gjengivelse av standardiserte tekstilpleiesymboler er et senere designsteg og endrer ikke den strukturerte datamodellen.

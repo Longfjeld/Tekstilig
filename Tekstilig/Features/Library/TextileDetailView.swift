@@ -12,6 +12,7 @@ struct TextileDetailView: View {
     @State private var attributesModel = TextileAttributesModel()
     @State private var attributeEditorRoute: AttributeEditorRoute?
     @State private var showLocationEditor = false
+    @State private var showCareEditor = false
 
     private var textile: Textile? {
         model.textile(withIdentity: textileIdentity)
@@ -45,6 +46,13 @@ struct TextileDetailView: View {
                         },
                         onEditColor: { color in
                             attributeEditorRoute = .editColor(color)
+                        }
+                    )
+
+                    TextileCareSection(
+                        textile: textile,
+                        onEditCare: {
+                            showCareEditor = true
                         }
                     )
 
@@ -157,6 +165,11 @@ struct TextileDetailView: View {
                         TextileColorEditorView(color: color, textileID: textile.textileID) { candidate in
                             try await attributesModel.saveColor(candidate)
                         }
+                    }
+                }
+                .sheet(isPresented: $showCareEditor) {
+                    TextileCareEditorView(textile: textile) { candidate in
+                        try await model.save(candidate)
                     }
                 }
                 .sheet(isPresented: $showLocationEditor) {

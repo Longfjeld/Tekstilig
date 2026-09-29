@@ -432,3 +432,24 @@ Tekstildetalj
 ```
 
 UI viser en liten fargeprøve når gyldig hex-verdi finnes, men tekstlig fargegruppe/navn beholdes alltid slik at farge ikke er eneste betydningsbærer.
+
+## 19. Implementert vedlikeholdsflyt – devpatch 0008
+
+Tekstildetaljen får en egen seksjon **Vedlikehold** mellom materiale/farge og plassering. Flyten er:
+
+```text
+Tekstildetalj
+    → Vedlikehold
+       → vask / temperatur / program
+       → bleking
+       → tørketrommel
+       → annen tørking
+       → stryking
+       → rens
+       → valgfri merknad
+       → lagre / rediger
+```
+
+Alle delområder kan stå uregistrert. UI skal tydelig skille «ikke registrert» fra eksplisitt «ikke tillatt». Detaljvisningen viser semantisk symbolmarkør og forklarende tekst slik at symbol alene aldri er eneste betydningsbærer.
+
+Første native implementering bruker system-/tekstmarkører som funksjonell representasjon. Endelig grafikk for standardiserte vaskesymboler og eventuelt bilde av vaskelapp kommer senere.

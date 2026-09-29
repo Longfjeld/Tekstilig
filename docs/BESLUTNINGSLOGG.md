@@ -788,3 +788,25 @@ Etter at devpatch 0006 stabiliserte materiale-/fargeeditorene, viste samme testm
 - `TextileLocationSection` har ikke lenger egen modal state eller avhengighet til `TextileLibraryModel`.
 - CloudKit-schemaet endres ikke av rettingen.
 - Plasseringsfeltene opprettes/testes først etter at editoren er bekreftet stabil.
+
+## B-044 – Vedlikehold lagres strukturert direkte på Textile
+
+**Dato:** 2026-09-29  
+**Status:** Besluttet
+
+### Beslutning
+
+Den native produktimplementeringen modellerer vedlikehold som `TextileCare` i Swift og mapper verdiene til valgfrie, flate felt på eksisterende CloudKit record type `Textile`. Det opprettes ikke en egen `TextileCare` child-record.
+
+### Begrunnelse
+
+Vedlikehold er en 1:1-egenskap ved tekstilet. Strukturerte felt gjør vask, bleking, tørking, stryking og rens søkbare/filtrerbare senere, samtidig som delvis registrering og ukjent verdi kan skilles fra eksplisitt «ikke tillatt». En egen child-record ville gitt ekstra query og livssyklus uten å representere en reell 1:n-relasjon.
+
+### Konsekvens
+
+- `careWashAllowed` lagres som valgfri Int64 (`1`/`0`) for å bevare tre tilstander: tillatt, ikke tillatt og ukjent.
+- øvrige pleievalg lagres som stabile kodeverdier, mens norsk forklaring håndteres i klienten.
+- alle feltene er valgfrie og eldre Textile-records krever ingen migrering.
+- ingen nye indekser opprettes før vedlikehold faktisk inngår i søk/filter.
+- vedlikeholdseditoren presenteres fra `TextileDetailView` for å følge det validerte stabile modal-mønsteret.
+- bilde av vaskelapp utsettes og skal senere være supplement til, ikke erstatning for, strukturerte data.

@@ -1,6 +1,6 @@
 # SwiftUI – videre implementering
 
-**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering klar til test via devpatch 0005  
+**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold 54–65 ❗️  
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
@@ -1034,7 +1034,7 @@ Beholder / kasse: Kasse B
 
 ## 53. Stoppunkt for plassering
 
-**✅ AKSJON – DU**
+**✅ FULLFØRT 2026-09-29**
 
 Devpatch 0007 og plassering er godkjent når alle disse er bekreftet:
 
@@ -1048,4 +1048,213 @@ Devpatch 0007 og plassering er godkjent når alle disse er bekreftet:
 - samme Textile-record oppdateres
 - bilde, materialer, farger og Piece-data bevares gjennom Textile-redigering
 
-**Ikke gå videre til neste produktområde før punkt 53 er bekreftet.**
+**Punkt 53 er bekreftet. Plassering er validert sammen med eksisterende bilde-, materiale-, farge- og Piece-data.**
+
+## 54. Legg inn devpatch 0008 – strukturert vedlikehold
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0009.zip`, der test 43–53 er validert.
+
+1. Lukk Xcode 27 dersom prosjektet er åpent.
+2. Kontroller at siste Git-commit/snapshot tilsvarer `SwiftUIActualApp0009`.
+3. Pakk ut `Tekstilig-devpatch-0008.zip`.
+4. Kopier innholdet over eksisterende Tekstilig-prosjektmappe.
+5. Velg **Erstatt** for eksisterende filer.
+6. Ikke slett lokale filer som er ignorert via `.gitignore`.
+7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+8. Kontroller at disse nye filene vises i Project Navigator:
+
+```text
+Domain/TextileCare.swift
+Features/Care/TextileCareSection.swift
+Features/Care/TextileCareEditorView.swift
+```
+
+Ingen Production-endring skal gjøres.
+
+## 55. Opprett vedlikeholdsfeltene i CloudKit Development
+
+**✅ AKSJON – DU**
+
+Vedlikehold lagres på eksisterende `Textile` record type. Opprett feltene før appen forsøker å lagre dem.
+
+1. Åpne CloudKit Database.
+2. Velg container `iCloud.com.longfjeld.tekstilig`.
+3. Kontroller at miljøet er **Development**.
+4. Åpne schemaet for record type **Textile**.
+5. Opprett disse feltene dersom de ikke allerede finnes:
+
+| Felt | Type |
+|:---|:---|
+| `careWashAllowed` | Int64 |
+| `careWashTemperatureC` | Int64 |
+| `careWashCycle` | String |
+| `careBleach` | String |
+| `careTumbleDry` | String |
+| `careDrying` | String |
+| `careIron` | String |
+| `careDryClean` | String |
+| `careNotes` | String |
+
+6. Lagre schemaendringen.
+7. Kontroller at alle ni feltene vises på `Textile`.
+
+Det skal **ikke** opprettes nye indekser i dette steget. `careWashAllowed` bruker `1` for vask tillatt og `0` for eksplisitt «skal ikke vaskes». Manglende felt betyr «ikke registrert».
+
+## 56. Bygg devpatch 0008
+
+**❗️ AKSJON – DU**
+
+1. Velg simulatoren som vanlig Run Destination.
+2. Velg **Product → Build**.
+3. Vent til build er ferdig.
+4. Kontroller at build er vellykket uten nye warnings fra vedlikeholdskoden.
+5. Kjør appen.
+6. Åpne et native-opprettet tekstil med `textileId` som starter med `T-`.
+
+Hvis build feiler, stopp her og send første reelle feilmelding før andre endringer gjøres.
+
+## 57. Valider tom vedlikeholdstilstand og editorstabilitet
+
+**❗️ AKSJON – DU**
+
+1. Finn seksjonen **Vedlikehold**.
+2. Kontroller at et tekstil uten registrert vedlikehold viser:
+
+```text
+Ingen vedlikeholdsinformasjon registrert
+```
+
+3. Trykk **Legg til vedlikehold**.
+4. La editoren stå åpen i minst 10 sekunder uten å skrive.
+5. Kontroller at editoren ikke forsvinner av seg selv.
+6. Trykk **Avbryt**.
+7. Åpne editoren én gang til og kontroller samme resultat.
+
+Stopp her dersom editoren lukkes automatisk.
+
+## 58. Registrer vask
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Legg til vedlikehold**.
+2. Sett **Vask** til **Vask tillatt**.
+3. Sett **Temperatur** til `40 °C`.
+4. Sett **Program** til **Normalprogram**.
+5. La øvrige områder stå som **Ikke registrert**.
+6. Trykk **Lagre**.
+7. Kontroller at detaljvisningen viser vask med `40 °C` og `Normalprogram`.
+8. Gå tilbake til biblioteket og inn på samme tekstil igjen.
+9. Kontroller at vaskedata fortsatt vises.
+
+## 59. Registrer øvrige pleievalg
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Rediger vedlikehold**.
+2. Sett **Bleking** til **Ikke tillatt**.
+3. Sett **Tørketrommel** til **Ikke tillatt**.
+4. Sett **Annen tørking** til **Hengetørkes**.
+5. Sett **Stryking** til **Middels temperatur**.
+6. Sett **Rens** til `P`.
+7. Trykk **Lagre**.
+8. Kontroller at detaljvisningen viser alle valgene med både symbolmarkør og forklarende tekst.
+
+## 60. Registrer vedlikeholdsmerknad
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Rediger vedlikehold**.
+2. Sett merknad til:
+
+```text
+Test: følg vaskelappen ved tvil
+```
+
+3. Lagre.
+4. Kontroller at merknaden vises i Vedlikehold-seksjonen.
+5. Åpne editoren igjen og kontroller at teksten lastes tilbake korrekt.
+
+## 61. Kontroller vedlikehold i CloudKit
+
+**❗️ AKSJON – DU**
+
+1. Åpne **CloudKit Database → Development → Private Database → Textile**.
+2. Finn samme Textile-record.
+3. Kontroller følgende verdier:
+
+| Felt | Forventet |
+|:---|:---|
+| `careWashAllowed` | `1` |
+| `careWashTemperatureC` | `40` |
+| `careWashCycle` | `normal` |
+| `careBleach` | `notAllowed` |
+| `careTumbleDry` | `notAllowed` |
+| `careDrying` | `line` |
+| `careIron` | `medium` |
+| `careDryClean` | `P` |
+| `careNotes` | `Test: følg vaskelappen ved tvil` |
+
+4. Kontroller at samme Textile Record Name er beholdt og at ingen ny Textile-record er opprettet.
+
+## 62. Valider «skal ikke vaskes» og avhengige felt
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Rediger vedlikehold**.
+2. Endre **Vask** fra **Vask tillatt** til **Skal ikke vaskes**.
+3. Kontroller at temperatur og program ikke lenger vises i editoren.
+4. Lagre.
+5. Kontroller at detaljvisningen viser **Skal ikke vaskes**.
+6. Kontroller i CloudKit at:
+   - `careWashAllowed = 0`
+   - `careWashTemperatureC` ikke lenger har `40`
+   - `careWashCycle` ikke lenger har `normal`
+
+Dette validerer at avhengige vaskeverdier fjernes når de ikke lenger er gyldige.
+
+## 63. Valider delvis vedlikehold og nullstilling
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Rediger vedlikehold**.
+2. Sett **Vask** tilbake til **Ikke registrert**.
+3. Sett Bleking, Tørketrommel, Annen tørking, Stryking og Rens til **Ikke registrert**.
+4. Tøm merknaden.
+5. Lagre.
+6. Kontroller at seksjonen igjen viser **Ingen vedlikeholdsinformasjon registrert**.
+7. Kontroller i CloudKit at de tidligere vedlikeholdsverdiene er fjernet fra recorden.
+
+## 64. Kontroller at vedlikehold lever sammen med øvrige produktdata
+
+**❗️ AKSJON – DU**
+
+1. Registrer på nytt minst én vedlikeholdsverdi, for eksempel **Vask 30 °C / Skånsomt program**.
+2. Kontroller at hovedbildet fortsatt vises.
+3. Kontroller at materialer og farger fortsatt vises.
+4. Kontroller at plassering fortsatt vises.
+5. Kontroller at stoffstykker fortsatt vises.
+6. Åpne vanlig **Rediger** for selve tekstilet.
+7. Endre navn eller kategori og lagre.
+8. Kontroller at vedlikehold, plassering, bilde, materialer, farger og Piece-data fortsatt er bevart.
+9. Gå ut og inn av detaljvisningen og kontroller samme resultat.
+
+## 65. Stoppunkt for vedlikehold
+
+**❗️ AKSJON – DU**
+
+Devpatch 0008 er godkjent når alle disse er bekreftet:
+
+- appen bygger i Xcode 27 uten nye warnings fra vedlikeholdskoden
+- vedlikeholdseditoren forblir åpen til bruker avslutter den
+- eldre Textile-records uten vedlikehold viser trygg tom tilstand
+- vask, temperatur og program kan lagres og leses tilbake
+- bleking, tørketrommel, annen tørking, stryking og rens kan lagres
+- merknad kan lagres og redigeres
+- «skal ikke vaskes» fjerner tidligere temperatur/program
+- alle vedlikeholdsfelt kan nullstilles igjen
+- samme Textile-record oppdateres
+- eksisterende bilde, materialer, farger, plassering og Piece-data bevares gjennom Textile-redigering
+
+**Ikke gå videre til neste produktområde før punkt 65 er bekreftet.**

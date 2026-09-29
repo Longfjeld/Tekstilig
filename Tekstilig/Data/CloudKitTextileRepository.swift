@@ -32,7 +32,16 @@ final class CloudKitTextileRepository: TextileRepository {
             "schemaVersion",
             "locationArea",
             "locationShelf",
-            "locationContainer"
+            "locationContainer",
+            "careWashAllowed",
+            "careWashTemperatureC",
+            "careWashCycle",
+            "careBleach",
+            "careTumbleDry",
+            "careDrying",
+            "careIron",
+            "careDryClean",
+            "careNotes"
         ]
 
         var textiles: [Textile] = []
@@ -128,6 +137,28 @@ final class CloudKitTextileRepository: TextileRepository {
             record["locationContainer"] = locationContainer as CKRecordValue
         }
 
+        let care = textile.care.normalized()
+
+        if let washAllowed = care.washAllowed {
+            record["careWashAllowed"] = NSNumber(value: washAllowed ? 1 : 0)
+        } else {
+            record["careWashAllowed"] = nil
+        }
+
+        if let washTemperatureC = care.washTemperatureC {
+            record["careWashTemperatureC"] = NSNumber(value: washTemperatureC)
+        } else {
+            record["careWashTemperatureC"] = nil
+        }
+
+        Self.setOptionalString(care.washCycle, field: "careWashCycle", on: record)
+        Self.setOptionalString(care.bleach, field: "careBleach", on: record)
+        Self.setOptionalString(care.tumbleDry, field: "careTumbleDry", on: record)
+        Self.setOptionalString(care.drying, field: "careDrying", on: record)
+        Self.setOptionalString(care.iron, field: "careIron", on: record)
+        Self.setOptionalString(care.dryClean, field: "careDryClean", on: record)
+        Self.setOptionalString(care.notes, field: "careNotes", on: record)
+
         let savedRecord = try await database.save(record)
         return try Self.textile(from: savedRecord)
     }
@@ -154,6 +185,17 @@ final class CloudKitTextileRepository: TextileRepository {
         let locationArea = record["locationArea"] as? String ?? ""
         let locationShelf = record["locationShelf"] as? String ?? ""
         let locationContainer = record["locationContainer"] as? String ?? ""
+        let care = TextileCare(
+            washAllowed: (record["careWashAllowed"] as? NSNumber).map { $0.intValue != 0 },
+            washTemperatureC: (record["careWashTemperatureC"] as? NSNumber)?.intValue,
+            washCycle: record["careWashCycle"] as? String ?? "",
+            bleach: record["careBleach"] as? String ?? "",
+            tumbleDry: record["careTumbleDry"] as? String ?? "",
+            drying: record["careDrying"] as? String ?? "",
+            iron: record["careIron"] as? String ?? "",
+            dryClean: record["careDryClean"] as? String ?? "",
+            notes: record["careNotes"] as? String ?? ""
+        ).normalized()
 
         return Textile(
             textileID: textileID,
@@ -165,8 +207,18 @@ final class CloudKitTextileRepository: TextileRepository {
             schemaVersion: schemaVersion,
             locationArea: locationArea,
             locationShelf: locationShelf,
-            locationContainer: locationContainer
+            locationContainer: locationContainer,
+            care: care
         )
+    }
+
+    private static func setOptionalString(_ value: String, field: String, on record: CKRecord) {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if normalized.isEmpty {
+            record[field] = nil
+        } else {
+            record[field] = normalized as CKRecordValue
+        }
     }
 }
 

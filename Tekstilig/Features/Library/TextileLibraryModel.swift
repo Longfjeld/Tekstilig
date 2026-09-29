@@ -49,6 +49,7 @@ final class TextileLibraryModel {
         normalized.locationArea = textile.locationArea.trimmingCharacters(in: .whitespacesAndNewlines)
         normalized.locationShelf = textile.locationShelf.trimmingCharacters(in: .whitespacesAndNewlines)
         normalized.locationContainer = textile.locationContainer.trimmingCharacters(in: .whitespacesAndNewlines)
+        normalized.care = textile.care.normalized()
 
         guard !normalized.name.isEmpty else {
             throw TextileLibraryError.nameRequired

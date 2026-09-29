@@ -533,3 +533,21 @@ Plassering er en 1:1-egenskap ved et tekstil og lagres derfor direkte på `Texti
 | `location.container` | `locationContainer` | String, valgfri |
 
 Alle tre verdiene kan lagres uavhengig av hverandre. Tomme verdier fjernes fra recorden ved lagring. Query-/search-indekser på disse feltene opprettes først når søk og filtre implementeres.
+
+### Devpatch 0008 – vedlikehold
+
+Fra devpatch 0008 er den logiske `care`-modellen representert native som `TextileCare` og lagret som valgfrie felt på samme CloudKit `Textile`-record. Mappingen er:
+
+| Logisk felt | CloudKit-felt | Type |
+|:---|:---|:---|
+| `care.wash.allowed` | `careWashAllowed` | Int64, valgfri (`1`/`0`) |
+| `care.wash.temperatureC` | `careWashTemperatureC` | Int64, valgfri |
+| `care.wash.cycle` | `careWashCycle` | String, valgfri |
+| `care.bleach` | `careBleach` | String, valgfri |
+| `care.tumbleDry` | `careTumbleDry` | String, valgfri |
+| `care.drying` | `careDrying` | String, valgfri |
+| `care.iron` | `careIron` | String, valgfri |
+| `care.dryClean` | `careDryClean` | String, valgfri |
+| `care.notes` | `careNotes` | String, valgfri |
+
+Manglende felt betyr «ikke registrert». Dette er bevisst forskjellig fra kodeverdien `notAllowed`. Vaskens temperatur og program brukes bare når `careWashAllowed = 1`. Første native UI støtter strukturerte valg og forklarende tekst; bilde av vaskelapp forblir et senere supplement.

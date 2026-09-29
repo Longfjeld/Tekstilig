@@ -29,7 +29,7 @@ PoC-resultatene er dokumentert i `docs/SWIFTUI-OPPSTART.md`.
 
 ## Nåværende appfase
 
-Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29 og materialer/farger gjennom test 30–39. Devpatch 0006 har stabilisert sheet-presentasjonen for materiale/farge. Devpatch 0007 anvender samme presentasjonsmønster på plassering før lagring av plasseringsdata testes mot CloudKit. Arkitekturen er nå:
+Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29, materialer/farger gjennom test 30–39 og plassering gjennom test 43–53. Devpatch 0008 introduserer strukturert vedlikehold som neste vertikale produktsteg. Arkitekturen er nå:
 
 ```text
 SwiftUI-visning
@@ -50,11 +50,12 @@ Tekstilbibliotek
   → Tekstildetalj
      → Hovedbilde (TextileImage + CKAsset)
      → Materialer / farger
+     → Vedlikehold
      → Plassering
      → Stoffstykker → Nytt/rediger/slett Piece
 ```
 
-Materialer og farger lagres strukturert som egne child-records (`TextileMaterial` og `TextileColor`) knyttet til `textileId`. Plassering lagres som tre valgfrie felt direkte på `Textile`: område/rom, hylle og beholder/kasse. Kamera, thumbnails og bildeoptimalisering er fortsatt utsatt. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
+Materialer og farger lagres strukturert som egne child-records (`TextileMaterial` og `TextileColor`) knyttet til `textileId`. Plassering og vedlikehold er 1:1-egenskaper og lagres som valgfrie felt direkte på `Textile`. Kamera, thumbnails, bilde av vaskelapp og bildeoptimalisering er fortsatt utsatt. Den fulle logiske datamodellen i `docs/DATAMODELL.md` endres ikke og kobles på trinnvis.
 
 ## Videre test
 
