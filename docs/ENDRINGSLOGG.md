@@ -577,3 +577,25 @@ Ingen nye indekser kreves i dette steget.
 - søk/filter på vedlikehold
 - Production deploy
 - PWA-endringer
+
+
+## Devpatch 0009 – 2026-09-29
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0010.zip`. Devpatch 0008 bygget korrekt, men første biblioteklasting etter opprettelse av vedlikeholdsfeltene endte i `CKError.operationCancelled` (feil 20).
+
+### Rettet/stabilisert
+
+- `CloudKitTextileRepository.fetchTextiles()` bruker nå `desiredKeys = nil` og henter komplette Textile-records i stedet for en eksplisitt klientliste over felt.
+- samme innstilling brukes både på første query og cursor-fortsettelser.
+- `TextileLibraryModel` viser mer CloudKit-diagnostikk når tilgjengelig: retry-tid, partial errors og underliggende NSError.
+
+### Uendret
+
+- CloudKit-schemaet fra devpatch 0008
+- `TextileCare`-modellen og vedlikeholds-UI
+- øvrige produktområder
+- PWA-koden
+
+### Testrekkefølge
+
+Biblioteklasting og refresh skal valideres før vedlikeholdstestene fortsetter.

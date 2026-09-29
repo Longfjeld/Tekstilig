@@ -29,7 +29,7 @@ PoC-resultatene er dokumentert i `docs/SWIFTUI-OPPSTART.md`.
 
 ## Nåværende appfase
 
-Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29, materialer/farger gjennom test 30–39 og plassering gjennom test 43–53. Devpatch 0008 introduserer strukturert vedlikehold som neste vertikale produktsteg. Arkitekturen er nå:
+Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29, materialer/farger gjennom test 30–39 og plassering gjennom test 43–53. Devpatch 0009 stabiliserer Textile-queryen etter CloudKit-feil 20 før valideringen av strukturert vedlikehold fortsetter. Arkitekturen er nå:
 
 ```text
 SwiftUI-visning

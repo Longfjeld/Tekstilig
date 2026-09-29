@@ -591,3 +591,10 @@ Alle feltene er valgfrie slik at eldre records og delvis registrert vedlikehold 
 Editoren presenteres fra den stabile `TextileDetailView`, ikke fra selve vedlikeholdsseksjonen. Dette viderefører presentasjonsmønsteret som ble validert for materiale/farge og plassering.
 
 Første native UI viser enkle semantiske symbolmarkører sammen med forklarende tekst. Nøyaktig grafisk gjengivelse av standardiserte tekstilpleiesymboler er et senere designsteg og endrer ikke den strukturerte datamodellen.
+
+
+### Textile-query og valgfrie schemafelt
+
+`CloudKitTextileRepository.fetchTextiles()` henter komplette `Textile`-records ved å bruke `desiredKeys = nil`. Den native dekoderen behandler plassering og vedlikehold som valgfrie felt og tåler derfor både eldre records og records som har de nye feltene.
+
+Dette reduserer koblingen mellom bibliotek-queryen og en eksplisitt klientliste over alle Textile-felter mens Development-schemaet fortsatt utvides. Eksplisitt feltbegrensning kan vurderes senere dersom målinger viser et faktisk ytelsesbehov.

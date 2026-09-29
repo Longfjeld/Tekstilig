@@ -23,26 +23,11 @@ final class CloudKitTextileRepository: TextileRepository {
             predicate: NSPredicate(value: true)
         )
 
-        let desiredKeys = [
-            "textileId",
-            "name",
-            "category",
-            "createdAt",
-            "updatedAt",
-            "schemaVersion",
-            "locationArea",
-            "locationShelf",
-            "locationContainer",
-            "careWashAllowed",
-            "careWashTemperatureC",
-            "careWashCycle",
-            "careBleach",
-            "careTumbleDry",
-            "careDrying",
-            "careIron",
-            "careDryClean",
-            "careNotes"
-        ]
+        // Fetch complete Textile records. Care/location fields are optional and the
+        // Development schema evolves during implementation. Using nil keeps this
+        // query decoupled from an explicit client-side field list while the record
+        // decoder below remains tolerant of missing optional fields.
+        let desiredKeys: [CKRecord.FieldKey]? = nil
 
         var textiles: [Textile] = []
         var cursor: CKQueryOperation.Cursor?

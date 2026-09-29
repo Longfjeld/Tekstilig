@@ -81,11 +81,28 @@ final class TextileLibraryModel {
     }
 
     private static func description(for error: Error) -> String {
-        if let cloudKitError = error as? CKError {
-            return "CloudKit-feil \(cloudKitError.code.rawValue): \(cloudKitError.localizedDescription)"
+        guard let cloudKitError = error as? CKError else {
+            return error.localizedDescription
         }
 
-        return error.localizedDescription
+        var details = [
+            "CloudKit-feil \(cloudKitError.code.rawValue): \(cloudKitError.localizedDescription)"
+        ]
+
+        if let retryAfterSeconds = cloudKitError.retryAfterSeconds {
+            details.append("Prøv igjen om ca. \(Int(retryAfterSeconds.rounded(.up))) sekunder.")
+        }
+
+        if let partialErrors = cloudKitError.partialErrorsByItemID, !partialErrors.isEmpty {
+            let summaries = partialErrors.values.prefix(3).map { $0.localizedDescription }
+            details.append("Del-feil: \(summaries.joined(separator: " | "))")
+        }
+
+        if let underlying = (cloudKitError as NSError).userInfo[NSUnderlyingErrorKey] as? NSError {
+            details.append("Underliggende feil: \(underlying.domain) \(underlying.code): \(underlying.localizedDescription)")
+        }
+
+        return details.joined(separator: "\n")
     }
 }
 

@@ -810,3 +810,24 @@ Vedlikehold er en 1:1-egenskap ved tekstilet. Strukturerte felt gjør vask, blek
 - ingen nye indekser opprettes før vedlikehold faktisk inngår i søk/filter.
 - vedlikeholdseditoren presenteres fra `TextileDetailView` for å følge det validerte stabile modal-mønsteret.
 - bilde av vaskelapp utsettes og skal senere være supplement til, ikke erstatning for, strukturerte data.
+
+
+## B-045 – Textile-biblioteket henter komplette records under aktiv schemautvikling
+
+**Dato:** 2026-09-29  
+**Status:** Besluttet
+
+### Beslutning
+
+`CloudKitTextileRepository.fetchTextiles()` bruker `desiredKeys = nil` i CloudKit-queryen så lenge `Textile`-schemaet fortsatt utvides aktivt.
+
+### Begrunnelse
+
+Etter at vedlikeholdsfeltene ble lagt til i Development begynte bibliotek-queryen med en eksplisitt `desiredKeys`-liste å bli stående og endte i `CKError.operationCancelled` (feil 20). Alle nye vedlikeholdsfelt er valgfrie, og record-dekoderen er allerede bakoverkompatibel. Å hente hele recorden fjerner unødvendig synkroniseringsavhengighet mellom den eksplisitte feltlisten i klienten og et schema som fortsatt utvikles.
+
+### Konsekvens
+
+- eldre og nyere Textile-records dekodes med samme kode
+- nye valgfrie Textile-felt krever ikke at queryens `desiredKeys` oppdateres samtidig
+- eventuell feltbegrensning gjeninnføres bare dersom senere ytelsesmåling tilsier det
+- feilmeldinger fra CloudKit viser mer tilgjengelig retry-/partial-/underliggende informasjon under utvikling

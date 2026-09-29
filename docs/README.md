@@ -4,7 +4,7 @@ Dokumentasjonen i denne mappen er den autoritative prosjektbeskrivelsen for Teks
 
 ## Gjeldende fase
 
-Den native CloudKit-PoC-en er fullført. Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29, materialer/farger gjennom test 30–39 og plassering gjennom test 43–53. Aktiv utvikling står ved devpatch 0008: strukturert vedlikehold på `Textile`, mot privat CloudKit Development-database.
+Den native CloudKit-PoC-en er fullført. Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29, materialer/farger gjennom test 30–39 og plassering gjennom test 43–53. Aktiv utvikling står ved devpatch 0009: stabilisering av Textile-query etter CloudKit-feil 20, deretter videre validering av strukturert vedlikehold på `Textile`.
 
 Start her for videre arbeid:
 
