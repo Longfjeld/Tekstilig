@@ -1302,7 +1302,7 @@ Vedlikeholdssteget er godkjent når alle disse er bekreftet:
 
 ## 68. Legg inn devpatch 0010 – vekt, elastisitet og krymp
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 Denne patchen bygger på `Tekstilig-SwiftUIActualApp0011.zip`, der test 1–67 er validert.
 
@@ -1341,7 +1341,7 @@ Patchen erstatter ikke kataloger; den merger bare nye/endrede filer inn i eksist
 
 ## 69. Opprett feltene for fysiske egenskaper i CloudKit Development
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne CloudKit Database.
 2. Velg containeren `iCloud.com.longfjeld.tekstilig`.

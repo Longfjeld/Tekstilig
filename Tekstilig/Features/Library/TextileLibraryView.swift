@@ -4,6 +4,10 @@ struct TextileLibraryView: View {
     @State private var model = TextileLibraryModel()
     @State private var showNewTextile = false
 
+    private var listItems: [TextileListItem] {
+        model.textiles.map(TextileListItem.init)
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -33,14 +37,17 @@ struct TextileLibraryView: View {
                         .buttonStyle(.borderedProminent)
                     }
                 } else {
-                    List(model.textiles) { textile in
+                    List(listItems) { item in
                         NavigationLink {
                             TextileDetailView(
-                                textileIdentity: textile.id,
+                                textileIdentity: item.id,
                                 model: model
                             )
                         } label: {
-                            TextileRow(textile: textile)
+                            TextileRow(
+                                name: item.name,
+                                category: item.category
+                            )
                         }
                     }
                     .refreshable {
@@ -70,15 +77,28 @@ struct TextileLibraryView: View {
     }
 }
 
+private struct TextileListItem: Identifiable {
+    let id: String
+    let name: String
+    let category: String
+
+    init(_ textile: Textile) {
+        id = textile.id
+        name = textile.name
+        category = textile.category
+    }
+}
+
 private struct TextileRow: View {
-    let textile: Textile
+    let name: String
+    let category: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(textile.name)
+            Text(name)
                 .font(.headline)
 
-            Text(textile.category.isEmpty ? "Kategori ikke registrert" : textile.category)
+            Text(category.isEmpty ? "Kategori ikke registrert" : category)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

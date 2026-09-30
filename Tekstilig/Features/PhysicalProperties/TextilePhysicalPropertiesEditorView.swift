@@ -28,9 +28,11 @@ struct TextilePhysicalPropertiesEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Vekt") {
+                Section {
                     TextField("g/m²", text: $weightText)
                         .keyboardType(.numberPad)
+                } header: {
+                    Text("Vekt")
                 } footer: {
                     Text("La feltet stå tomt dersom vekt ikke er kjent.")
                 }
