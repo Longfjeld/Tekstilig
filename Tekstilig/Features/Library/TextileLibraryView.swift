@@ -5,7 +5,20 @@ struct TextileLibraryView: View {
     @State private var showNewTextile = false
 
     private var listItems: [TextileListItem] {
-        model.textiles.map(TextileListItem.init)
+        var items: [TextileListItem] = []
+        items.reserveCapacity(model.textiles.count)
+
+        for textile in model.textiles {
+            items.append(
+                TextileListItem(
+                    id: textile.id,
+                    name: textile.name,
+                    category: textile.category
+                )
+            )
+        }
+
+        return items
     }
 
     var body: some View {
@@ -82,11 +95,6 @@ private struct TextileListItem: Identifiable {
     let name: String
     let category: String
 
-    init(_ textile: Textile) {
-        id = textile.id
-        name = textile.name
-        category = textile.category
-    }
 }
 
 private struct TextileRow: View {
