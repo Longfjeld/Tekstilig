@@ -13,6 +13,7 @@ struct TextileDetailView: View {
     @State private var attributeEditorRoute: AttributeEditorRoute?
     @State private var showLocationEditor = false
     @State private var showCareEditor = false
+    @State private var showPhysicalPropertiesEditor = false
 
     private var textile: Textile? {
         model.textile(withIdentity: textileIdentity)
@@ -53,6 +54,13 @@ struct TextileDetailView: View {
                         textile: textile,
                         onEditCare: {
                             showCareEditor = true
+                        }
+                    )
+
+                    TextilePhysicalPropertiesSection(
+                        textile: textile,
+                        onEdit: {
+                            showPhysicalPropertiesEditor = true
                         }
                     )
 
@@ -169,6 +177,11 @@ struct TextileDetailView: View {
                 }
                 .sheet(isPresented: $showCareEditor) {
                     TextileCareEditorView(textile: textile) { candidate in
+                        try await model.save(candidate)
+                    }
+                }
+                .sheet(isPresented: $showPhysicalPropertiesEditor) {
+                    TextilePhysicalPropertiesEditorView(textile: textile) { candidate in
                         try await model.save(candidate)
                     }
                 }

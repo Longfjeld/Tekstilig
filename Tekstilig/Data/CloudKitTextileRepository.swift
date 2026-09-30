@@ -144,6 +144,34 @@ final class CloudKitTextileRepository: TextileRepository {
         Self.setOptionalString(care.dryClean, field: "careDryClean", on: record)
         Self.setOptionalString(care.notes, field: "careNotes", on: record)
 
+        if let weightGsm = textile.weightGsm {
+            record["weightGsm"] = NSNumber(value: weightGsm)
+        } else {
+            record["weightGsm"] = nil
+        }
+
+        let stretch = textile.stretch.normalized()
+        Self.setOptionalString(stretch.level, field: "stretchLevel", on: record)
+        Self.setOptionalString(stretch.direction, field: "stretchDirection", on: record)
+        if let stretchPercent = stretch.percent {
+            record["stretchPercent"] = NSNumber(value: stretchPercent)
+        } else {
+            record["stretchPercent"] = nil
+        }
+
+        let shrinkage = textile.shrinkage.normalized()
+        if let shrinkLengthPercent = shrinkage.lengthPercent {
+            record["shrinkageLengthPercent"] = NSNumber(value: shrinkLengthPercent)
+        } else {
+            record["shrinkageLengthPercent"] = nil
+        }
+        if let shrinkWidthPercent = shrinkage.widthPercent {
+            record["shrinkageWidthPercent"] = NSNumber(value: shrinkWidthPercent)
+        } else {
+            record["shrinkageWidthPercent"] = nil
+        }
+        Self.setOptionalString(shrinkage.note, field: "shrinkageNote", on: record)
+
         let savedRecord = try await database.save(record)
         return try Self.textile(from: savedRecord)
     }
@@ -181,6 +209,17 @@ final class CloudKitTextileRepository: TextileRepository {
             dryClean: record["careDryClean"] as? String ?? "",
             notes: record["careNotes"] as? String ?? ""
         ).normalized()
+        let weightGsm = (record["weightGsm"] as? NSNumber)?.intValue
+        let stretch = TextileStretch(
+            level: record["stretchLevel"] as? String ?? "",
+            direction: record["stretchDirection"] as? String ?? "",
+            percent: (record["stretchPercent"] as? NSNumber)?.intValue
+        ).normalized()
+        let shrinkage = TextileShrinkage(
+            lengthPercent: (record["shrinkageLengthPercent"] as? NSNumber)?.intValue,
+            widthPercent: (record["shrinkageWidthPercent"] as? NSNumber)?.intValue,
+            note: record["shrinkageNote"] as? String ?? ""
+        ).normalized()
 
         return Textile(
             textileID: textileID,
@@ -193,7 +232,10 @@ final class CloudKitTextileRepository: TextileRepository {
             locationArea: locationArea,
             locationShelf: locationShelf,
             locationContainer: locationContainer,
-            care: care
+            care: care,
+            weightGsm: weightGsm,
+            stretch: stretch,
+            shrinkage: shrinkage
         )
     }
 

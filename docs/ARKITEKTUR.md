@@ -598,3 +598,37 @@ Første native UI viser enkle semantiske symbolmarkører sammen med forklarende 
 `CloudKitTextileRepository.fetchTextiles()` henter komplette `Textile`-records ved å bruke `desiredKeys = nil`. Den native dekoderen behandler plassering og vedlikehold som valgfrie felt og tåler derfor både eldre records og records som har de nye feltene.
 
 Dette reduserer koblingen mellom bibliotek-queryen og en eksplisitt klientliste over alle Textile-felter mens Development-schemaet fortsatt utvides. Eksplisitt feltbegrensning kan vurderes senere dersom målinger viser et faktisk ytelsesbehov.
+
+## 27. Produktarkitektur for vekt, elastisitet og krymp – devpatch 0010
+
+Vekt, elastisitet og krymp er 1:1-egenskaper ved `Textile` og bruker derfor eksisterende `TextileRepository` i stedet for egne child-records.
+
+```text
+TextileDetailView
+    ↓
+TextilePhysicalPropertiesSection
+    ↓
+TextilePhysicalPropertiesEditorView
+    ↓
+TextileLibraryModel
+    ↓
+CloudKitTextileRepository
+    ↓
+Private CloudKit / Textile
+```
+
+CloudKit-mapping:
+
+| Felt | Type | Betydning |
+|:---|:---|:---|
+| `weightGsm` | Int64, valgfri | gram per kvadratmeter |
+| `stretchLevel` | String, valgfri | `none`, `low`, `medium`, `high` |
+| `stretchDirection` | String, valgfri | `length`, `width`, `both`, `notApplicable` |
+| `stretchPercent` | Int64, valgfri | valgfri elastisitet i prosent |
+| `shrinkageLengthPercent` | Int64, valgfri | krymp i lengderetning |
+| `shrinkageWidthPercent` | Int64, valgfri | krymp i bredderetning |
+| `shrinkageNote` | String, valgfri | kontekst/merknad om krymptest |
+
+Alle feltene er valgfrie. Dette gjør at eksisterende Textile-records kan leses uten schema-migrering. Når elastisitetsgrad settes til `none`, normaliseres retningen til `notApplicable` og prosent fjernes. Dersom elastisitet settes til «ikke registrert», fjernes alle tre stretch-feltene.
+
+Editoren presenteres fra den stabile `TextileDetailView`, på samme måte som vedlikehold og plassering, for å unngå den tidligere validerte sheet-livssyklusfeilen.

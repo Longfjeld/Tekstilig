@@ -1,6 +1,6 @@
 # SwiftUI – videre implementering
 
-**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold 54–55 ✅ · runtime/query 56 ⚠️ · devpatch 0009 fra 57 ❗️  
+**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper fra 68 ❗️  
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
@@ -1299,3 +1299,245 @@ Vedlikeholdssteget er godkjent når alle disse er bekreftet:
 - eksisterende bilde, materialer, farger, plassering og Piece-data bevares gjennom Textile-redigering
 
 **Ikke gå videre til neste produktområde før punkt 67 er bekreftet.**
+
+## 68. Legg inn devpatch 0010 – vekt, elastisitet og krymp
+
+**❗️ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0011.zip`, der test 1–67 er validert.
+
+1. Lukk Xcode 27 dersom Tekstilig-prosjektet er åpent.
+2. Kontroller at prosjektet du skal oppdatere tilsvarer `Tekstilig-SwiftUIActualApp0011`.
+3. Pakk ut `Tekstilig-devpatch-0010.zip` i `Downloads`.
+4. Kjør først denne dry-run-kommandoen dersom den utpakkede katalogen heter `Tekstilig-devpatch-0010`:
+
+```bash
+rsync -av --dry-run --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0010/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+5. Kontroller at rsync bare viser filer fra patchen som nye eller endrede.
+6. Kjør deretter den faktiske oppdateringen:
+
+```bash
+rsync -av --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0010/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+8. Kontroller at disse nye filene vises i Project Navigator:
+
+```text
+Domain/TextilePhysicalProperties.swift
+Features/PhysicalProperties/TextilePhysicalPropertiesSection.swift
+Features/PhysicalProperties/TextilePhysicalPropertiesEditorView.swift
+```
+
+9. Kontroller at eksisterende `Textile.swift`, `CloudKitTextileRepository.swift`, `TextileLibraryModel.swift` og `TextileDetailView.swift` fortsatt finnes.
+
+Patchen erstatter ikke kataloger; den merger bare nye/endrede filer inn i eksisterende prosjektstruktur.
+
+## 69. Opprett feltene for fysiske egenskaper i CloudKit Development
+
+**❗️ AKSJON – DU**
+
+1. Åpne CloudKit Database.
+2. Velg containeren `iCloud.com.longfjeld.tekstilig`.
+3. Kontroller at miljøet er **Development**.
+4. Åpne schemaet for record type **Textile**.
+5. Opprett følgende valgfrie felt med nøyaktig disse navnene og typene:
+
+| Felt | Type |
+|:---|:---|
+| `weightGsm` | Int64 |
+| `stretchLevel` | String |
+| `stretchDirection` | String |
+| `stretchPercent` | Int64 |
+| `shrinkageLengthPercent` | Int64 |
+| `shrinkageWidthPercent` | Int64 |
+| `shrinkageNote` | String |
+
+6. Lagre schemaendringene.
+7. Kontroller at alle syv feltene finnes på **Textile**.
+
+Ingen nye indekser kreves i dette steget. Søk-/filterindekser opprettes først når den faktiske søkeflyten implementeres.
+
+## 70. Bygg patchen og valider tom tilstand
+
+**❗️ AKSJON – DU**
+
+1. Velg samme simulator/fysiske testenhet som i de siste valideringene.
+2. Velg **Product → Build**.
+3. Kontroller at build fullføres uten nye feil.
+4. Kjør appen.
+5. Åpne et eksisterende tekstil som ikke har de nye feltene.
+6. Finn seksjonen **Fysiske egenskaper**.
+7. Kontroller at den viser:
+
+```text
+Ingen vekt, elastisitet eller krymp registrert
+```
+
+8. Trykk **Legg til vekt/elastisitet/krymp**.
+9. Kontroller at editoren åpnes og forblir åpen.
+10. Kontroller at editoren inneholder seksjonene **Vekt**, **Elastisitet** og **Krymp**.
+11. Trykk **Avbryt**.
+12. Kontroller at ingen data er endret.
+
+Hvis editoren forsvinner av seg selv eller build feiler, stopp her før du oppretter testdata.
+
+## 71. Registrer vekt
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Legg til vekt/elastisitet/krymp**.
+2. Skriv følgende i feltet for vekt:
+
+```text
+320
+```
+
+3. La elastisitet og krymp stå tomt/ikke registrert.
+4. Trykk **Lagre**.
+5. Kontroller at editoren lukkes.
+6. Kontroller at detaljvisningen viser:
+
+```text
+Vekt    320 g/m²
+```
+
+7. Gå ut av tekstilet og inn igjen.
+8. Kontroller at `320 g/m²` fortsatt vises.
+
+## 72. Registrer elastisitet
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Rediger vekt/elastisitet/krymp**.
+2. Sett **Grad** til **Middels**.
+3. Sett **Retning** til **Bredde**.
+4. Sett **Prosent** til:
+
+```text
+25
+```
+
+5. Trykk **Lagre**.
+6. Kontroller at detaljvisningen viser:
+   - `Elastisitet: Middels`
+   - `Retning: Bredderetning`
+   - `Elastisitet, prosent: 25 %`
+7. Åpne editoren igjen.
+8. Kontroller at de tre verdiene lastes tilbake korrekt.
+9. Trykk **Avbryt**.
+
+## 73. Registrer krymp
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Rediger vekt/elastisitet/krymp**.
+2. Sett **Lengde i prosent** til:
+
+```text
+3
+```
+
+3. Sett **Bredde i prosent** til:
+
+```text
+1
+```
+
+4. Sett merknad til:
+
+```text
+Etter vask på 40 °C
+```
+
+5. Trykk **Lagre**.
+6. Kontroller at detaljvisningen viser:
+   - `Krymp, lengde: 3 %`
+   - `Krymp, bredde: 1 %`
+   - `Krymp, merknad: Etter vask på 40 °C`
+7. Gå ut av tekstilet og inn igjen.
+8. Kontroller at alle tre verdiene fortsatt vises.
+
+## 74. Kontroller de nye feltene i CloudKit
+
+**❗️ AKSJON – DU**
+
+1. Åpne **CloudKit Database → Development → Private Database → Textile**.
+2. Finn samme Textile-record som du brukte i test 71–73.
+3. Kontroller følgende verdier:
+
+| Felt | Forventet verdi |
+|:---|:---|
+| `weightGsm` | `320` |
+| `stretchLevel` | `medium` |
+| `stretchDirection` | `width` |
+| `stretchPercent` | `25` |
+| `shrinkageLengthPercent` | `3` |
+| `shrinkageWidthPercent` | `1` |
+| `shrinkageNote` | `Etter vask på 40 °C` |
+
+4. Kontroller at samme Textile Record Name er beholdt.
+5. Kontroller at lagringen ikke har opprettet en ekstra Textile-record.
+
+## 75. Valider nullstilling og «Ingen elastisitet»
+
+**❗️ AKSJON – DU**
+
+1. Åpne **Rediger vekt/elastisitet/krymp**.
+2. Endre **Grad** til **Ingen**.
+3. Kontroller at feltene for retning og prosent ikke lenger vises.
+4. Trykk **Lagre**.
+5. Kontroller at detaljvisningen viser `Elastisitet: Ingen`, uten retning eller prosent.
+6. Kontroller i CloudKit at:
+   - `stretchLevel = none`
+   - `stretchDirection = notApplicable`
+   - `stretchPercent` er fjernet/tomt
+7. Åpne editoren igjen.
+8. Tøm vektfeltet.
+9. Sett **Grad** til **Ikke registrert**.
+10. Tøm begge krympprosentene og merknaden.
+11. Trykk **Lagre**.
+12. Kontroller at seksjonen igjen viser **Ingen vekt, elastisitet eller krymp registrert**.
+13. Kontroller i CloudKit at alle syv fysiske egenskapsfeltene nå er fjernet/tomme.
+
+## 76. Kontroller samspill med eksisterende produktdata
+
+**❗️ AKSJON – DU**
+
+1. Registrer på nytt minst vekt `320`, elastisitet **Middels/Bredde/25 %** og krymp `3 % / 1 %`.
+2. Kontroller at hovedbildet fortsatt vises.
+3. Kontroller at materialer og farger fortsatt vises.
+4. Kontroller at vedlikehold fortsatt vises.
+5. Kontroller at plassering fortsatt vises.
+6. Kontroller at stoffstykker fortsatt vises.
+7. Åpne vanlig **Rediger** for selve tekstilet.
+8. Endre navn eller kategori og lagre.
+9. Kontroller at fysiske egenskaper, vedlikehold, plassering, bilde, materialer, farger og Piece-data fortsatt er bevart.
+10. Gå ut og inn av detaljvisningen og kontroller samme resultat.
+
+## 77. Stoppunkt for fysiske egenskaper
+
+**❗️ AKSJON – DU**
+
+Steget er godkjent når alle disse er bekreftet:
+
+- appen bygger i Xcode 27 uten nye feil
+- eldre Textile-records uten de nye feltene vises trygt
+- editoren for fysiske egenskaper forblir åpen til bruker avslutter den
+- vekt kan lagres, leses tilbake og nullstilles
+- elastisitetsgrad, retning og valgfri prosent kan lagres og leses tilbake
+- `Ingen` elastisitet fjerner prosent og lagrer retning som `notApplicable`
+- krymp i lengde og bredde kan lagres separat
+- krympmerknad kan lagres og redigeres
+- alle syv nye CloudKit-felt kan nullstilles igjen
+- samme Textile-record oppdateres
+- eksisterende bilde, materialer, farger, vedlikehold, plassering og Piece-data bevares gjennom Textile-redigering
+
+**Ikke gå videre til neste produktområde før punkt 77 er bekreftet.**
+

@@ -599,3 +599,44 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0010.zip`. Devpatch 0008
 ### Testrekkefølge
 
 Biblioteklasting og refresh skal valideres før vedlikeholdstestene fortsetter.
+
+## Devpatch 0010 – 2026-09-30
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0011.zip`, der test 1–67 er validert.
+
+### Opprettet
+
+- `Domain/TextilePhysicalProperties.swift` – strukturerte Swift-typer for elastisitet og krymp
+- `Features/PhysicalProperties/TextilePhysicalPropertiesSection.swift` – detaljvisning for vekt, elastisitet og krymp
+- `Features/PhysicalProperties/TextilePhysicalPropertiesEditorView.swift` – samlet editor med enkel tallvalidering
+
+### Endret
+
+- `Textile` har nå valgfri `weightGsm`, `stretch` og `shrinkage` med bakoverkompatible standardverdier
+- `CloudKitTextileRepository` leser, lagrer og fjerner syv valgfrie felt på samme Textile-record
+- `TextileLibraryModel` normaliserer elastisitet og krymp før lagring
+- `TextileDetailView` viser **Fysiske egenskaper** mellom Vedlikehold og Plassering og presenterer editoren fra den stabile detaljroten
+- dokumentasjonen markerer vedlikehold/query test 54–67 som validert og legger til test 68–77
+
+### CloudKit
+
+Nye valgfrie felt på eksisterende `Textile` record type i Development:
+
+- `weightGsm` (Int64)
+- `stretchLevel` (String)
+- `stretchDirection` (String)
+- `stretchPercent` (Int64)
+- `shrinkageLengthPercent` (Int64)
+- `shrinkageWidthPercent` (Int64)
+- `shrinkageNote` (String)
+
+Ingen nye indekser kreves i dette steget.
+
+### Bevisst utsatt
+
+- søk/filtrering på vekt, elastisitet og krymp
+- generelle egenskapstagger (`properties`)
+- innkjøp/pris og fritekstnotater
+- kamera / flere bilder / bildeoptimalisering
+- Production deploy
+- PWA-endringer

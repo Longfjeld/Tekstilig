@@ -551,3 +551,19 @@ Fra devpatch 0008 er den logiske `care`-modellen representert native som `Textil
 | `care.notes` | `careNotes` | String, valgfri |
 
 Manglende felt betyr «ikke registrert». Dette er bevisst forskjellig fra kodeverdien `notAllowed`. Vaskens temperatur og program brukes bare når `careWashAllowed = 1`. Første native UI støtter strukturerte valg og forklarende tekst; bilde av vaskelapp forblir et senere supplement.
+
+### Devpatch 0010 – vekt, elastisitet og krymp
+
+Fra devpatch 0010 er de logiske feltene `weightGsm`, `stretch` og `shrinkage` representert native på `Textile` og lagret som valgfrie felt på samme CloudKit-record:
+
+| Logisk felt | CloudKit-felt | Type |
+|:---|:---|:---|
+| `weightGsm` | `weightGsm` | Int64, valgfri |
+| `stretch.level` | `stretchLevel` | String, valgfri |
+| `stretch.direction` | `stretchDirection` | String, valgfri |
+| `stretch.percent` | `stretchPercent` | Int64, valgfri |
+| `shrinkage.lengthPercent` | `shrinkageLengthPercent` | Int64, valgfri |
+| `shrinkage.widthPercent` | `shrinkageWidthPercent` | Int64, valgfri |
+| `shrinkage.note` | `shrinkageNote` | String, valgfri |
+
+Manglende felt betyr «ikke registrert» og eldre records trenger derfor ingen migrering. Første native versjon lagrer prosentverdier som heltall. Søk-/filterindekser opprettes først sammen med søkefunksjonen.

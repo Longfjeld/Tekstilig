@@ -50,6 +50,8 @@ final class TextileLibraryModel {
         normalized.locationShelf = textile.locationShelf.trimmingCharacters(in: .whitespacesAndNewlines)
         normalized.locationContainer = textile.locationContainer.trimmingCharacters(in: .whitespacesAndNewlines)
         normalized.care = textile.care.normalized()
+        normalized.stretch = textile.stretch.normalized()
+        normalized.shrinkage = textile.shrinkage.normalized()
 
         guard !normalized.name.isEmpty else {
             throw TextileLibraryError.nameRequired
