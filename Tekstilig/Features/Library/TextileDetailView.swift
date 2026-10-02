@@ -13,33 +13,18 @@ struct TextileDetailView: View {
     }
 
     var body: some View {
-        Group {
-            if let textile = textileSnapshot {
-                List {
-                    Section("Tekstil") {
-                        LabeledContent("Navn", value: textile.name)
-                        LabeledContent(
-                            "Kategori",
-                            value: textile.category.isEmpty ? "Ikke registrert" : textile.category
-                        )
-                    }
+        VStack(alignment: .leading, spacing: 12) {
+            if let textileSnapshot {
+                Text(textileSnapshot.name)
+                    .font(.title2)
 
-                    Section("CloudKit") {
-                        LabeledContent("Tekstilig-ID", value: textile.textileID)
-
-                        if let cloudRecordName = textile.cloudRecordName {
-                            LabeledContent("Record name", value: cloudRecordName)
-                        }
-                    }
-                }
-                .navigationTitle(textile.name)
+                Text(textileSnapshot.category.isEmpty ? "Ikke registrert" : textileSnapshot.category)
+                    .foregroundStyle(.secondary)
             } else {
-                ContentUnavailableView(
-                    "Tekstilet finnes ikke",
-                    systemImage: "questionmark.folder",
-                    description: Text("Oppdater tekstilbiblioteket og prøv igjen.")
-                )
+                Text("Tekstilet finnes ikke")
             }
         }
+        .padding()
+        .navigationTitle("Tekstil")
     }
 }
