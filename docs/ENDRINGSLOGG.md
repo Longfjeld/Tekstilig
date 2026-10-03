@@ -714,3 +714,38 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0018.zip`, der test 1–
 - kortvarig treghet observert under kategorifilter i test 88 er dokumentert som ikke-blokkerende ytelsesobservasjon
 - test 95–103 er lagt inn som **❗️** frem til eksplisitt validering
 
+
+## Validering – devpatch 0044
+
+Test 95–103 er gjennomført og eksplisitt bekreftet OK. Materiale- og fargebasert fritekstsøk/filter regnes dermed som validert del av hovedsporet.
+
+## Devpatch 0045 – første «Finn til prosjekt»
+
+Bygger på `Tekstilig-SwiftUIActualApp0019.zip`.
+
+### Endret
+
+- `ContentView.swift` – legger til egen fane **Finn til prosjekt**.
+- `PieceRepository.swift` – legger til bulk-lesing av Piece-records.
+- `CloudKitPieceRepository.swift` – paginert `fetchAllPieces()` uten nye schemaendringer.
+- `PieceLibraryIndex.swift` – nytt lokalt Piece-indeks gruppert på `textileId`.
+- `ProjectSearchView.swift` – første kriteriebaserte prosjektsøk.
+
+### Første støttede krav
+
+- minimum tilgjengelig sammenhengende lengde
+- minimumsbredde
+- kategori
+- materiale
+- minimum/maksimum vekt
+- elastisitetsnivå
+
+Treff krever at ett konkret stoffstykke oppfyller aktive dimensjonskrav, og resultatet viser tilgjengelige mål samt forklarende materiale-/vektinformasjon. Delvis reservasjon reduserer tilgjengelig lengde i søket.
+
+### CloudKit
+
+Ingen nye felter eller indekser opprettes i denne leveransen.
+
+### Teststatus
+
+Test 104–113 er lagt inn som **❗️** frem til eksplisitt validering.

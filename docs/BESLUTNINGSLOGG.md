@@ -855,3 +855,35 @@ Materiale og farge er 1:n-child-records. En lokal samling unngår N+1-query unde
 - det opprettes ingen nye feltbaserte CloudKit-indekser i dette steget.
 - ytelse skal måles/observeres før samme mønster utvides til flere child-record-baserte filterområder.
 
+
+## B-047 – Første prosjektsøk bruker lokalt Piece-indeks og absolutte krav
+
+**Dato:** 2026-10-03  
+**Status:** Besluttet
+
+### Beslutning
+
+Første native versjon av **Finn til prosjekt** laster eksisterende `Piece`-records samlet fra private CloudKit og grupperer dem lokalt på `textileId`. Treff krever at minst ett fysisk stoffstykke oppfyller alle aktive dimensjonskrav samtidig. Gjenværende tilgjengelig lengde beregnes som `lengthCm - reservedLengthCm`.
+
+Første blokk støtter valgfrie krav til:
+
+- nødvendig sammenhengende tilgjengelig lengde
+- minimumsbredde
+- kategori
+- materiale
+- vektintervall
+- elastisitetsnivå
+
+### Begrunnelse
+
+Prosjektsøk må vurdere fysisk tilgjengelig beholdning, ikke bare Textile-metadata. Et lokalt Piece-indeks gjør dette uten N+1-query per tekstil og bygger videre på den validerte lokale indeksstrategien for materiale/farge. Absolutte krav gir forutsigbare og forklarbare treff i tråd med B-020.
+
+### Konsekvens
+
+- `PieceRepository` får bulk-lesing av alle Piece-records.
+- `PieceLibraryIndex` grupperer stoffstykker på `textileId`.
+- et tekstil vises bare dersom minst ett enkelt Piece oppfyller både lengde- og breddekrav.
+- delvis reservasjon reduserer tilgjengelig lengde i prosjektsøket.
+- treff viser hvilket stykke som passer og sentrale grunner som materiale og vekt.
+- ingen nye CloudKit-felt eller nye feltbaserte indekser opprettes i denne blokken.
+- avanserte kriterier som farge, vedlikeholdskrav, egenskaper og rikere rangering kan legges til senere etter validering av grunnflyten.

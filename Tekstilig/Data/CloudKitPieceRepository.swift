@@ -88,6 +88,75 @@ final class CloudKitPieceRepository: PieceRepository {
         }
     }
 
+    func fetchAllPieces() async throws -> [Piece] {
+        let query = CKQuery(
+            recordType: Self.recordType,
+            predicate: NSPredicate(value: true)
+        )
+
+        let desiredKeys = [
+            "pieceId",
+            "textileId",
+            "lengthCm",
+            "widthCm",
+            "reservedLengthCm",
+            "project"
+        ]
+
+        var pieces: [Piece] = []
+        var cursor: CKQueryOperation.Cursor?
+
+        repeat {
+            let response: (
+                matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)],
+                queryCursor: CKQueryOperation.Cursor?
+            )
+
+            if let cursor {
+                response = try await database.records(
+                    continuingMatchFrom: cursor,
+                    desiredKeys: desiredKeys,
+                    resultsLimit: 200
+                )
+            } else {
+                response = try await database.records(
+                    matching: query,
+                    inZoneWith: nil,
+                    desiredKeys: desiredKeys,
+                    resultsLimit: 200
+                )
+            }
+
+            for (_, result) in response.matchResults {
+                switch result {
+                case .success(let record):
+                    guard !Self.diagnosticRecordNames.contains(record.recordID.recordName) else {
+                        continue
+                    }
+                    pieces.append(try Self.piece(from: record))
+
+                case .failure(let error):
+                    throw error
+                }
+            }
+
+            cursor = response.queryCursor
+        } while cursor != nil
+
+        return pieces.sorted {
+            if $0.textileID != $1.textileID {
+                return $0.textileID.localizedCaseInsensitiveCompare($1.textileID) == .orderedAscending
+            }
+            if $0.availableLengthCm != $1.availableLengthCm {
+                return $0.availableLengthCm > $1.availableLengthCm
+            }
+            if $0.widthCm != $1.widthCm {
+                return $0.widthCm > $1.widthCm
+            }
+            return $0.pieceID.localizedCaseInsensitiveCompare($1.pieceID) == .orderedAscending
+        }
+    }
+
     func save(_ piece: Piece) async throws -> Piece {
         try Self.validate(piece)
 

@@ -2019,3 +2019,178 @@ Blokken er godkjent når alle disse er bekreftet:
 
 **Ikke gå videre til Piece-baserte mål-/tilgjengelighetsfiltre eller «Finn til prosjekt» før punkt 103 er bekreftet.**
 
+
+## 104. Legg inn devpatch 0045 – første «Finn til prosjekt»
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0019.zip`, der test 1–103 er validert. Første prosjektsøk bruker eksisterende Textile-, materiale- og Piece-data lokalt og oppretter ingen nye CloudKit-felt eller indekser.
+
+1. Lukk Xcode 27 dersom Tekstilig-prosjektet er åpent.
+2. Pakk ut `Tekstilig-devpatch-0045.zip` i `Downloads`.
+3. Kjør dry-run:
+
+```bash
+rsync -av --dry-run --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0045/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+4. Kontroller at patchen bare endrer/legger til filer for ContentView, Piece-bulklesing, prosjektsøk og dokumentasjon.
+5. Kjør den faktiske oppdateringen:
+
+```bash
+rsync -av --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0045/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+6. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+7. Velg **Product → Build**.
+8. Kontroller at build fullføres uten nye feil.
+9. Start appen på fysisk testtelefon.
+10. Kontroller at fanene **Tekstiler** og **Finn til prosjekt** vises.
+11. Åpne **Finn til prosjekt**.
+12. Vent til dataene er lastet.
+13. Kontroller at kriteriene for lengde, bredde, kategori, materiale, vekt og elastisitet vises.
+
+Stopp på punkt 104 dersom build eller innlasting feiler.
+
+## 105. Valider grunnflyt og tomt søk
+
+**✅ AKSJON – DU**
+
+1. Åpne **Finn til prosjekt**.
+2. Kontroller at **Finn tekstiler** ikke kan brukes uten minst ett kriterium.
+3. Angi ett enkelt kriterium som du vet minst ett stoff kan oppfylle.
+4. Trykk **Finn tekstiler**.
+5. Kontroller at resultatseksjonen oppdateres.
+6. Trykk **Nullstill kriterier**.
+7. Kontroller at alle felt/valg nullstilles og at søkeresultatet skjules igjen.
+
+## 106. Valider nødvendig sammenhengende lengde
+
+**✅ AKSJON – DU**
+
+1. Finn et tekstil med et kjent stoffstykke og noter stykkets totale lengde og eventuell reservasjon.
+2. Beregn tilgjengelig lengde som total lengde minus reservert lengde.
+3. Åpne **Finn til prosjekt**.
+4. Angi et lengdekrav som er mindre enn eller lik den tilgjengelige lengden.
+5. Trykk **Finn tekstiler**.
+6. Kontroller at tekstilet vises.
+7. Øk kravet til mer enn tilgjengelig lengde.
+8. Trykk **Finn tekstiler** på nytt.
+9. Kontroller at tekstilet ikke lenger vises.
+
+## 107. Valider minimumsbredde og krav på samme Piece
+
+**✅ AKSJON – DU**
+
+1. Bruk et tekstil med minst ett kjent Piece.
+2. Angi et lengdekrav og et breddekrav som samme Piece oppfyller.
+3. Trykk **Finn tekstiler**.
+4. Kontroller at tekstilet vises.
+5. Endre bredden til mer enn det aktuelle stykket har.
+6. Trykk **Finn tekstiler** igjen.
+7. Kontroller at tekstilet ikke vises.
+8. Dersom tekstilet har flere stoffstykker, kontroller at appen ikke kombinerer lengde fra ett Piece med bredde fra et annet; minst ett enkelt Piece må oppfylle begge kravene.
+
+## 108. Valider reservasjon mot tilgjengelig lengde
+
+**✅ AKSJON – DU**
+
+1. Velg et Piece med en delvis reservasjon, eller opprett en testreservasjon på et eksisterende stykke.
+2. Noter total lengde, reservert lengde og beregnet tilgjengelig lengde.
+3. Åpne **Finn til prosjekt**.
+4. Angi et lengdekrav som er større enn tilgjengelig lengde, men mindre enn eller lik total lengde.
+5. Trykk **Finn tekstiler**.
+6. Kontroller at dette Piece ikke gjør tekstilet til et treff.
+7. Reduser lengdekravet til tilgjengelig lengde eller lavere.
+8. Trykk **Finn tekstiler** igjen.
+9. Kontroller at tekstilet nå vises dersom øvrige aktive krav også er oppfylt.
+10. Kontroller at resultatet viser at en del av stykket er reservert når dette gjelder.
+
+## 109. Valider kategori og materiale
+
+**✅ AKSJON – DU**
+
+1. Nullstill kriteriene.
+2. Velg en kategori som et kjent tekstil bruker.
+3. Velg ett av materialene på samme tekstil.
+4. Trykk **Finn tekstiler**.
+5. Kontroller at tekstilet vises.
+6. Endre materiale til et materiale tekstilet ikke har.
+7. Trykk **Finn tekstiler** igjen.
+8. Kontroller at tekstilet ikke lenger vises.
+9. Sett materiale tilbake og velg en kategori som ikke matcher.
+10. Kontroller at tekstilet fortsatt filtreres bort.
+
+## 110. Valider vekt og elastisitet
+
+**✅ AKSJON – DU**
+
+1. Nullstill kriteriene.
+2. Velg et tekstil med registrert vekt og elastisitetsnivå.
+3. Sett et vektintervall som inkluderer tekstilets vekt.
+4. Velg tekstilets elastisitetsnivå.
+5. Trykk **Finn tekstiler**.
+6. Kontroller at tekstilet vises.
+7. Endre maksimums- eller minimumsvekt slik at tekstilets vekt faller utenfor intervallet.
+8. Trykk **Finn tekstiler** igjen.
+9. Kontroller at tekstilet filtreres bort.
+10. Gjenopprett vektintervallet og velg feil elastisitetsnivå.
+11. Kontroller at tekstilet filtreres bort.
+
+## 111. Valider kombinerte absolutte krav og forklarbare treff
+
+**✅ AKSJON – DU**
+
+1. Velg et kjent tekstil der du kjenner tilgjengelig Piece-lengde, bredde, kategori, materiale, vekt og elastisitet.
+2. Angi alle disse kravene slik at tekstilet skal passe.
+3. Trykk **Finn tekstiler**.
+4. Kontroller at tekstilet vises.
+5. Kontroller at resultatet viser hvilket tilgjengelig stykke som passer med lengde × bredde.
+6. Kontroller at materiale vises når registrert.
+7. Kontroller at vekt vises når registrert.
+8. Endre ett absolutt krav slik at tekstilet ikke lenger passer.
+9. Kontroller at tekstilet forsvinner fra resultatene.
+
+## 112. Valider navigasjon, refresh og regresjon
+
+**✅ AKSJON – DU**
+
+1. Utfør et prosjektsøk som gir minst ett treff.
+2. Trykk på et treff.
+3. Kontroller at riktig `TextileDetailView` åpnes.
+4. Gå tilbake til prosjektsøket.
+5. Dra ned for å refreshe.
+6. Kjør samme søk på nytt.
+7. Kontroller at resultatet fortsatt er korrekt.
+8. Gå til fanen **Tekstiler**.
+9. Kontroller at vanlig fritekstsøk og filterpanel fortsatt fungerer.
+10. Åpne et tekstil og kontroller at tidligere validerte editorer/Piece-funksjoner fortsatt er stabile.
+11. Kontroller at prosjektsøk ikke har endret noen CloudKit-data.
+
+## 113. Stoppunkt for første «Finn til prosjekt»
+
+**✅ STOPPUNKT**
+
+Blokken er godkjent når alle disse er bekreftet:
+
+- appen bygger uten nye feil
+- egen **Finn til prosjekt**-fane vises og lastes stabilt
+- minst ett kriterium kreves før søk
+- nødvendig sammenhengende tilgjengelig lengde fungerer
+- minimumsbredde fungerer
+- samme Piece må oppfylle aktive dimensjonskrav
+- reservasjon reduserer tilgjengelig søkbar lengde
+- kategori og materiale kan brukes som absolutte krav
+- vektintervall fungerer
+- elastisitetsnivå fungerer
+- flere krav kan kombineres
+- treff viser forklarende Piece-dimensjoner og relevante metadata
+- treff kan åpne riktig tekstildetalj
+- refresh og vanlig bibliotekfunksjonalitet er bevart
+- prosjektsøk endrer ikke CloudKit-data
+
+**Ikke gå videre til reservasjon direkte fra prosjektsøk, flere kriterietyper eller mer avansert rangering før punkt 113 er bekreftet.**

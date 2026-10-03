@@ -653,3 +653,17 @@ Dette er fortsatt et lokalt søketrinn. Det brukes ingen CloudKit-predikater på
 
 Pull-to-refresh oppdaterer både `Textile`-listen og det lokale materiale-/fargeindekset, slik at endringer fra detaljeditorene blir synlige i bibliotekssøk etter refresh.
 
+
+## Prosjektsøk – lokal beholdningsindeks
+
+Første native implementering av **Finn til prosjekt** kombinerer tre allerede eksisterende datakilder i klienten:
+
+1. `Textile` via `TextileLibraryModel`
+2. `TextileMaterial` / `TextileColor` via `TextileLibraryAttributeIndex`
+3. `Piece` via `PieceLibraryIndex`
+
+`PieceLibraryIndex` gjør én paginert bulk-query mot private CloudKit og grupperer resultatene på `textileId`. Prosjektsøket evaluerer deretter alle aktive absolutte krav lokalt.
+
+For dimensjoner må **samme Piece** tilfredsstille både nødvendig tilgjengelig lengde og minimumsbredde. `Piece.availableLengthCm` brukes, slik at en eksisterende reservasjon trekkes fra total lengde før treff vurderes.
+
+Denne første versjonen er bevisst lokal og oppretter ingen nye CloudKit-indekser. Dersom datamengden senere gjør bulklasting for kostbar, kan samme søkegrensesnitt beholdes mens datatilgangen flyttes til mer målrettede server-side queries/cache.
