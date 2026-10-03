@@ -683,3 +683,34 @@ Dette trinnet bruker ikke CloudKit-query for søk og krever derfor ingen nye ind
 - Filterpanelet utvides med plassering/område, minimum/maksimum vekt og elastisitetsnivå.
 - Ingen nye CloudKit-felt eller indekser introduseres.
 - Nye testpunkter 87–94 er lagt inn som ❗️ frem til eksplisitt validering.
+
+## Devpatch 0044 – materiale- og fargebasert søk/filter
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0018.zip`, der test 1–94 er validert.
+
+### Søkeindeks
+
+- nytt `TextileLibraryAttributeIndex` henter og grupperer alle material- og farge-child-records lokalt på `textileId`
+- material- og fargerepositories har fått bulk-lesing for bibliotekssøk
+- pull-to-refresh oppdaterer både Textile-listen og child-record-indekset
+
+### Søk og filter
+
+- fritekstsøk omfatter nå materialnavn, fargegruppe og beskrivende fargenavn i tillegg til eksisterende Textile-felt
+- filterpanelet har fått **Materiale** og **Farge**
+- materialfilter matcher dersom minst ett registrert materiale passer
+- fargefilter matcher dersom minst én registrert fargegruppe passer
+- eksisterende kategori-, plassering-, vekt- og elastisitetsfiltre kan kombineres med de nye filtrene
+
+### CloudKit
+
+- ingen nye record-felt
+- ingen nye feltbaserte `QUERYABLE`/`SEARCHABLE`-indekser i dette steget
+- child-records hentes samlet og filtreres lokalt
+
+### Dokumentasjon/test
+
+- test 87–94 er beholdt som validert
+- kortvarig treghet observert under kategorifilter i test 88 er dokumentert som ikke-blokkerende ytelsesobservasjon
+- test 95–103 er lagt inn som **❗️** frem til eksplisitt validering
+

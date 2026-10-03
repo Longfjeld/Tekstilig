@@ -69,6 +69,56 @@ final class CloudKitTextileColorRepository: TextileColorRepository {
         }
     }
 
+    func fetchAllColors() async throws -> [TextileColor] {
+        let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
+        let desiredKeys = ["colorId", "textileId", "group", "name", "hex"]
+        var colors: [TextileColor] = []
+        var cursor: CKQueryOperation.Cursor?
+
+        repeat {
+            let response: (
+                matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)],
+                queryCursor: CKQueryOperation.Cursor?
+            )
+
+            if let cursor {
+                response = try await database.records(
+                    continuingMatchFrom: cursor,
+                    desiredKeys: desiredKeys,
+                    resultsLimit: 100
+                )
+            } else {
+                response = try await database.records(
+                    matching: query,
+                    inZoneWith: nil,
+                    desiredKeys: desiredKeys,
+                    resultsLimit: 100
+                )
+            }
+
+            for (_, result) in response.matchResults {
+                switch result {
+                case .success(let record):
+                    colors.append(try Self.color(from: record))
+                case .failure(let error):
+                    throw error
+                }
+            }
+
+            cursor = response.queryCursor
+        } while cursor != nil
+
+        return colors.sorted {
+            if $0.textileID != $1.textileID {
+                return $0.textileID < $1.textileID
+            }
+            if $0.group != $1.group {
+                return $0.group.localizedCaseInsensitiveCompare($1.group) == .orderedAscending
+            }
+            return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+    }
+
     func save(_ color: TextileColor) async throws -> TextileColor {
         let normalizedTextileID = color.textileID.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedGroup = color.group.trimmingCharacters(in: .whitespacesAndNewlines)

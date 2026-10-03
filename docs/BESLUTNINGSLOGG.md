@@ -831,3 +831,27 @@ Etter at vedlikeholdsfeltene ble lagt til i Development begynte bibliotek-querye
 - nye valgfrie Textile-felt krever ikke at queryens `desiredKeys` oppdateres samtidig
 - eventuell feltbegrensning gjeninnføres bare dersom senere ytelsesmåling tilsier det
 - feilmeldinger fra CloudKit viser mer tilgjengelig retry-/partial-/underliggende informasjon under utvikling
+
+## B-046 – Materiale og farge indekseres lokalt for første bibliotekssøk
+
+**Dato:** 2026-10-03  
+**Status:** Besluttet
+
+### Beslutning
+
+Første bibliotekssøk/filter på materiale og farge bruker et lokalt indeks i SwiftUI-klienten. Appen henter `TextileMaterial` og `TextileColor` samlet fra private CloudKit og grupperer child-records på `textileId`. Filtrering utføres deretter lokalt sammen med de allerede innlastede `Textile`-recordene.
+
+### Begrunnelse
+
+Materiale og farge er 1:n-child-records. En lokal samling unngår N+1-query under hver filterevaluering og lar søke-UX valideres før Production-schemaet får flere søkeindekser. Dette følger også eksisterende beslutning om at CloudKit-indekser skal opprettes når en konkret server-side query faktisk trenger dem.
+
+### Konsekvens
+
+- `TextileMaterialRepository` og `TextileColorRepository` får bulk-lesing av alle records.
+- `TextileLibraryAttributeIndex` eier bibliotekets lokale materiale-/fargeoppslag.
+- fritekstsøk kan bruke materialnavn samt fargegruppe/fargenavn.
+- filterpanelet kan filtrere på materiale og fargegruppe.
+- pull-to-refresh oppdaterer både Textile-data og child-record-indekset.
+- det opprettes ingen nye feltbaserte CloudKit-indekser i dette steget.
+- ytelse skal måles/observeres før samme mønster utvides til flere child-record-baserte filterområder.
+

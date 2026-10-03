@@ -632,3 +632,24 @@ CloudKit-mapping:
 Alle feltene er valgfrie. Dette gjør at eksisterende Textile-records kan leses uten schema-migrering. Når elastisitetsgrad settes til `none`, normaliseres retningen til `notApplicable` og prosent fjernes. Dersom elastisitet settes til «ikke registrert», fjernes alle tre stretch-feltene.
 
 Editoren presenteres fra den stabile `TextileDetailView`, på samme måte som vedlikehold og plassering, for å unngå den tidligere validerte sheet-livssyklusfeilen.
+
+## 28. Lokalt materiale-/fargeindeks for bibliotekssøk – devpatch 0044
+
+Materiale og farge er child-records og ligger derfor ikke direkte på `Textile`. For vanlig bibliotekssøk henter appen i dette steget alle `TextileMaterial`- og `TextileColor`-records i private CloudKit og grupperer dem lokalt på `textileId`.
+
+```text
+TextileLibraryView
+    ↓
+TextileLibraryAttributeIndex
+    ├─ CloudKitTextileMaterialRepository.fetchAllMaterials()
+    └─ CloudKitTextileColorRepository.fetchAllColors()
+              ↓
+        Private CloudKit
+```
+
+`TextileLibraryView` kombinerer deretter dette lokale child-record-indekset med allerede innlastede `Textile`-snapshots. Dermed kan fritekstsøk og filter bruke materialnavn, fargegruppe og beskrivende fargenavn uten én CloudKit-query per tekstil under selve filtreringen.
+
+Dette er fortsatt et lokalt søketrinn. Det brukes ingen CloudKit-predikater på `material` eller `group`, og det opprettes derfor ingen nye feltbaserte `QUERYABLE`/`SEARCHABLE`-indekser i devpatch 0044. Dersom datamengde eller målinger senere tilsier server-side søk, planlegges slike indekser eksplisitt da.
+
+Pull-to-refresh oppdaterer både `Textile`-listen og det lokale materiale-/fargeindekset, slik at endringer fra detaljeditorene blir synlige i bibliotekssøk etter refresh.
+

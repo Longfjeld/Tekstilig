@@ -1752,6 +1752,10 @@ Hvis build, biblioteklasting eller åpning/lukking av filterpanelet feiler, stop
 8. Trykk **Ferdig**.
 9. Kontroller at hele biblioteket vises igjen.
 
+### Observasjon fra validering av punkt 88
+
+Kategori-valg i filterpanelet opplevdes én gang som kortvarig tregt/hengende på testklienten. Tilstanden løste seg ved videre navigering, og test 88–94 ble ellers validert uten funksjonsfeil. Dette behandles som en ikke-blokkerende ytelsesobservasjon som skal følges opp før produksjon dersom den kan reproduseres.
+
 ## 89. Valider filter på plassering/område
 
 **✅ AKSJON – DU**
@@ -1856,3 +1860,162 @@ Blokken er godkjent når alle disse er bekreftet:
 - tidligere validerte funksjoner er bevart
 
 **Ikke gå videre til materiale-/fargebasert søk eller mer avanserte filtre før punkt 94 er bekreftet.**
+
+## 95. Legg inn devpatch 0044 – materiale- og fargebasert søk/filter
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0018.zip`, der test 1–94 er validert. Blokken utvider det eksisterende lokale bibliotekssøket med strukturerte `TextileMaterial`- og `TextileColor`-data. Materiale/farge hentes som egne child-records og bygges inn i et lokalt søkeindeks i appen. Det opprettes ingen nye CloudKit-felt eller feltbaserte søkeindekser i dette steget.
+
+1. Lukk Xcode 27 dersom Tekstilig-prosjektet er åpent.
+2. Pakk ut `Tekstilig-devpatch-0044.zip` i `Downloads`.
+3. Kjør dry-run:
+
+```bash
+rsync -av --dry-run --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0044/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+4. Kontroller at patchen bare endrer/legger til filer for bibliotekssøk, materiale/farge-repositories og dokumentasjon.
+5. Kjør den faktiske oppdateringen:
+
+```bash
+rsync -av --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0044/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+6. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+7. Velg **Product → Build**.
+8. Kontroller at build fullføres uten nye feil.
+9. Start appen på den fysiske testtelefonen.
+10. Vent til tekstilbiblioteket er lastet.
+11. Åpne **Filtre**.
+12. Kontroller at panelet nå også inneholder **Materiale** og **Farge**.
+13. Kontroller at de kan åpnes uten at appen henger eller lukker filterpanelet.
+14. Trykk **Ferdig**.
+
+Hvis build, biblioteklasting eller lasting av materiale/farge feiler, stopp på punkt 95.
+
+## 96. Valider fritekstsøk på materiale
+
+**✅ AKSJON – DU**
+
+1. Velg et tekstil som har minst ett kjent materiale, for eksempel **Ull**.
+2. Gå tilbake til biblioteket.
+3. Skriv hele materialnavnet i søkefeltet.
+4. Kontroller at tekstilet vises.
+5. Søk deretter på en unik del av materialnavnet.
+6. Kontroller at deltreff fortsatt finner tekstilet.
+7. Kontroller at søket ikke er avhengig av store/små bokstaver.
+8. Tøm søket.
+
+## 97. Valider fritekstsøk på fargegruppe og fargenavn
+
+**✅ AKSJON – DU**
+
+1. Velg et tekstil med kjent fargegruppe og eventuelt beskrivende fargenavn.
+2. Søk på fargegruppen, for eksempel **Blå**.
+3. Kontroller at tekstilet vises.
+4. Tøm søket.
+5. Dersom fargen har et eget navn, søk på hele eller deler av navnet.
+6. Kontroller at tekstilet vises.
+7. Kontroller at søket er case-insensitivt.
+8. Tøm søket.
+
+## 98. Valider materialfilter
+
+**✅ AKSJON – DU**
+
+1. Åpne **Filtre**.
+2. Velg et materiale som minst ett tekstil bruker.
+3. Trykk **Ferdig**.
+4. Kontroller at bare tekstiler som har dette materialet vises.
+5. Kontroller at tekstiler med flere materialer fortsatt vises dersom ett av materialene matcher.
+6. Kontroller at filterikonet viser aktiv tilstand.
+7. Åpne **Filtre** igjen.
+8. Velg **Alle materialer**.
+9. Trykk **Ferdig**.
+10. Kontroller at materialfilteret er fjernet.
+
+## 99. Valider fargegruppefilter
+
+**✅ AKSJON – DU**
+
+1. Åpne **Filtre**.
+2. Velg en fargegruppe som minst ett tekstil bruker.
+3. Trykk **Ferdig**.
+4. Kontroller at bare tekstiler med denne fargegruppen vises.
+5. Kontroller at et tekstil med flere farger fortsatt vises dersom minst én farge matcher gruppen.
+6. Åpne **Filtre** igjen.
+7. Velg **Alle farger**.
+8. Trykk **Ferdig**.
+9. Kontroller at fargefilteret er fjernet.
+
+## 100. Kombiner materiale/farge med eksisterende filtre
+
+**✅ AKSJON – DU**
+
+1. Velg et tekstil med kjent materiale, fargegruppe og kategori.
+2. Åpne **Filtre**.
+3. Velg tekstilets materiale.
+4. Velg tekstilets fargegruppe.
+5. Velg tekstilets kategori.
+6. Trykk **Ferdig**.
+7. Kontroller at tekstilet fortsatt vises.
+8. Endre ett av filtrene til en verdi som ikke passer tekstilet.
+9. Kontroller at tekstilet forsvinner fra resultatet.
+10. Nullstill filtrene.
+
+## 101. Kombiner materiale/farge med fritekstsøk
+
+**✅ AKSJON – DU**
+
+1. Velg et materialfilter som gir minst ett treff.
+2. Skriv en del av navnet på ett av treffene i søkefeltet.
+3. Kontroller at bare riktig tekstil vises.
+4. Endre søket til et tekstil som ikke har det valgte materialet.
+5. Kontroller at dette tekstilet ikke vises mens materialfilteret er aktivt.
+6. Tøm søket.
+7. Nullstill materialfilteret.
+8. Gjenta samme kontroll med et fargegruppefilter.
+9. Tøm søk og filtre til slutt.
+
+## 102. Valider refresh etter materiale-/fargeendring og regresjon
+
+**✅ AKSJON – DU**
+
+1. Åpne et eksisterende tekstil.
+2. Legg til eller rediger et materiale og lagre.
+3. Gå tilbake til biblioteket.
+4. Dra ned for å refreshe biblioteket.
+5. Søk på den nye materialverdien.
+6. Kontroller at tekstilet nå finnes.
+7. Åpne tekstilet igjen og legg til eller rediger en farge.
+8. Gå tilbake til biblioteket og refresh igjen.
+9. Søk eller filtrer på den nye fargeverdien.
+10. Kontroller at tekstilet finnes.
+11. Kontroller at tidligere validerte kategori-, plassering-, vekt- og elastisitetsfiltre fortsatt fungerer.
+12. Kontroller at Piece-, bilde-, vedlikeholds-, plassering- og fysiske egenskapsdata er bevart.
+
+## 103. Stoppunkt for materiale- og fargebasert søk/filter
+
+**✅ STOPPUNKT**
+
+Blokken er godkjent når alle disse er bekreftet:
+
+- appen bygger uten nye feil
+- materiale/farge-søkeindeksen lastes uten å blokkere vanlig bibliotekbruk
+- fritekstsøk finner materialnavn
+- fritekstsøk finner fargegruppe og beskrivende fargenavn
+- materialfilter fungerer, også for tekstiler med flere materialer
+- fargegruppefilter fungerer, også for tekstiler med flere farger
+- materiale/farge kan kombineres med eksisterende filtre
+- materiale/farge kan kombineres med fritekstsøk
+- refresh oppdaterer søkeindeksen etter endring i materiale/farge
+- filtrering endrer ikke CloudKit-data
+- tidligere validerte funksjoner er bevart
+
+**Ikke gå videre til Piece-baserte mål-/tilgjengelighetsfiltre eller «Finn til prosjekt» før punkt 103 er bekreftet.**
+

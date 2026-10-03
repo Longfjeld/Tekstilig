@@ -69,6 +69,53 @@ final class CloudKitTextileMaterialRepository: TextileMaterialRepository {
         }
     }
 
+    func fetchAllMaterials() async throws -> [TextileMaterial] {
+        let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
+        let desiredKeys = ["materialId", "textileId", "material", "percent"]
+        var materials: [TextileMaterial] = []
+        var cursor: CKQueryOperation.Cursor?
+
+        repeat {
+            let response: (
+                matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)],
+                queryCursor: CKQueryOperation.Cursor?
+            )
+
+            if let cursor {
+                response = try await database.records(
+                    continuingMatchFrom: cursor,
+                    desiredKeys: desiredKeys,
+                    resultsLimit: 100
+                )
+            } else {
+                response = try await database.records(
+                    matching: query,
+                    inZoneWith: nil,
+                    desiredKeys: desiredKeys,
+                    resultsLimit: 100
+                )
+            }
+
+            for (_, result) in response.matchResults {
+                switch result {
+                case .success(let record):
+                    materials.append(try Self.material(from: record))
+                case .failure(let error):
+                    throw error
+                }
+            }
+
+            cursor = response.queryCursor
+        } while cursor != nil
+
+        return materials.sorted {
+            if $0.textileID != $1.textileID {
+                return $0.textileID < $1.textileID
+            }
+            return $0.material.localizedCaseInsensitiveCompare($1.material) == .orderedAscending
+        }
+    }
+
     func save(_ material: TextileMaterial) async throws -> TextileMaterial {
         let normalizedTextileID = material.textileID.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedMaterial = material.material.trimmingCharacters(in: .whitespacesAndNewlines)
