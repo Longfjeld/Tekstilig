@@ -9,7 +9,8 @@ final class TextileAttributesModel {
     private(set) var colors: [TextileColor] = []
     private(set) var isLoading = false
     private(set) var loadedTextileID: String?
-    var errorMessage: String?
+    private(set) var loadErrorMessage: String?
+    var mutationErrorMessage: String?
 
     private let materialRepository: any TextileMaterialRepository
     private let colorRepository: any TextileColorRepository
@@ -36,14 +37,14 @@ final class TextileAttributesModel {
         guard !isLoading else { return }
 
         isLoading = true
-        errorMessage = nil
+        loadErrorMessage = nil
 
         do {
             materials = try await materialRepository.fetchMaterials(textileID: textileID)
             colors = try await colorRepository.fetchColors(textileID: textileID)
             loadedTextileID = textileID
         } catch {
-            errorMessage = Self.description(for: error)
+            loadErrorMessage = Self.description(for: error)
         }
 
         isLoading = false
@@ -53,28 +54,28 @@ final class TextileAttributesModel {
     func saveMaterial(_ material: TextileMaterial) async throws -> TextileMaterial {
         let saved = try await materialRepository.save(material)
         upsertMaterial(saved)
-        errorMessage = nil
+        mutationErrorMessage = nil
         return saved
     }
 
     func deleteMaterial(_ material: TextileMaterial) async throws {
         try await materialRepository.delete(material)
         materials.removeAll { $0.id == material.id }
-        errorMessage = nil
+        mutationErrorMessage = nil
     }
 
     @discardableResult
     func saveColor(_ color: TextileColor) async throws -> TextileColor {
         let saved = try await colorRepository.save(color)
         upsertColor(saved)
-        errorMessage = nil
+        mutationErrorMessage = nil
         return saved
     }
 
     func deleteColor(_ color: TextileColor) async throws {
         try await colorRepository.delete(color)
         colors.removeAll { $0.id == color.id }
-        errorMessage = nil
+        mutationErrorMessage = nil
     }
 
     private func upsertMaterial(_ material: TextileMaterial) {

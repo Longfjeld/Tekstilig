@@ -15,7 +15,7 @@ struct TextileAttributesSection: View {
             Section {
                 if model.isLoading && model.materials.isEmpty && model.colors.isEmpty {
                     ProgressView("Henter materiale og farge …")
-                } else if let errorMessage = model.errorMessage,
+                } else if let errorMessage = model.loadErrorMessage,
                           model.materials.isEmpty && model.colors.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Label("Kunne ikke hente materiale og farge", systemImage: "icloud.slash")
@@ -114,13 +114,13 @@ struct TextileAttributesSection: View {
         .alert(
             "Kunne ikke endre materiale eller farge",
             isPresented: Binding(
-                get: { model.errorMessage != nil && (!model.materials.isEmpty || !model.colors.isEmpty) },
-                set: { if !$0 { model.errorMessage = nil } }
+                get: { model.mutationErrorMessage != nil },
+                set: { if !$0 { model.mutationErrorMessage = nil } }
             )
         ) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(model.errorMessage ?? "Ukjent feil")
+            Text(model.mutationErrorMessage ?? "Ukjent feil")
         }
     }
 
@@ -137,7 +137,7 @@ struct TextileAttributesSection: View {
                 }
                 self.deletionTarget = nil
             } catch {
-                model.errorMessage = error.localizedDescription
+                model.mutationErrorMessage = error.localizedDescription
                 self.deletionTarget = nil
             }
         }

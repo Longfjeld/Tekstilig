@@ -1366,7 +1366,7 @@ Ingen nye indekser kreves i dette steget. Søk-/filterindekser opprettes først 
 
 ## 70. Bygg patchen og valider tom tilstand
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Velg samme simulator/fysiske testenhet som i de siste valideringene.
 2. Velg **Product → Build**.
@@ -1390,7 +1390,7 @@ Hvis editoren forsvinner av seg selv eller build feiler, stopp her før du oppre
 
 ## 71. Registrer vekt
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **Legg til vekt/elastisitet/krymp**.
 2. Skriv følgende i feltet for vekt:
@@ -1413,7 +1413,7 @@ Vekt    320 g/m²
 
 ## 72. Registrer elastisitet
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **Rediger vekt/elastisitet/krymp**.
 2. Sett **Grad** til **Middels**.
@@ -1435,7 +1435,7 @@ Vekt    320 g/m²
 
 ## 73. Registrer krymp
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **Rediger vekt/elastisitet/krymp**.
 2. Sett **Lengde i prosent** til:
@@ -1466,7 +1466,7 @@ Etter vask på 40 °C
 
 ## 74. Kontroller de nye feltene i CloudKit
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **CloudKit Database → Development → Private Database → Textile**.
 2. Finn samme Textile-record som du brukte i test 71–73.
@@ -1487,7 +1487,7 @@ Etter vask på 40 °C
 
 ## 75. Valider nullstilling og «Ingen elastisitet»
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne **Rediger vekt/elastisitet/krymp**.
 2. Endre **Grad** til **Ingen**.
@@ -1508,7 +1508,7 @@ Etter vask på 40 °C
 
 ## 76. Kontroller samspill med eksisterende produktdata
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Registrer på nytt minst vekt `320`, elastisitet **Middels/Bredde/25 %** og krymp `3 % / 1 %`.
 2. Kontroller at hovedbildet fortsatt vises.
@@ -1523,7 +1523,7 @@ Etter vask på 40 °C
 
 ## 77. Stoppunkt for fysiske egenskaper
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 Steget er godkjent når alle disse er bekreftet:
 
