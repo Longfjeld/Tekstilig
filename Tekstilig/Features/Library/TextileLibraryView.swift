@@ -4,7 +4,8 @@ struct TextileLibraryView: View {
     @State private var model = TextileLibraryModel()
     @State private var showNewTextile = false
     @State private var searchText = ""
-    @State private var selectedCategory = ""
+    @State private var filters = TextileLibraryFilters()
+    @State private var showFilters = false
 
     private var listItems: [TextileListItem] {
         var items: [TextileListItem] = []
@@ -18,7 +19,9 @@ struct TextileLibraryView: View {
                     category: textile.category,
                     locationArea: textile.locationArea,
                     locationShelf: textile.locationShelf,
-                    locationContainer: textile.locationContainer
+                    locationContainer: textile.locationContainer,
+                    weightGsm: textile.weightGsm,
+                    stretchLevel: textile.stretch.level
                 )
             )
         }
@@ -28,12 +31,33 @@ struct TextileLibraryView: View {
 
     private var filteredListItems: [TextileListItem] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let areaQuery = filters.locationArea.trimmingCharacters(in: .whitespacesAndNewlines)
 
         return listItems.filter { item in
-            let matchesCategory = selectedCategory.isEmpty ||
-                item.category.localizedCaseInsensitiveCompare(selectedCategory) == .orderedSame
+            if !filters.category.isEmpty,
+               item.category.localizedCaseInsensitiveCompare(filters.category) != .orderedSame {
+                return false
+            }
 
-            guard matchesCategory else {
+            if !areaQuery.isEmpty,
+               !item.locationArea.localizedCaseInsensitiveContains(areaQuery) {
+                return false
+            }
+
+            if let minimumWeight = filters.minimumWeight {
+                guard let weight = item.weightGsm, weight >= minimumWeight else {
+                    return false
+                }
+            }
+
+            if let maximumWeight = filters.maximumWeight {
+                guard let weight = item.weightGsm, weight <= maximumWeight else {
+                    return false
+                }
+            }
+
+            if !filters.stretchLevel.isEmpty,
+               item.stretchLevel != filters.stretchLevel {
                 return false
             }
 
@@ -46,7 +70,7 @@ struct TextileLibraryView: View {
     }
 
     private var hasActiveFilter: Bool {
-        !selectedCategory.isEmpty
+        filters.isActive
     }
 
     var body: some View {
@@ -82,14 +106,14 @@ struct TextileLibraryView: View {
                         Label("Ingen treff", systemImage: "magnifyingglass")
                     } description: {
                         if hasActiveFilter {
-                            Text("Ingen tekstiler passer søket og valgt kategori.")
+                            Text("Ingen tekstiler passer søket og valgte filtre.")
                         } else {
                             Text("Ingen tekstiler passer søket.")
                         }
                     } actions: {
                         if hasActiveFilter {
-                            Button("Nullstill kategori") {
-                                selectedCategory = ""
+                            Button("Nullstill filtre") {
+                                filters.reset()
                             }
                         }
 
@@ -126,23 +150,17 @@ struct TextileLibraryView: View {
             )
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        Picker("Kategori", selection: $selectedCategory) {
-                            Text("Alle kategorier").tag("")
-
-                            ForEach(Textile.categoryOptions, id: \.self) { category in
-                                Text(category).tag(category)
-                            }
-                        }
+                    Button {
+                        showFilters = true
                     } label: {
                         Label(
-                            selectedCategory.isEmpty ? "Kategori" : selectedCategory,
+                            "Filtre",
                             systemImage: hasActiveFilter
                                 ? "line.3.horizontal.decrease.circle.fill"
                                 : "line.3.horizontal.decrease.circle"
                         )
                     }
-                    .accessibilityLabel("Filtrer på kategori")
+                    .accessibilityLabel(hasActiveFilter ? "Filtre, aktive filtre" : "Filtre")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -152,6 +170,9 @@ struct TextileLibraryView: View {
                         Label("Nytt tekstil", systemImage: "plus")
                     }
                 }
+            }
+            .sheet(isPresented: $showFilters) {
+                TextileLibraryFilterView(filters: $filters)
             }
             .sheet(isPresented: $showNewTextile) {
                 TextileEditorView(textile: nil) { candidate in
@@ -165,6 +186,92 @@ struct TextileLibraryView: View {
     }
 }
 
+private struct TextileLibraryFilters: Equatable {
+    var category = ""
+    var locationArea = ""
+    var minimumWeight: Int?
+    var maximumWeight: Int?
+    var stretchLevel = ""
+
+    var isActive: Bool {
+        !category.isEmpty ||
+        !locationArea.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        minimumWeight != nil ||
+        maximumWeight != nil ||
+        !stretchLevel.isEmpty
+    }
+
+    mutating func reset() {
+        self = TextileLibraryFilters()
+    }
+}
+
+private struct TextileLibraryFilterView: View {
+    @Binding var filters: TextileLibraryFilters
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Kategori") {
+                    Picker("Kategori", selection: $filters.category) {
+                        Text("Alle kategorier").tag("")
+
+                        ForEach(Textile.categoryOptions, id: \.self) { category in
+                            Text(category).tag(category)
+                        }
+                    }
+                }
+
+                Section("Plassering") {
+                    TextField("Område", text: $filters.locationArea)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+
+                Section {
+                    TextField("Minimum g/m²", value: $filters.minimumWeight, format: .number)
+                        .keyboardType(.numberPad)
+
+                    TextField("Maksimum g/m²", value: $filters.maximumWeight, format: .number)
+                        .keyboardType(.numberPad)
+                } header: {
+                    Text("Vekt")
+                } footer: {
+                    Text("Tekstiler uten registrert vekt skjules når et vektfilter er aktivt.")
+                }
+
+                Section("Elastisitet") {
+                    Picker("Nivå", selection: $filters.stretchLevel) {
+                        Text("Alle nivåer").tag("")
+                        Text("Ingen").tag("none")
+                        Text("Lav").tag("low")
+                        Text("Middels").tag("medium")
+                        Text("Høy").tag("high")
+                    }
+                }
+
+                if filters.isActive {
+                    Section {
+                        Button("Nullstill alle filtre", role: .destructive) {
+                            filters.reset()
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Filtre")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Ferdig") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
 private struct TextileListItem: Identifiable {
     let id: String
     let name: String
@@ -172,6 +279,8 @@ private struct TextileListItem: Identifiable {
     let locationArea: String
     let locationShelf: String
     let locationContainer: String
+    let weightGsm: Int?
+    let stretchLevel: String
 
     var searchableText: String {
         [

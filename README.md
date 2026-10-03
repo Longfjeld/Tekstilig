@@ -29,7 +29,7 @@ PoC-resultatene er dokumentert i `docs/SWIFTUI-OPPSTART.md`.
 
 ## Nåværende appfase
 
-Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29, materialer/farger gjennom test 30–39, plassering gjennom test 43–53, vedlikehold/query gjennom test 54–67 og fysiske egenskaper gjennom test 68–77. Neste avgrensede produktområde er fritekstsøk og grunnfiltre; første trinn bruker lokal filtrering av allerede innlastede Textile-data før CloudKit-søkeindekser og child-record-søk introduseres. Arkitekturen er nå:
+Textile-produktflyten er validert gjennom test 1–9, Piece gjennom test 10–18, hovedbilde gjennom test 20–29, materialer/farger gjennom test 30–39, plassering gjennom test 43–53, vedlikehold/query gjennom test 54–67 og fysiske egenskaper gjennom test 68–77. Første søk/grunnfilter-blokk 78–86 er validert. Neste avgrensede trinn er et eget filterpanel med kategori, plassering/område, vekt og elastisitetsnivå, fortsatt basert på allerede innlastede Textile-data. Materiale-/fargesøk og child-record-søk kommer senere. Arkitekturen er nå:
 
 ```text
 SwiftUI-visning

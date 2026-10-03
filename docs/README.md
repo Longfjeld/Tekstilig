@@ -8,13 +8,14 @@ Den native CloudKit-PoC-en er fullført. Textile-produktflyten er validert gjenn
 
 Start her for videre arbeid:
 
-1. `SWIFTUI-IMPLEMENTERING.md` – sekvensiell arbeids- og testplan for aktiv kodeleveranse
-2. `DATAMODELL.md` – autoritativ logisk datamodell
-3. `ARKITEKTUR.md` – teknisk arkitektur og CloudKit-mapping
-4. `UX-FLYTER.md` – brukerflyter og informasjonsstruktur
-5. `DESIGN.md` – visuell designretning
-6. `BESLUTNINGSLOGG.md` – arkitektur- og produktbeslutninger
-7. `ENDRINGSLOGG.md` – leveransehistorikk
+1. `ARBEIDSMETODIKK.md` – fast metode for kodegrunnlag, devpatcher, testing og avvik ved feil
+2. `SWIFTUI-IMPLEMENTERING.md` – sekvensiell arbeids- og testplan for aktiv kodeleveranse
+3. `DATAMODELL.md` – autoritativ logisk datamodell
+4. `ARKITEKTUR.md` – teknisk arkitektur og CloudKit-mapping
+5. `UX-FLYTER.md` – brukerflyter og informasjonsstruktur
+6. `DESIGN.md` – visuell designretning
+7. `BESLUTNINGSLOGG.md` – arkitektur- og produktbeslutninger
+8. `ENDRINGSLOGG.md` – leveransehistorikk
 
 ## Historisk/teknisk referanse
 

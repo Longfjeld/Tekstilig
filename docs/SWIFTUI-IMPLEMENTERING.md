@@ -1,6 +1,8 @@
 # SwiftUI – videre implementering
 
-**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper 68–77 ✅ · søk/grunnfilter fra 78 ❗️  
+**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper 68–77 ✅ · første søk/grunnfilter 78–86 ✅ · utvidede grunnfiltre fra 87 ❗️  
+
+> **Fast arbeidsmetodikk:** Les `ARBEIDSMETODIKK.md` før nye kodeendringer. `SWIFTUI-IMPLEMENTERING.md` er hovedsporet. Nye/ikke-validerte punkter markeres ❗️ og endres først til ✅ etter brukerens validering. Ved konkrete feil kan hovedsporet midlertidig erstattes av målrettet ad-hoc feilisolering; når feilen er løst fortsetter arbeidet fra neste ufullførte nummererte punkt.
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
@@ -1698,3 +1700,159 @@ Første søkeblokk er godkjent når alle disse er bekreftet:
 
 **Ikke gå videre til neste søk-/filtertrinn før punkt 86 er bekreftet.**
 
+
+
+## 87. Legg inn devpatch 0042 – filterpanel og utvidede grunnfiltre
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0017.zip`, der første søkeblokk 78–86 er fullført. Kategorien flyttes inn i et eget filterpanel, og filtrering utvides bare med felt som allerede ligger direkte på `Textile`: plassering/område, vekt og elastisitetsnivå. Det opprettes ingen nye CloudKit-felt eller indekser.
+
+1. Lukk Xcode 27 dersom Tekstilig-prosjektet er åpent.
+2. Pakk ut `Tekstilig-devpatch-0042.zip` i `Downloads`.
+3. Kjør dry-run:
+
+```bash
+rsync -av --dry-run --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0042/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+4. Kontroller at patchen endrer `TextileLibraryView.swift`, dokumentasjon og legger til `docs/ARBEIDSMETODIKK.md`.
+5. Kjør den faktiske oppdateringen:
+
+```bash
+rsync -av --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0042/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+6. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+7. Velg **Product → Build**.
+8. Kontroller at build fullføres uten nye feil.
+9. Start appen på den fysiske testtelefonen.
+10. Kontroller at tekstilbiblioteket lastes.
+11. Trykk **Filtre**.
+12. Kontroller at filterpanelet inneholder **Kategori**, **Plassering**, **Vekt** og **Elastisitet**.
+13. Trykk **Ferdig** og kontroller at panelet lukkes.
+
+Hvis build, biblioteklasting eller åpning/lukking av filterpanelet feiler, stopp på punkt 87.
+
+## 88. Valider kategorifilter i det nye filterpanelet
+
+**✅ AKSJON – DU**
+
+1. Åpne **Filtre**.
+2. Velg en kategori som minst ett tekstil bruker.
+3. Trykk **Ferdig**.
+4. Kontroller at bare tekstiler i kategorien vises.
+5. Kontroller at filterikonet viser aktiv tilstand.
+6. Åpne **Filtre** igjen.
+7. Velg **Alle kategorier**.
+8. Trykk **Ferdig**.
+9. Kontroller at hele biblioteket vises igjen.
+
+## 89. Valider filter på plassering/område
+
+**✅ AKSJON – DU**
+
+1. Velg et eksisterende tekstil som har et kjent **Område** under plassering.
+2. Gå tilbake til biblioteket og åpne **Filtre**.
+3. Skriv hele eller en unik del av området i feltet **Område**.
+4. Trykk **Ferdig**.
+5. Kontroller at tekstilet vises.
+6. Kontroller at tekstiler med andre områder skjules når de ikke matcher.
+7. Åpne **Filtre** igjen og tøm **Område**.
+8. Trykk **Ferdig**.
+9. Kontroller at biblioteket igjen er ufiltrert på område.
+
+## 90. Valider minimums- og maksimumsvekt
+
+**✅ AKSJON – DU**
+
+1. Bruk minst ett tekstil med registrert vekt fra test 68–77.
+2. Åpne **Filtre**.
+3. Sett **Minimum g/m²** lavere enn eller lik tekstilets vekt.
+4. Sett **Maksimum g/m²** høyere enn eller lik tekstilets vekt.
+5. Trykk **Ferdig**.
+6. Kontroller at tekstilet vises.
+7. Endre minimumsvekten slik at den blir høyere enn tekstilets registrerte vekt.
+8. Trykk **Ferdig**.
+9. Kontroller at tekstilet ikke lenger vises.
+10. Åpne **Filtre** og fjern begge vektgrensene.
+11. Trykk **Ferdig**.
+12. Kontroller at tekstilet vises igjen.
+
+Tekstiler uten registrert vekt skal ikke matche når minimum eller maksimum vekt er aktivt.
+
+## 91. Valider filter på elastisitetsnivå
+
+**✅ AKSJON – DU**
+
+1. Bruk et tekstil med et kjent registrert elastisitetsnivå.
+2. Åpne **Filtre**.
+3. Velg det samme nivået under **Elastisitet**.
+4. Trykk **Ferdig**.
+5. Kontroller at tekstilet vises.
+6. Åpne **Filtre** og velg et annet elastisitetsnivå.
+7. Trykk **Ferdig**.
+8. Kontroller at tekstilet ikke vises dersom det ikke matcher det valgte nivået.
+9. Åpne **Filtre** og velg **Alle nivåer**.
+10. Trykk **Ferdig**.
+11. Kontroller at elastisitetsfilteret er fjernet.
+
+## 92. Kombiner flere filtre og fritekstsøk
+
+**✅ AKSJON – DU**
+
+1. Finn et tekstil der du kjenner navn, kategori, område, vekt og elastisitetsnivå.
+2. Åpne **Filtre**.
+3. Velg tekstilets kategori.
+4. Angi tekstilets område.
+5. Angi et vektintervall som inkluderer tekstilets vekt.
+6. Velg tekstilets elastisitetsnivå.
+7. Trykk **Ferdig**.
+8. Kontroller at tekstilet fortsatt vises.
+9. Skriv en unik del av tekstilets navn i søkefeltet.
+10. Kontroller at tekstilet fortsatt vises.
+11. Endre én filterverdi slik at tekstilet ikke lenger matcher.
+12. Kontroller at **Ingen treff** vises.
+
+## 93. Valider nullstilling og regresjon
+
+**✅ AKSJON – DU**
+
+1. Mens ett eller flere filtre er aktive, åpne **Filtre**.
+2. Trykk **Nullstill alle filtre**.
+3. Trykk **Ferdig**.
+4. Kontroller at filterikonet ikke lenger viser aktiv tilstand.
+5. Tøm eventuell søketekst.
+6. Kontroller at hele biblioteket vises igjen.
+7. Åpne et tekstil fra biblioteket.
+8. Kontroller at detaljvisningen fortsatt er stabil.
+9. Rediger en ufarlig eksisterende verdi og lagre.
+10. Gå tilbake til biblioteket.
+11. Kontroller at søk og filterpanel fortsatt fungerer.
+12. Dra ned for å refreshe og kontroller at filterfunksjonen fortsatt fungerer.
+13. Kontroller at filtrering ikke har endret lagrede CloudKit-data.
+
+## 94. Stoppunkt for utvidede grunnfiltre
+
+**✅ STOPPUNKT**
+
+Blokken er godkjent når alle disse er bekreftet:
+
+- appen bygger uten nye feil
+- filterpanelet åpnes og lukkes stabilt
+- kategori kan filtreres fra filterpanelet
+- plassering/område kan filtreres med deltreff
+- minimums- og maksimumsvekt fungerer
+- elastisitetsnivå kan filtreres
+- flere filtre kan kombineres
+- filtre kan kombineres med eksisterende fritekstsøk
+- aktive filtre er synlige via filterikonet
+- alle filtre kan nullstilles samlet
+- filtrering endrer ikke CloudKit-data
+- tidligere validerte funksjoner er bevart
+
+**Ikke gå videre til materiale-/fargebasert søk eller mer avanserte filtre før punkt 94 er bekreftet.**

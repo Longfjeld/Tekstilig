@@ -673,3 +673,13 @@ Dette trinnet bruker ikke CloudKit-query for søk og krever derfor ingen nye ind
 - generelle egenskapstagger (`properties`)
 - CloudKit-søkeindekser og server-side query-søk
 - prosjektsøk
+
+
+## Devpatch 0042 – arbeidsmetodikk og utvidede grunnfiltre
+
+- Ny `docs/ARBEIDSMETODIKK.md` samler fast metode for kodegrunnlag, nummerert testing, ❗️/✅-status, devpatcher og midlertidig ad-hoc feilisolering.
+- Test 78–86 er registrert som fullført etter validering av første søk/grunnfilter-blokk.
+- Kategorifilteret flyttes til et eget filterpanel.
+- Filterpanelet utvides med plassering/område, minimum/maksimum vekt og elastisitetsnivå.
+- Ingen nye CloudKit-felt eller indekser introduseres.
+- Nye testpunkter 87–94 er lagt inn som ❗️ frem til eksplisitt validering.
