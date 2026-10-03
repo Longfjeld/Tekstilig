@@ -640,3 +640,36 @@ Ingen nye indekser kreves i dette steget.
 - kamera / flere bilder / bildeoptimalisering
 - Production deploy
 - PWA-endringer
+
+## Devpatch 0041 – 2026-10-03
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0016.zip`, der test 1–77 er validert.
+
+### Første søk-/filtertrinn
+
+- `TextileLibraryView` har fått native `.searchable`-felt.
+- Fritekstsøket kjører lokalt på allerede innlastede Textile-snapshots og søker i navn, kategori og plassering (område, hylle og beholder).
+- Søk er case-insensitivt, støtter deltreff og ignorerer ytre mellomrom.
+- Biblioteket har fått et enkelt kategorifilter i toolbaren.
+- Søk og kategorifilter kan kombineres.
+- Tomt søkeresultat har egen `Ingen treff`-tilstand med knapper for å tømme søk og nullstille kategori.
+- Eksisterende snapshot-mønster i biblioteket beholdes; hele `Textile` sendes fortsatt ikke direkte inn i NavigationLink-labelen.
+
+### Arkitektur
+
+Dette trinnet bruker ikke CloudKit-query for søk og krever derfor ingen nye indekser. Det er et bevisst første steg for å validere UX og lokal filterlogikk før søk utvides til child-records som materiale/farge og mer avanserte filtre.
+
+### Testplan
+
+- test 68–77 er markert validert
+- test 78–86 dekker første fritekstsøk og kategorifilter
+- `SWIFTUI-IMPLEMENTERING.md` dokumenterer nå eksplisitt normalmetodikken: nummererte tester er hovedsporet; ad-hoc diagnostikk brukes bare midlertidig når et konkret problem blokkerer planen
+
+### Bevisst utsatt
+
+- søk i materiale og farge
+- søk/filter på Piece-data og tilgjengelige mål
+- filter på vekt, elastisitet, vedlikehold og plassering
+- generelle egenskapstagger (`properties`)
+- CloudKit-søkeindekser og server-side query-søk
+- prosjektsøk

@@ -3,6 +3,8 @@ import SwiftUI
 struct TextileLibraryView: View {
     @State private var model = TextileLibraryModel()
     @State private var showNewTextile = false
+    @State private var searchText = ""
+    @State private var selectedCategory = ""
 
     private var listItems: [TextileListItem] {
         var items: [TextileListItem] = []
@@ -13,12 +15,38 @@ struct TextileLibraryView: View {
                 TextileListItem(
                     id: textile.id,
                     name: textile.name,
-                    category: textile.category
+                    category: textile.category,
+                    locationArea: textile.locationArea,
+                    locationShelf: textile.locationShelf,
+                    locationContainer: textile.locationContainer
                 )
             )
         }
 
         return items
+    }
+
+    private var filteredListItems: [TextileListItem] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return listItems.filter { item in
+            let matchesCategory = selectedCategory.isEmpty ||
+                item.category.localizedCaseInsensitiveCompare(selectedCategory) == .orderedSame
+
+            guard matchesCategory else {
+                return false
+            }
+
+            guard !query.isEmpty else {
+                return true
+            }
+
+            return item.searchableText.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    private var hasActiveFilter: Bool {
+        !selectedCategory.isEmpty
     }
 
     var body: some View {
@@ -49,8 +77,30 @@ struct TextileLibraryView: View {
                         }
                         .buttonStyle(.borderedProminent)
                     }
+                } else if filteredListItems.isEmpty {
+                    ContentUnavailableView {
+                        Label("Ingen treff", systemImage: "magnifyingglass")
+                    } description: {
+                        if hasActiveFilter {
+                            Text("Ingen tekstiler passer søket og valgt kategori.")
+                        } else {
+                            Text("Ingen tekstiler passer søket.")
+                        }
+                    } actions: {
+                        if hasActiveFilter {
+                            Button("Nullstill kategori") {
+                                selectedCategory = ""
+                            }
+                        }
+
+                        if !searchText.isEmpty {
+                            Button("Tøm søk") {
+                                searchText = ""
+                            }
+                        }
+                    }
                 } else {
-                    List(listItems) { item in
+                    List(filteredListItems) { item in
                         NavigationLink {
                             TextileDetailView(
                                 textileIdentity: item.id,
@@ -69,7 +119,32 @@ struct TextileLibraryView: View {
                 }
             }
             .navigationTitle("Tekstiler")
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Søk i navn, kategori og plassering"
+            )
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        Picker("Kategori", selection: $selectedCategory) {
+                            Text("Alle kategorier").tag("")
+
+                            ForEach(Textile.categoryOptions, id: \.self) { category in
+                                Text(category).tag(category)
+                            }
+                        }
+                    } label: {
+                        Label(
+                            selectedCategory.isEmpty ? "Kategori" : selectedCategory,
+                            systemImage: hasActiveFilter
+                                ? "line.3.horizontal.decrease.circle.fill"
+                                : "line.3.horizontal.decrease.circle"
+                        )
+                    }
+                    .accessibilityLabel("Filtrer på kategori")
+                }
+
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showNewTextile = true
@@ -94,7 +169,21 @@ private struct TextileListItem: Identifiable {
     let id: String
     let name: String
     let category: String
+    let locationArea: String
+    let locationShelf: String
+    let locationContainer: String
 
+    var searchableText: String {
+        [
+            name,
+            category,
+            locationArea,
+            locationShelf,
+            locationContainer
+        ]
+        .filter { !$0.isEmpty }
+        .joined(separator: " ")
+    }
 }
 
 private struct TextileRow: View {

@@ -1,6 +1,6 @@
 # SwiftUI – videre implementering
 
-**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper fra 68 ❗️  
+**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper 68–77 ✅ · søk/grunnfilter fra 78 ❗️  
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
@@ -1540,4 +1540,161 @@ Steget er godkjent når alle disse er bekreftet:
 - eksisterende bilde, materialer, farger, vedlikehold, plassering og Piece-data bevares gjennom Textile-redigering
 
 **Ikke gå videre til neste produktområde før punkt 77 er bekreftet.**
+
+## 78. Legg inn devpatch 0041 – første fritekstsøk og kategorifilter
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0016.zip`, der test 1–77 er validert. Den første søkeblokken er bevisst lokal og bruker bare Textile-data som allerede er lastet i biblioteket. Ingen CloudKit-søkeindekser opprettes ennå.
+
+1. Lukk Xcode 27 dersom Tekstilig-prosjektet er åpent.
+2. Kontroller at prosjektet du skal oppdatere tilsvarer `Tekstilig-SwiftUIActualApp0016`.
+3. Pakk ut `Tekstilig-devpatch-0041.zip` i `Downloads`.
+4. Kjør først dry-run:
+
+```bash
+rsync -av --dry-run --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0041/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+5. Kontroller at patchen bare endrer `TextileLibraryView.swift` og dokumentasjonsfilene som følger patchen.
+6. Kjør den faktiske oppdateringen:
+
+```bash
+rsync -av --itemize-changes \
+"/Users/persteinar/Downloads/Tekstilig-devpatch-0041/" \
+"/Users/persteinar/Library/Mobile Documents/com~apple~CloudDocs/Koding/GitHub/Tekstilig/"
+```
+
+7. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+8. Velg **Product → Build**.
+9. Kontroller at build fullføres uten nye feil.
+10. Start appen på den fysiske testtelefonen.
+11. Kontroller at tekstilbiblioteket fortsatt lastes som før.
+12. Kontroller at søkefeltet **Søk i navn, kategori og plassering** vises.
+13. Kontroller at en kategori/filter-knapp vises i toolbaren.
+
+Hvis build eller vanlig biblioteklasting feiler, stopp her før søk testes.
+
+## 79. Valider fritekstsøk på navn
+
+**✅ AKSJON – DU**
+
+1. Finn et eksisterende tekstil med et navn som skiller seg tydelig fra de andre.
+2. Skriv en unik del av navnet i søkefeltet.
+3. Kontroller at resultatlisten oppdateres fortløpende.
+4. Kontroller at tekstilet med matchende navn vises.
+5. Kontroller at tekstiler som ikke matcher, skjules.
+6. Slett søketeksten.
+7. Kontroller at hele biblioteket vises igjen.
+
+## 80. Valider store/små bokstaver og deltreff
+
+**✅ AKSJON – DU**
+
+1. Søk etter en del av et kjent tekstilnavn med annen bruk av store/små bokstaver enn navnet har i biblioteket.
+2. Kontroller at tekstilet fortsatt finnes.
+3. Søk deretter på en kort delstreng fra midten av navnet.
+4. Kontroller at deltreffet fortsatt finner tekstilet.
+5. Legg inn et mellomrom før eller etter søkeordet.
+6. Kontroller at ytre mellomrom ikke hindrer treff.
+7. Tøm søkefeltet.
+
+## 81. Valider søk på kategori og plassering
+
+**✅ AKSJON – DU**
+
+1. Velg et tekstil som har registrert kategori og plassering.
+2. Søk på hele eller deler av kategorinavnet.
+3. Kontroller at tekstilet vises.
+4. Tøm søket.
+5. Søk på registrert **Område** for tekstilet.
+6. Kontroller at tekstilet vises.
+7. Tøm søket.
+8. Søk på registrert **Hylle** eller **Beholder**.
+9. Kontroller at tekstilet vises.
+10. Tøm søkefeltet.
+
+Dette første fritekstsøket omfatter bare navn, kategori og plassering. Materiale, farge, Piece-data, vedlikehold og fysiske egenskaper kobles på i senere søketrinn.
+
+## 82. Valider kategorifilter
+
+**✅ AKSJON – DU**
+
+1. Trykk kategori/filter-knappen i toolbaren.
+2. Velg en kategori som minst ett eksisterende tekstil bruker.
+3. Kontroller at bare tekstiler i den valgte kategorien vises.
+4. Kontroller at filterikonet viser aktiv tilstand.
+5. Åpne kategorimenyen igjen.
+6. Velg **Alle kategorier**.
+7. Kontroller at hele biblioteket vises igjen.
+
+## 83. Kombiner søk og kategorifilter
+
+**✅ AKSJON – DU**
+
+1. Velg en kategori som inneholder minst ett kjent tekstil.
+2. Kontroller at kategorifilteret er aktivt.
+3. Skriv en del av navnet på ett tekstil i denne kategorien.
+4. Kontroller at treffet vises.
+5. Endre søket til et navn som finnes i en annen kategori.
+6. Kontroller at dette tekstilet ikke vises mens kategorifilteret fortsatt er aktivt.
+7. Velg **Alle kategorier**.
+8. Kontroller at tekstilet fra den andre kategorien nå kan vises med samme søk.
+9. Tøm søket.
+
+## 84. Valider tomt søkeresultat og nullstilling
+
+**✅ AKSJON – DU**
+
+1. Skriv et søkeord som med sikkerhet ikke finnes i biblioteket.
+2. Kontroller at visningen viser **Ingen treff**.
+3. Kontroller at knappen **Tøm søk** vises.
+4. Trykk **Tøm søk**.
+5. Kontroller at biblioteket vises igjen.
+6. Aktiver et kategorifilter.
+7. Skriv et søkeord som ikke gir treff innen valgt kategori.
+8. Kontroller at **Ingen treff** vises og at **Nullstill kategori** er tilgjengelig.
+9. Trykk **Nullstill kategori**.
+10. Kontroller at kategorifilteret fjernes uten å endre lagrede Textile-data.
+11. Tøm eventuelt gjenværende søketekst.
+
+## 85. Kontroller regresjon og oppdatering etter redigering
+
+**✅ AKSJON – DU**
+
+1. Tøm søk og kategorifilter.
+2. Åpne et eksisterende tekstil fra biblioteket.
+3. Kontroller at detaljvisningen fortsatt åpnes stabilt.
+4. Gå tilbake til biblioteket.
+5. Søk frem samme tekstil på navn.
+6. Åpne tekstilet fra søkeresultatet.
+7. Rediger navnet eller plasseringen og lagre.
+8. Gå tilbake til biblioteket.
+9. Tøm det gamle søket og søk på den nye verdien.
+10. Kontroller at den nye verdien gir treff.
+11. Dra ned for å refreshe biblioteket.
+12. Kontroller at søk og kategorifilter fortsatt fungerer etter refresh.
+13. Kontroller at bilde, materialer, farger, fysiske egenskaper, vedlikehold, plassering og Piece-data fortsatt er bevart.
+
+## 86. Stoppunkt for første søk og grunnfilter
+
+**✅ AKSJON – DU**
+
+Første søkeblokk er godkjent når alle disse er bekreftet:
+
+- appen bygger i Xcode 27 uten nye feil
+- biblioteket lastes og kan refreshes som før
+- fritekstsøk på navn fungerer fortløpende
+- søket er case-insensitivt og støtter deltreff
+- kategori og plassering kan finnes med fritekstsøk
+- kategorifilter kan aktiveres og nullstilles
+- fritekstsøk og kategorifilter kan kombineres
+- tomt resultat gir tydelig **Ingen treff**-visning
+- søk/filter endrer ikke CloudKit-data
+- tekstiler kan fortsatt åpnes og redigeres fra søkeresultatet
+- tidligere validerte Textile-, Piece-, bilde-, materiale/farge-, plassering-, vedlikeholds- og fysiske egenskapsdata er bevart
+
+**Ikke gå videre til neste søk-/filtertrinn før punkt 86 er bekreftet.**
 
