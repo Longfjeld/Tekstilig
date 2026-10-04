@@ -774,3 +774,35 @@ Bygger på `Tekstilig-SwiftUIActualApp0020.zip`, der test 1–113 er validert.
 - gjør lengde/bredde-radene i Piece-editoren klikkbare over hele raden og legger til **Ferdig** for tastaturet
 - dokumenterer UX-/ytelsesblokken og test 123–131
 - ingen CloudKit-schemaendring
+
+## Devpatch 0052 – utvidede prosjektkriterier
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0022.zip`, der test 1–131 er validert.
+
+### Prosjektsøk
+
+- legger til **Fargegruppe** som kriterium ved å gjenbruke eksisterende lokale fargeindeks
+- legger til **Elastisitetsretning** i tillegg til elastisitetsnivå
+- legger til **Maks krymp (%)**; aktivt krav krever registrert krymp både i lengde og bredde
+- legger til **Vaskbarhet** og **Min vasketemperatur** som første avgrensede vedlikeholdskrav
+- ukjente krymp-/vaskedata godkjennes ikke når et absolutt krav er aktivt
+- nye kriterier kombineres med eksisterende lengde, bredde, kategori, materiale, vekt og elastisitet som AND-krav
+- søkeresultatet forklarer relevante treff for farge, elastisitet, krymp og vask
+- eksisterende sortering og Piece-valg beholdes uendret; ingen egnethetsrangering innføres ennå
+
+### Piece-editor
+
+- ved fokus på eksisterende **Lengde** eller **Bredde** flyttes innsettingspunktet eksplisitt til slutten av tallet
+- eksisterende helrad-fokus og **Ferdig**-handling beholdes
+
+### CloudKit og datamodell
+
+- ingen nye record-typer
+- ingen nye felt
+- ingen nye CloudKit-indekser
+- eksisterende `TextileColor`, `TextileStretch`, `TextileShrinkage` og `TextileCare` gjenbrukes
+
+### Teststatus
+
+- test 123–131 er beholdt som validert
+- test 132–140 er lagt inn som **❗️** frem til eksplisitt validering

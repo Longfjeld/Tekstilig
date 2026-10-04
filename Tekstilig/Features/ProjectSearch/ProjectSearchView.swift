@@ -12,9 +12,14 @@ struct ProjectSearchView: View {
     @State private var minimumWidthText = ""
     @State private var category = ""
     @State private var material = ""
+    @State private var colorGroup = ""
     @State private var minimumWeightText = ""
     @State private var maximumWeightText = ""
     @State private var stretchLevel = ""
+    @State private var stretchDirection = ""
+    @State private var maximumShrinkageText = ""
+    @State private var washRequirement = ""
+    @State private var minimumWashTemperatureText = ""
     @State private var hasSearched = false
     @State private var searchResults: [ProjectSearchMatch] = []
     @State private var reservationMatch: ProjectSearchMatch?
@@ -40,12 +45,21 @@ struct ProjectSearchView: View {
         Int(maximumWeightText.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
+    private var maximumShrinkage: Int? {
+        Int(maximumShrinkageText.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private var minimumWashTemperature: Int? {
+        Int(minimumWashTemperatureText)
+    }
+
     private var numericCriteriaAreValid: Bool {
         let pairs: [(String, Any?)] = [
             (requiredLengthText, requiredLengthCm),
             (minimumWidthText, minimumWidthCm),
             (minimumWeightText, minimumWeight),
-            (maximumWeightText, maximumWeight)
+            (maximumWeightText, maximumWeight),
+            (maximumShrinkageText, maximumShrinkage)
         ]
 
         return pairs.allSatisfy { text, value in
@@ -66,9 +80,14 @@ struct ProjectSearchView: View {
         !minimumWidthText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         !category.isEmpty ||
         !material.isEmpty ||
+        !colorGroup.isEmpty ||
         !minimumWeightText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         !maximumWeightText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-        !stretchLevel.isEmpty
+        !stretchLevel.isEmpty ||
+        !stretchDirection.isEmpty ||
+        !maximumShrinkageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !washRequirement.isEmpty ||
+        !minimumWashTemperatureText.isEmpty
     }
 
     var body: some View {
@@ -171,6 +190,14 @@ struct ProjectSearchView: View {
             }
             .disabled(attributeIndex.isLoading || attributeIndex.errorMessage != nil)
 
+            Picker("Fargegruppe", selection: $colorGroup) {
+                Text("Alle farger").tag("")
+                ForEach(TextileColor.groupOptions, id: \.self) { option in
+                    Text(option).tag(option)
+                }
+            }
+            .disabled(attributeIndex.isLoading || attributeIndex.errorMessage != nil)
+
             HStack {
                 TextField("Min g/m²", text: $minimumWeightText)
                     .keyboardType(.numberPad)
@@ -189,6 +216,43 @@ struct ProjectSearchView: View {
                 Text("Middels").tag("medium")
                 Text("Høy").tag("high")
             }
+            .onChange(of: stretchLevel) { _, newValue in
+                if newValue == "none" {
+                    stretchDirection = ""
+                }
+            }
+
+            Picker("Elastisitetsretning", selection: $stretchDirection) {
+                Text("Alle retninger").tag("")
+                Text("Lengderetning").tag("length")
+                Text("Bredderetning").tag("width")
+                Text("Begge retninger").tag("both")
+            }
+            .disabled(stretchLevel == "none")
+
+            TextField("Maks krymp (%)", text: $maximumShrinkageText)
+                .keyboardType(.numberPad)
+                .focused($focusedNumberField, equals: .maximumShrinkage)
+
+            Picker("Vaskbarhet", selection: $washRequirement) {
+                Text("Alle").tag("")
+                Text("Må kunne vaskes").tag("washable")
+                Text("Skal ikke vaskes").tag("notWashable")
+            }
+            .onChange(of: washRequirement) { _, newValue in
+                if newValue == "notWashable" {
+                    minimumWashTemperatureText = ""
+                }
+            }
+
+            Picker("Min vasketemperatur", selection: $minimumWashTemperatureText) {
+                Text("Ikke krav").tag("")
+                Text("30 °C").tag("30")
+                Text("40 °C").tag("40")
+                Text("60 °C").tag("60")
+                Text("90 °C").tag("90")
+            }
+            .disabled(washRequirement == "notWashable")
 
             Button("Finn tekstiler") {
                 focusedNumberField = nil
@@ -205,7 +269,7 @@ struct ProjectSearchView: View {
         } header: {
             Text("Krav")
         } footer: {
-            Text("Lengde vurderes som gjenværende sammenhengende tilgjengelig lengde etter eventuell reservasjon.")
+            Text("Lengde vurderes som gjenværende sammenhengende tilgjengelig lengde etter eventuell reservasjon. Aktive krav til krymp og vasketemperatur krever at relevante data er registrert på tekstilet.")
         }
     }
 
@@ -278,9 +342,14 @@ struct ProjectSearchView: View {
         minimumWidthText = ""
         category = ""
         material = ""
+        colorGroup = ""
         minimumWeightText = ""
         maximumWeightText = ""
         stretchLevel = ""
+        stretchDirection = ""
+        maximumShrinkageText = ""
+        washRequirement = ""
+        minimumWashTemperatureText = ""
         hasSearched = false
         searchResults = []
     }
@@ -296,17 +365,41 @@ struct ProjectSearchView: View {
         var result: [ProjectSearchMatch] = []
 
         for textile in textileModel.textiles {
-            if !category.isEmpty,
-               textile.category.localizedCaseInsensitiveCompare(category) != .orderedSame {
-                continue
+            var explanations: [String] = []
+
+            if !category.isEmpty {
+                guard textile.category.localizedCaseInsensitiveCompare(category) == .orderedSame else {
+                    continue
+                }
+                explanations.append("Kategori: \(textile.category)")
             }
 
+            let materials = attributeIndex.materials(for: textile.textileID)
             if !material.isEmpty {
-                let materials = attributeIndex.materials(for: textile.textileID)
                 guard materials.contains(where: {
                     $0.material.localizedCaseInsensitiveCompare(material) == .orderedSame
                 }) else {
                     continue
+                }
+            }
+
+            let colors = attributeIndex.colors(for: textile.textileID)
+            if !colorGroup.isEmpty {
+                let matchingColors = colors.filter {
+                    $0.group.localizedCaseInsensitiveCompare(colorGroup) == .orderedSame
+                }
+                guard !matchingColors.isEmpty else {
+                    continue
+                }
+
+                let names = matchingColors
+                    .map(\.name)
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                if names.isEmpty {
+                    explanations.append("Farge: \(colorGroup)")
+                } else {
+                    explanations.append("Farge: \(colorGroup) · \(names.joined(separator: ", "))")
                 }
             }
 
@@ -325,6 +418,61 @@ struct ProjectSearchView: View {
             if !stretchLevel.isEmpty,
                textile.stretch.level != stretchLevel {
                 continue
+            }
+
+            if !stretchDirection.isEmpty,
+               textile.stretch.direction != stretchDirection {
+                continue
+            }
+
+            if !stretchLevel.isEmpty || !stretchDirection.isEmpty {
+                var parts: [String] = []
+                if let level = TextilePhysicalPropertyLabels.stretchLevel(textile.stretch.level) {
+                    parts.append(level)
+                }
+                if let direction = TextilePhysicalPropertyLabels.stretchDirection(textile.stretch.direction),
+                   textile.stretch.direction != "notApplicable" {
+                    parts.append(direction)
+                }
+                if !parts.isEmpty {
+                    explanations.append("Elastisitet: \(parts.joined(separator: " · "))")
+                }
+            }
+
+            if let maximumShrinkage {
+                guard let lengthShrinkage = textile.shrinkage.lengthPercent,
+                      let widthShrinkage = textile.shrinkage.widthPercent,
+                      lengthShrinkage <= maximumShrinkage,
+                      widthShrinkage <= maximumShrinkage else {
+                    continue
+                }
+                explanations.append("Krymp: \(lengthShrinkage) % lengde · \(widthShrinkage) % bredde")
+            }
+
+            switch washRequirement {
+            case "washable":
+                guard textile.care.washAllowed == true else {
+                    continue
+                }
+            case "notWashable":
+                guard textile.care.washAllowed == false else {
+                    continue
+                }
+            default:
+                break
+            }
+
+            if let minimumWashTemperature {
+                guard textile.care.washAllowed == true,
+                      let washTemperature = textile.care.washTemperatureC,
+                      washTemperature >= minimumWashTemperature else {
+                    continue
+                }
+            }
+
+            if !washRequirement.isEmpty || minimumWashTemperature != nil,
+               let washLabel = TextileCareLabels.wash(textile.care) {
+                explanations.append("Vask: \(washLabel)")
             }
 
             var bestPiece: Piece?
@@ -371,9 +519,10 @@ struct ProjectSearchView: View {
                 ProjectSearchMatch(
                     textile: textile,
                     piece: bestPiece,
-                    materials: attributeIndex.materials(for: textile.textileID),
+                    materials: materials,
                     availableLengthCm: bestAvailableLength,
-                    widthCm: bestWidth
+                    widthCm: bestWidth,
+                    explanations: explanations
                 )
             )
         }
@@ -395,6 +544,7 @@ private enum NumberField: Hashable {
     case width
     case minimumWeight
     case maximumWeight
+    case maximumShrinkage
 }
 
 private struct ProjectSearchMatch: Identifiable {
@@ -403,6 +553,7 @@ private struct ProjectSearchMatch: Identifiable {
     let materials: [TextileMaterial]
     let availableLengthCm: Int64
     let widthCm: Int64
+    let explanations: [String]
 
     var id: String { textile.id }
 }
@@ -436,6 +587,12 @@ private struct ProjectSearchResultRow: View {
 
             if let weight = match.textile.weightGsm {
                 Text("\(weight) g/m²")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            ForEach(match.explanations, id: \.self) { explanation in
+                Text(explanation)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

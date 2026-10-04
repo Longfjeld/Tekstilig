@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct PieceEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -96,6 +97,10 @@ struct PieceEditorView: View {
                 }
             }
             .interactiveDismissDisabled(isSaving)
+            .onChange(of: focusedField) { _, newValue in
+                guard newValue == .length || newValue == .width else { return }
+                moveFocusedTextFieldCursorToEnd()
+            }
             .alert(
                 "Kunne ikke lagre",
                 isPresented: Binding(
@@ -134,6 +139,19 @@ struct PieceEditorView: View {
             && !draft.project.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private func moveFocusedTextFieldCursorToEnd() {
+        DispatchQueue.main.async {
+            for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
+                for window in scene.windows {
+                    guard let textField = window.tekstiligFirstResponderTextField else { continue }
+                    let end = textField.endOfDocument
+                    textField.selectedTextRange = textField.textRange(from: end, to: end)
+                    return
+                }
+            }
+        }
+    }
+
     private func save() {
         guard canSave else { return }
 
@@ -164,4 +182,21 @@ private enum PieceEditorField: Hashable {
     case width
     case reservedLength
     case project
+}
+
+
+private extension UIView {
+    var tekstiligFirstResponderTextField: UITextField? {
+        if isFirstResponder {
+            return self as? UITextField
+        }
+
+        for subview in subviews {
+            if let textField = subview.tekstiligFirstResponderTextField {
+                return textField
+            }
+        }
+
+        return nil
+    }
 }

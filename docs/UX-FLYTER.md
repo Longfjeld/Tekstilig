@@ -472,3 +472,18 @@ Før videre utvidelse av prosjektsøket gjennomføres en mobilrettet opprydding 
 - En Piece-endring eller reservasjon som allerede er lagret lokalt skal reflekteres direkte i aktive søkeresultater.
 - Numeriske søkefelt skal reagere raskt på første trykk og fortsatt ha tydelig **Ferdig**-handling for talltastaturet.
 - Når en rad representerer én handling, er hele raden trykkbar. Dette gjelder blant annet Piece-rader og dimensjonsrader i Piece-editoren.
+
+### Utvidede prosjektkriterier – devpatch 0052
+
+Etter validert UX-/ytelsesopprydding utvides **Finn til prosjekt** med flere allerede strukturerte tekstilegenskaper uten å endre CloudKit-modellen:
+
+- farge velges som **fargegruppe**, ikke fritekst, slik at kravet er deterministisk
+- elastisitet kan kreve både nivå og retning; **Ingen** elastisitet kan ikke kombineres med en retning
+- maksimumskrav til krymp vurderer både lengde- og breddekrymp, og manglende data regnes ikke som dokumentert oppfyllelse
+- første vedlikeholdskrav begrenses til vaskbarhet og minimum tillatt vasketemperatur
+- ved aktivt vasketemperaturkrav må tekstilet eksplisitt være vaskbart og ha registrert temperatur
+- alle aktive prosjektkrav kombineres som AND-kriterier
+- resultatraden skal forklare relevante egenskaper som gjorde at et stoff traff
+- eksisterende deterministiske sortering beholdes; «best fit»/egnethetsrangering behandles som en senere separat blokk
+
+I Piece-editoren skal fokus på et eksisterende lengde- eller breddefelt plassere markøren etter eksisterende tall, slik at brukeren kan fortsette å skrive uten først å flytte innsettingspunktet manuelt.

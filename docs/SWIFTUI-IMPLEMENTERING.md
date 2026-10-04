@@ -2458,3 +2458,167 @@ Blokken er godkjent når alle disse er bekreftet:
 - bibliotekssøk, filter, prosjektsøk, Piece-redigering og reservasjon er bevart
 
 **Ikke gå videre til flere prosjektkriterier eller mer avansert rangering før punkt 131 er bekreftet.**
+
+## 132. Legg inn devpatch 0052 – utvidede prosjektkriterier
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0022.zip`, der test 1–131 er funksjonelt validert.
+
+1. Lukk Xcode 27 dersom prosjektet er åpent.
+2. Pakk ut `Tekstilig-devpatch-0052.zip` i `Downloads`.
+3. Kjør dry-run med vanlig rsync-metode.
+4. Kontroller at patchen bare erstatter `ProjectSearchView.swift`, `PieceEditorView.swift` og relevant dokumentasjon.
+5. Kjør den faktiske rsync-oppdateringen.
+6. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+7. Velg **Product → Build**.
+8. Kontroller at build fullføres uten nye feil eller varsler.
+9. Start appen på fysisk testtelefon.
+10. Kontroller at appen åpner normalt i fanen **Tekstiler**.
+11. Åpne **Finn til prosjekt** og vent til skjermen er ferdig lastet.
+12. Kontroller at de eksisterende kriteriene fremdeles vises, og at de nye kriteriene **Fargegruppe**, **Elastisitetsretning**, **Maks krymp (%)**, **Vaskbarhet** og **Min vasketemperatur** også er tilgjengelige.
+
+Stopp på punkt 132 dersom build, vanlig oppstart eller lasting av **Finn til prosjekt** feiler.
+
+## 133. Valider markørplassering i Piece-editoren
+
+**✅ AKSJON – DU**
+
+1. Gå til **Tekstiler** og åpne et tekstil med et eksisterende stoffstykke.
+2. Åpne stoffstykket for redigering.
+3. Trykk på **Lengde**-raden slik at det eksisterende lengdetallet får fokus.
+4. Kontroller at markøren står bak det eksisterende tallet, ikke foran eller midt i tallet.
+5. Skriv inn ett ekstra siffer og kontroller at sifferet legges til bakerst.
+6. Fjern testsifferet igjen slik at korrekt lengde beholdes.
+7. Trykk **Ferdig**.
+8. Trykk på **Bredde**-raden.
+9. Kontroller at markøren også her står bak eksisterende tall.
+10. Lukk editoren uten å lagre dersom ingen reell verdi skal endres.
+
+## 134. Valider fargegruppe som prosjektkrav
+
+**✅ AKSJON – DU**
+
+1. Finn et tekstil som har en kjent registrert fargegruppe, for eksempel **Blå**.
+2. Kontroller at tekstilet har minst ett tilgjengelig stoffstykke.
+3. Åpne **Finn til prosjekt**.
+4. Nullstill kriteriene.
+5. Velg den registrerte fargegruppen under **Fargegruppe**.
+6. Trykk **Finn tekstiler**.
+7. Kontroller at tekstilet vises som treff.
+8. Kontroller at resultatet forklarer hvilken fargegruppe som traff, og viser beskrivende fargenavn dersom dette er registrert.
+9. Velg deretter en annen fargegruppe som tekstilet ikke har.
+10. Trykk **Finn tekstiler** på nytt.
+11. Kontroller at tekstilet ikke lenger vises som treff.
+
+## 135. Valider elastisitetsretning
+
+**✅ AKSJON – DU**
+
+1. Finn et tekstil med registrert elastisitetsnivå og kjent elastisitetsretning.
+2. Åpne **Finn til prosjekt** og nullstill kriteriene.
+3. Velg tekstilets registrerte elastisitetsnivå.
+4. Velg tekstilets registrerte retning under **Elastisitetsretning**.
+5. Trykk **Finn tekstiler**.
+6. Kontroller at tekstilet vises som treff og at resultatet forklarer elastisitetsnivå og retning.
+7. Endre bare retningen til en retning tekstilet ikke har.
+8. Trykk **Finn tekstiler** igjen.
+9. Kontroller at tekstilet ikke lenger vises.
+10. Velg **Ingen** under **Elastisitet**.
+11. Kontroller at **Elastisitetsretning** blir deaktivert og ikke kan stå igjen som et motstridende krav.
+
+## 136. Valider maksimumskrav til krymp
+
+**✅ AKSJON – DU**
+
+1. Finn et tekstil der krymp er registrert både i lengde og bredde, og noter begge prosentverdiene.
+2. Kontroller at tekstilet har minst ett tilgjengelig stoffstykke.
+3. Åpne **Finn til prosjekt** og nullstill kriteriene.
+4. Skriv inn en verdi i **Maks krymp (%)** som er lik eller høyere enn begge registrerte krympverdier.
+5. Trykk **Finn tekstiler**.
+6. Kontroller at tekstilet vises som treff og at begge krympverdiene forklares i resultatet.
+7. Endre maksimumsverdien slik at minst én av tekstilets registrerte krympverdier er høyere enn kravet.
+8. Trykk **Finn tekstiler** igjen.
+9. Kontroller at tekstilet ikke lenger vises.
+10. Finn om mulig et tekstil som mangler krymp i én eller begge retninger.
+11. Kjør samme aktive maksimumskrav.
+12. Kontroller at tekstilet med manglende krympdata ikke godkjennes som sikkert treff.
+
+## 137. Valider vaskbarhet og minimum vasketemperatur
+
+**✅ AKSJON – DU**
+
+1. Finn et tekstil som er registrert som vaskbart og har en kjent vasketemperatur.
+2. Åpne **Finn til prosjekt** og nullstill kriteriene.
+3. Velg **Må kunne vaskes** under **Vaskbarhet**.
+4. Trykk **Finn tekstiler**.
+5. Kontroller at det vaskbare tekstilet kan vises som treff.
+6. Velg en **Min vasketemperatur** som er lik eller lavere enn tekstilets registrerte tillatte temperatur.
+7. Trykk **Finn tekstiler** igjen.
+8. Kontroller at tekstilet fortsatt er treff og at vaskedata forklares i resultatet.
+9. Velg en minimumstemperatur som er høyere enn tekstilets registrerte temperatur.
+10. Trykk **Finn tekstiler** igjen.
+11. Kontroller at tekstilet ikke lenger vises.
+12. Velg **Skal ikke vaskes** under **Vaskbarhet**.
+13. Kontroller at **Min vasketemperatur** blir deaktivert og nullstilt.
+14. Kjør søket og kontroller at bare tekstiler som eksplisitt er registrert som ikke vaskbare kan tilfredsstille dette kravet.
+15. Kontroller at et tekstil med ukjent vaskbarhet ikke behandles som sikkert treff for et aktivt vaskekrav.
+
+## 138. Valider kombinasjon av gamle og nye prosjektkriterier
+
+**✅ AKSJON – DU**
+
+1. Velg et kjent tekstil med nok registrerte data til å teste flere kriterier samtidig.
+2. Åpne **Finn til prosjekt** og nullstill kriteriene.
+3. Angi et realistisk minimumskrav til tilgjengelig lengde.
+4. Angi et realistisk minimumskrav til bredde.
+5. Velg riktig kategori.
+6. Velg riktig materiale.
+7. Velg riktig fargegruppe.
+8. Angi et vektintervall som omfatter tekstilets registrerte vekt.
+9. Velg korrekt elastisitetsnivå og eventuelt korrekt elastisitetsretning.
+10. Angi krymp- og vaskekrav som tekstilet oppfyller dersom disse dataene er registrert.
+11. Trykk **Finn tekstiler**.
+12. Kontroller at tekstilet vises som treff.
+13. Endre ett enkelt kriterium til en verdi tekstilet ikke oppfyller.
+14. Trykk **Finn tekstiler** igjen.
+15. Kontroller at tekstilet forsvinner fra resultatet.
+16. Sett kriteriet tilbake til korrekt verdi og kontroller at treffet kommer tilbake.
+
+## 139. Valider resultatforklaring, reservasjon og regresjon
+
+**✅ AKSJON – DU**
+
+1. Kjør et prosjektsøk som bruker minst to av de nye kriteriene og som gir minst ett treff.
+2. Kontroller at resultatet fortsatt viser tilgjengelig lengde og bredde for konkret Piece.
+3. Kontroller at materiale og eventuell vekt fortsatt vises som før.
+4. Kontroller at aktive nye kriterier forklares med forståelig tekst i resultatraden.
+5. Åpne tekstildetaljen fra søkeresultatet og kontroller at riktig tekstil åpnes.
+6. Gå tilbake til søkeresultatet.
+7. Åpne **Reserver stykke** eller **Endre reservasjon**.
+8. Lagre en gyldig reservasjon eller en ufarlig testendring.
+9. Kontroller at aktivt søkeresultat oppdateres uten manuell pull-to-refresh.
+10. Kontroller at de nye kriteriene fremdeles er aktive og brukes etter oppdateringen.
+11. Nullstill kriteriene og kontroller at alle gamle og nye kriterier går tilbake til standardverdiene.
+12. Kjør et enkelt søk med bare et tidligere støttet kriterium, for eksempel minimumslengde eller materiale.
+13. Kontroller at den tidligere validerte søkefunksjonen fortsatt fungerer.
+
+## 140. Stoppunkt for utvidede prosjektkriterier
+
+**✅ STOPPUNKT**
+
+Blokken er godkjent når alle disse er bekreftet:
+
+- appen bygger uten nye feil eller varsler
+- Piece-editoren plasserer markøren bak eksisterende lengde-/breddetall ved fokus
+- fargegruppe fungerer som deterministisk prosjektkrav
+- elastisitetsretning kan kombineres med elastisitetsnivå uten motstridende valg
+- maksimumskrav til krymp krever registrerte krympdata og filtrerer korrekt
+- vaskbarhet og minimum vasketemperatur filtrerer korrekt, og ukjente data godkjennes ikke som sikre treff
+- gamle og nye kriterier kan kombineres som AND-krav
+- resultatraden forklarer relevante nye treffegenskaper
+- eksisterende Piece-valg, reservasjon, automatisk oppdatering og gamle prosjektkriterier er bevart
+- sorteringen er fortsatt den eksisterende deterministiske sorteringen; egnethetsrangering er ikke innført i denne blokken
+- ingen nye CloudKit-felt eller indekser er nødvendige
+
+**Ikke gå videre til egnethetsrangering eller rikere reservasjonsmodell før punkt 140 er bekreftet.**
