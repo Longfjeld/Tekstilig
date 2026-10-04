@@ -749,3 +749,15 @@ Ingen nye felter eller indekser opprettes i denne leveransen.
 ### Teststatus
 
 Test 104–113 er lagt inn som **❗️** frem til eksplisitt validering.
+
+## Devpatch 0050 – reservasjon direkte fra «Finn til prosjekt»
+
+Bygger på `Tekstilig-SwiftUIActualApp0020.zip`, der test 1–113 er validert.
+
+- søkeresultater får **Reserver stykke** / **Endre reservasjon**
+- ny fokusert reservasjonsskjerm lagrer reservasjon i eksisterende Piece-record
+- søkets lengdekrav foreslås som reservert lengde for ureserverte stykker
+- Piece-indeksen lastes på nytt etter lagring og gjeldende prosjektsøk beregnes på nytt automatisk
+- ingen nye CloudKit-felt eller indekser
+- test 114–122 er lagt inn som **❗️**
+- UX-/ytelsesobservasjoner fra test 104–113 er dokumentert for senere opprydding

@@ -2194,3 +2194,138 @@ Blokken er godkjent når alle disse er bekreftet:
 - prosjektsøk endrer ikke CloudKit-data
 
 **Ikke gå videre til reservasjon direkte fra prosjektsøk, flere kriterietyper eller mer avansert rangering før punkt 113 er bekreftet.**
+
+## UX-/ytelsesobservasjoner etter test 104–113
+
+Følgende er registrert som ikke-blokkerende oppfølgingspunkter etter validering av første «Finn til prosjekt»:
+
+- appstart ble observert som merkbart tregere etter innføring av prosjektsøk og lokale child-record-indekser
+- første fokus på numeriske felt i «Finn til prosjekt» kan ha merkbar forsinkelse selv om resten av appen er responsiv
+- Piece-data i prosjektsøket kan være foreldet etter redigering i en annen visning frem til pull-to-refresh; dette skal senere erstattes med automatisk invalidasjon/oppdatering
+- når en hel visuell rad representerer én handling eller ett valg, skal hele raden være trykkbar; brukeren skal ikke måtte treffe selve teksten, tallet eller en liten kontrollflate
+
+Disse punktene skal tas med i en egen UX-/ytelsesopprydding og endrer ikke godkjenningen av test 104–113.
+
+## 114. Legg inn devpatch 0050 – reservasjon direkte fra prosjektsøk
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0020.zip`, der test 1–113 er validert.
+
+1. Lukk Xcode 27 dersom prosjektet er åpent.
+2. Pakk ut `Tekstilig-devpatch-0050.zip` i `Downloads`.
+3. Kjør dry-run med vanlig rsync-metode.
+4. Kontroller at patchen bare endrer prosjektsøk, legger til reservasjonsskjermen og oppdaterer dokumentasjon.
+5. Kjør den faktiske rsync-oppdateringen.
+6. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+7. Velg **Product → Build**.
+8. Kontroller at build fullføres uten nye feil eller varsler.
+9. Start appen på fysisk testtelefon.
+10. Åpne **Finn til prosjekt** og utfør et søk som gir minst ett treff.
+11. Kontroller at treffet har knappen **Reserver stykke** når Piece ikke allerede er reservert.
+
+Stopp på punkt 114 dersom build eller åpning av reservasjon ikke fungerer.
+
+## 115. Valider åpning og foreslått lengde
+
+**✅ AKSJON – DU**
+
+1. Angi et konkret minimumskrav til lengde i prosjektsøket.
+2. Kjør søket.
+3. Trykk **Reserver stykke** på et treff.
+4. Kontroller at reservasjonsskjermen viser stykkets totale lengde, bredde og nåværende tilgjengelige lengde.
+5. Kontroller at reservert lengde er forhåndsutfylt med søkets lengdekrav når stykket ikke allerede har en reservasjon.
+6. Kontroller at prosjektfeltet kan fylles ut.
+
+## 116. Valider tastatur og lagringskrav
+
+**✅ AKSJON – DU**
+
+1. Trykk i feltet for reservert lengde.
+2. Kontroller at talltastaturet åpnes.
+3. Trykk **Ferdig** og kontroller at tastaturet lukkes.
+4. La prosjektfeltet være tomt og kontroller at **Lagre** ikke kan brukes.
+5. Angi en reservert lengde større enn stykkets totale lengde og kontroller at **Lagre** ikke kan brukes.
+6. Angi en gyldig lengde og et prosjektnavn.
+7. Kontroller at **Lagre** blir tilgjengelig.
+
+## 117. Valider ny reservasjon fra søkeresultat
+
+**✅ AKSJON – DU**
+
+1. Bruk et hittil ureservert Piece.
+2. Angi en gyldig reservert lengde og et tydelig testprosjektnavn.
+3. Trykk **Lagre**.
+4. Vent til reservasjonsskjermen lukkes.
+5. Kontroller at prosjektsøket oppdateres uten manuell pull-to-refresh.
+6. Kjør samme søk på nytt dersom resultatet ikke allerede er oppdatert.
+7. Kontroller at tilgjengelig lengde er redusert med den reserverte lengden.
+8. Kontroller at treffet viser reservasjonen og prosjektnavnet når stykket fortsatt oppfyller søkekravene.
+
+## 118. Valider at reservasjon påvirker treff umiddelbart
+
+**✅ AKSJON – DU**
+
+1. Bruk Piece fra punkt 117.
+2. Sett lengdekravet høyere enn gjenværende tilgjengelig lengde, men ikke høyere enn total lengde.
+3. Trykk **Finn tekstiler**.
+4. Kontroller at Piece ikke lenger gjør tekstilet til et treff.
+5. Reduser lengdekravet til gjenværende tilgjengelig lengde eller lavere.
+6. Trykk **Finn tekstiler** igjen.
+7. Kontroller at tekstilet vises dersom øvrige krav er oppfylt.
+
+## 119. Valider redigering av eksisterende reservasjon
+
+**✅ AKSJON – DU**
+
+1. Kjør et søk der et allerede reservert Piece fortsatt er tilgjengelig som treff.
+2. Kontroller at knappen heter **Endre reservasjon**.
+3. Åpne reservasjonen.
+4. Kontroller at eksisterende reservert lengde og prosjektnavn er forhåndsutfylt.
+5. Endre lengden til en annen gyldig verdi.
+6. Endre prosjektnavnet.
+7. Lagre.
+8. Kontroller at prosjektsøket bruker de nye verdiene uten manuell pull-to-refresh.
+
+## 120. Valider persistens i tekstildetalj
+
+**✅ AKSJON – DU**
+
+1. Trykk på treffet og åpne riktig tekstildetalj.
+2. Finn det aktuelle stoffstykket.
+3. Kontroller at reservert lengde og prosjektnavn samsvarer med det som ble lagret fra prosjektsøket.
+4. Gå tilbake til **Finn til prosjekt**.
+5. Kontroller at søket fortsatt fungerer.
+
+## 121. Valider omstart og regresjon
+
+**✅ AKSJON – DU**
+
+1. Avslutt appen helt.
+2. Start appen på nytt.
+3. Åpne **Finn til prosjekt**.
+4. Kjør et søk som inkluderer stykket fra reservasjonstesten.
+5. Kontroller at reservasjonen fortsatt påvirker tilgjengelig lengde korrekt.
+6. Gå til **Tekstiler** og kontroller at vanlig bibliotek, fritekstsøk og filterpanel fortsatt fungerer.
+7. Åpne et tekstil og kontroller at eksisterende Piece-redigering fortsatt fungerer.
+
+## 122. Stoppunkt for reservasjon direkte fra prosjektsøk
+
+**✅ STOPPUNKT**
+
+Blokken er godkjent når alle disse er bekreftet:
+
+- appen bygger uten nye feil eller varsler
+- et søkeresultat kan åpne reservasjon direkte
+- søkets lengdekrav foreslås som reservasjon for et ureservert Piece
+- reservasjon krever gyldig lengde og prosjektnavn
+- talltastaturet kan lukkes med **Ferdig**
+- reservasjonen lagres i eksisterende Piece-record
+- Piece-indeksen oppdateres automatisk etter lagring
+- ny reservasjon påvirker tilgjengelig lengde og nye søkeresultater umiddelbart
+- eksisterende reservasjon kan redigeres fra søkeresultatet
+- reservasjonen er synlig med samme data i tekstildetaljen
+- reservasjonen overlever omstart
+- tidligere bibliotek-, søke-, filter- og Piece-funksjoner er bevart
+
+**Ikke gå videre til flere kriterietyper, flere samtidige reservasjoner per Piece eller mer avansert rangering før punkt 122 er bekreftet.**

@@ -14,6 +14,7 @@ struct ProjectSearchView: View {
     @State private var stretchLevel = ""
     @State private var hasSearched = false
     @State private var searchResults: [ProjectSearchMatch] = []
+    @State private var reservationMatch: ProjectSearchMatch?
     @FocusState private var focusedNumberField: NumberField?
 
     private var isLoading: Bool {
@@ -72,6 +73,15 @@ struct ProjectSearchView: View {
             }
             .task {
                 await loadAllIfNeeded()
+            }
+            .sheet(item: $reservationMatch) { match in
+                ProjectReservationView(
+                    piece: match.piece,
+                    suggestedLengthCm: requiredLengthCm
+                ) {
+                    await pieceIndex.load()
+                    performSearch()
+                }
             }
         }
     }
@@ -162,14 +172,28 @@ struct ProjectSearchView: View {
         } else {
             Section("Resultater") {
                 ForEach(searchResults) { match in
-                    NavigationLink {
-                        TextileDetailView(
-                            textileIdentity: match.textile.id,
-                            model: textileModel
-                        )
-                    } label: {
-                        ProjectSearchResultRow(match: match)
+                    VStack(alignment: .leading, spacing: 10) {
+                        NavigationLink {
+                            TextileDetailView(
+                                textileIdentity: match.textile.id,
+                                model: textileModel
+                            )
+                        } label: {
+                            ProjectSearchResultRow(match: match)
+                                .contentShape(Rectangle())
+                        }
+
+                        Button {
+                            reservationMatch = match
+                        } label: {
+                            Label(
+                                match.piece.isReserved ? "Endre reservasjon" : "Reserver stykke",
+                                systemImage: "bookmark"
+                            )
+                        }
+                        .buttonStyle(.bordered)
                     }
+                    .padding(.vertical, 2)
                 }
             }
         }

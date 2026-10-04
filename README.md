@@ -1,11 +1,7 @@
-# Tekstilig-devpatch-0049
+# Tekstilig devpatch 0050
 
-Ad-hoc UX-rettelse for `Finn til prosjekt` etter testpunkt 105.
+Bygger på `Tekstilig-SwiftUIActualApp0020.zip`.
 
-- treffberegning kjører bare når `Finn tekstiler` trykkes
-- tallfelt bruker eksplisitt fokusstyring
-- talltastaturet får `Ferdig`-knapp
-- tastaturet kan lukkes interaktivt ved scrolling
-- `Nullstill kriterier` lukker tastaturet og tømmer tidligere treff
+Denne patchen legger til første reservasjon direkte fra **Finn til prosjekt** og dokumenterer validering av test 104–113 samt registrerte UX-/ytelsesobservasjoner.
 
-Ingen CloudKit- eller testplanendringer.
+Ingen nye CloudKit-felt eller indekser introduseres.

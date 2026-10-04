@@ -667,3 +667,9 @@ Første native implementering av **Finn til prosjekt** kombinerer tre allerede e
 For dimensjoner må **samme Piece** tilfredsstille både nødvendig tilgjengelig lengde og minimumsbredde. `Piece.availableLengthCm` brukes, slik at en eksisterende reservasjon trekkes fra total lengde før treff vurderes.
 
 Denne første versjonen er bevisst lokal og oppretter ingen nye CloudKit-indekser. Dersom datamengden senere gjør bulklasting for kostbar, kan samme søkegrensesnitt beholdes mens datatilgangen flyttes til mer målrettede server-side queries/cache.
+
+## Reservasjon fra prosjektsøk
+
+Første reservasjon fra `ProjectSearchView` gjenbruker eksisterende `Piece` som lagringsenhet. `ProjectReservationView` redigerer bare `reservedLengthCm` og `project`, og lagrer gjennom eksisterende `PieceInventoryModel`/`PieceRepository`-kjede. Etter vellykket lagring reloader `ProjectSearchView` sitt `PieceLibraryIndex` og beregner gjeldende søkeresultat på nytt. Dermed er søkegrunnlaget konsistent uten manuell refresh.
+
+Denne arkitekturen støtter én reservasjon per Piece, i tråd med dagens datamodell. Flere samtidige reservasjoner per Piece krever senere en separat reservasjonsmodell og inngår ikke i denne blokken.

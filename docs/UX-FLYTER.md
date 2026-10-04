@@ -453,3 +453,12 @@ Tekstildetalj
 Alle delområder kan stå uregistrert. UI skal tydelig skille «ikke registrert» fra eksplisitt «ikke tillatt». Detaljvisningen viser semantisk symbolmarkør og forklarende tekst slik at symbol alene aldri er eneste betydningsbærer.
 
 Første native implementering bruker system-/tekstmarkører som funksjonell representasjon. Endelig grafikk for standardiserte vaskesymboler og eventuelt bilde av vaskelapp kommer senere.
+
+### UX-observasjoner etter første prosjektsøk
+
+Følgende skal tas med i senere UX-/ytelsesopprydding:
+
+- lokale Textile-/materiale-/farge-/Piece-indekser må vurderes samlet fordi appstart er observert som tregere
+- numeriske felt i prosjektsøk har hatt merkbar forsinkelse ved første fokus
+- prosjektsøk skal automatisk få ferske Piece-data etter endringer; manuell pull-to-refresh skal ikke være nødvendig for korrekt resultat
+- når en visuell rad representerer én handling eller ett valg, skal hele raden være trykkbar, også for Piece-rader og tilsvarende editorrader

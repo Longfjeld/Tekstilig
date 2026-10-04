@@ -887,3 +887,18 @@ Prosjektsøk må vurdere fysisk tilgjengelig beholdning, ikke bare Textile-metad
 - treff viser hvilket stykke som passer og sentrale grunner som materiale og vekt.
 - ingen nye CloudKit-felt eller nye feltbaserte indekser opprettes i denne blokken.
 - avanserte kriterier som farge, vedlikeholdskrav, egenskaper og rikere rangering kan legges til senere etter validering av grunnflyten.
+
+## B-048 – Første reservasjon fra prosjektsøk bruker eksisterende Piece-record
+
+**Dato:** 2026-10-03  
+**Status:** Besluttet
+
+### Beslutning
+
+Første reservasjon direkte fra **Finn til prosjekt** lagres i de eksisterende `Piece`-feltene `reservedLengthCm` og `project`. Det opprettes ikke en separat Reservation-record i denne blokken. Dersom Piece allerede har en reservasjon, åpnes den som redigering av den eksisterende reservasjonen.
+
+Etter lagring lastes det lokale Piece-indekset på nytt og det aktive prosjektsøket beregnes på nytt, slik at brukeren ikke skal måtte utføre manuell pull-to-refresh.
+
+### Begrunnelse
+
+Dette følger den allerede validerte datamodellen og gir korteste vei til en komplett søk → reserver-flyt uten schemaendring. Begrensningen til én reservasjon per Piece er eksplisitt og kan senere erstattes av en egen reservasjonsmodell dersom behovet for flere samtidige prosjekter oppstår.
