@@ -49,6 +49,11 @@ final class PieceInventoryModel {
         let saved = try await repository.save(normalized)
         upsert(saved)
         errorMessage = nil
+        NotificationCenter.default.post(
+            name: .tekstiligPieceDidChange,
+            object: saved,
+            userInfo: ["deleted": false]
+        )
         return saved
     }
 
@@ -56,6 +61,11 @@ final class PieceInventoryModel {
         try await repository.delete(piece)
         pieces.removeAll { $0.id == piece.id }
         errorMessage = nil
+        NotificationCenter.default.post(
+            name: .tekstiligPieceDidChange,
+            object: piece,
+            userInfo: ["deleted": true]
+        )
     }
 
     private func upsert(_ piece: Piece) {
@@ -83,4 +93,9 @@ final class PieceInventoryModel {
 
         return error.localizedDescription
     }
+}
+
+
+extension Notification.Name {
+    static let tekstiligPieceDidChange = Notification.Name("Tekstilig.PieceDidChange")
 }

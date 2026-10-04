@@ -5,7 +5,7 @@ struct ProjectReservationView: View {
 
     let piece: Piece
     let suggestedLengthCm: Int64?
-    let onSaved: () async -> Void
+    let onSaved: (Piece) async -> Void
 
     @State private var model = PieceInventoryModel()
     @State private var reservedLengthCm: Int64?
@@ -17,7 +17,7 @@ struct ProjectReservationView: View {
     init(
         piece: Piece,
         suggestedLengthCm: Int64?,
-        onSaved: @escaping () async -> Void
+        onSaved: @escaping (Piece) async -> Void
     ) {
         self.piece = piece
         self.suggestedLengthCm = suggestedLengthCm
@@ -123,8 +123,8 @@ struct ProjectReservationView: View {
 
         Task {
             do {
-                _ = try await model.save(candidate)
-                await onSaved()
+                let saved = try await model.save(candidate)
+                await onSaved(saved)
                 dismiss()
             } catch {
                 errorMessage = error.localizedDescription

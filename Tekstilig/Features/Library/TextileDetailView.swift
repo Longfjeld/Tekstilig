@@ -269,6 +269,8 @@ struct TextileDetailView: View {
                         editingPiece = piece
                     } label: {
                         PieceRow(piece: piece)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {

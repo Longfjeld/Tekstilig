@@ -761,3 +761,16 @@ Bygger på `Tekstilig-SwiftUIActualApp0020.zip`, der test 1–113 er validert.
 - ingen nye CloudKit-felt eller indekser
 - test 114–122 er lagt inn som **❗️**
 - UX-/ytelsesobservasjoner fra test 104–113 er dokumentert for senere opprydding
+
+## Devpatch 0051 – UX- og ytelsesopprydding etter prosjektsøk
+
+- bygger på `Tekstilig-SwiftUIActualApp0021.zip`
+- utsetter lasting av **Finn til prosjekt** til fanen faktisk aktiveres
+- refresher prosjektsøkets datagrunnlag ved ny aktivering av fanen
+- oppdaterer lokal Piece-indeks direkte ved lagring, sletting og reservasjon
+- reduserer avhengigheten av umiddelbar CloudKit-read-after-write for søkeresultater
+- forenkler bindingen for numeriske prosjektkriterier og validerer dem før søk
+- gjør Piece-rader helrad-klikkbare
+- gjør lengde/bredde-radene i Piece-editoren klikkbare over hele raden og legger til **Ferdig** for tastaturet
+- dokumenterer UX-/ytelsesblokken og test 123–131
+- ingen CloudKit-schemaendring

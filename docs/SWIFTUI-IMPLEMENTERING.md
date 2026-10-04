@@ -2329,3 +2329,132 @@ Blokken er godkjent når alle disse er bekreftet:
 - tidligere bibliotek-, søke-, filter- og Piece-funksjoner er bevart
 
 **Ikke gå videre til flere kriterietyper, flere samtidige reservasjoner per Piece eller mer avansert rangering før punkt 122 er bekreftet.**
+
+## Observasjon etter test 114–122
+
+Test 114–122 er funksjonelt validert. Under punkt 118 måtte **Finn til prosjekt** refreshe manuelt før endret tilgjengelig lengde slo gjennom i søkeresultatet. Reservasjonen var lagret korrekt, men den lokale Piece-indeksen kunne være foreldet. Dette tas eksplisitt inn i UX-/ytelsesblokken 123–131 og endrer ikke godkjenningen av reservasjonsflyten.
+
+## 123. Legg inn devpatch 0051 – UX-/ytelsesopprydding
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0021.zip`, der test 1–122 er funksjonelt validert.
+
+1. Lukk Xcode 27 dersom prosjektet er åpent.
+2. Pakk ut `Tekstilig-devpatch-0051.zip` i `Downloads`.
+3. Kjør dry-run med vanlig rsync-metode.
+4. Kontroller at patchen bare endrer app-/prosjektsøk-/Piece-UX og relevant dokumentasjon.
+5. Kjør den faktiske rsync-oppdateringen.
+6. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+7. Velg **Product → Build**.
+8. Kontroller at build fullføres uten nye feil eller varsler.
+9. Start appen på fysisk testtelefon.
+10. Kontroller at appen åpner direkte i **Tekstiler** som før.
+
+Stopp på punkt 123 dersom build eller vanlig oppstart feiler.
+
+## 124. Valider utsatt lasting av «Finn til prosjekt»
+
+**✅ AKSJON – DU**
+
+1. Avslutt appen helt.
+2. Start appen på nytt og bli stående i fanen **Tekstiler**.
+3. Kontroller at biblioteket blir tilgjengelig normalt.
+4. Legg merke til om oppstarten oppleves raskere enn før devpatch 0051.
+5. Åpne deretter **Finn til prosjekt**.
+6. Kontroller at eventuell lasting av prosjektdata skjer først når denne fanen åpnes.
+7. Vent til skjermen er klar og kontroller at eksisterende kriterier og funksjoner fortsatt er tilgjengelige.
+
+## 125. Valider fokus og tastatur i numeriske prosjektfelt
+
+**✅ AKSJON – DU**
+
+1. Stå i **Finn til prosjekt** etter at dataene er ferdig lastet.
+2. Trykk i raden for **Lengde minst (cm)**.
+3. Kontroller at feltet får fokus og talltastaturet åpnes uten den tidligere markante forsinkelsen, eller noter eventuell gjenværende forsinkelse.
+4. Skriv inn en verdi.
+5. Trykk **Ferdig** og kontroller at tastaturet lukkes.
+6. Gjenta for **Bredde minst (cm)**.
+7. Gjenta kort for minimum/maksimum vekt.
+8. Kontroller at **Finn tekstiler** fortsatt bruker de angitte tallverdiene korrekt.
+
+## 126. Valider automatisk Piece-oppdatering etter redigering i Tekstiler
+
+**✅ AKSJON – DU**
+
+1. Finn et kjent Piece og noter lengden.
+2. Gå til **Tekstiler** og åpne tekstilet som eier stykket.
+3. Rediger Piece og endre lengden til en tydelig annen testverdi.
+4. Lagre og kontroller at den nye verdien vises i tekstildetaljen.
+5. Gå til fanen **Finn til prosjekt** uten å utføre pull-to-refresh.
+6. Kjør et søk der den nye lengden påvirker om stykket skal være treff.
+7. Kontroller at prosjektsøket bruker den nye Piece-verdien uten manuell refresh.
+8. Sett Piece tilbake til ønsket verdi etter testen dersom testverdien var midlertidig.
+
+## 127. Valider umiddelbar oppdatering etter reservasjon
+
+**✅ AKSJON – DU**
+
+1. Kjør et prosjektsøk som gir et ureservert eller delvis reservert Piece som treff.
+2. Åpne **Reserver stykke** eller **Endre reservasjon**.
+3. Endre reservert lengde til en verdi som tydelig påvirker gjenværende tilgjengelig lengde.
+4. Lagre.
+5. Ikke dra ned for å refreshe.
+6. Kontroller at søkeresultatet oppdateres direkte etter lagring.
+7. Kjør søket på nytt med et lengdekrav som skiller gammel og ny tilgjengelig lengde.
+8. Kontroller at treffet følger den nye reservasjonen.
+
+## 128. Valider helrad-klikk på stoffstykker
+
+**✅ AKSJON – DU**
+
+1. Åpne et tekstil med minst ett registrert stoffstykke.
+2. Trykk helt til venstre i den visuelle Piece-raden, men ikke direkte på dimensjonsteksten.
+3. Kontroller at Piece-editoren åpnes.
+4. Lukk editoren.
+5. Trykk helt til høyre i samme rad der det er tom flate.
+6. Kontroller at Piece-editoren åpnes igjen.
+7. Kontroller at swipe for **Slett** fortsatt fungerer og avbryt sletting.
+
+## 129. Valider helrad-fokus i Piece-editoren
+
+**✅ AKSJON – DU**
+
+1. Åpne et eksisterende stoffstykke.
+2. Trykk på teksten **Lengde** eller tom flate i samme rad, ikke direkte i tallet.
+3. Kontroller at lengdefeltet får fokus og talltastaturet åpnes.
+4. Trykk **Ferdig** og kontroller at tastaturet lukkes.
+5. Trykk på teksten **Bredde** eller tom flate i bredderaden.
+6. Kontroller at breddefeltet får fokus.
+7. Lukk editoren uten å endre verdier dersom testen ikke skal endre Piece-data.
+
+## 130. Valider fanebytte, refresh og regresjon
+
+**✅ AKSJON – DU**
+
+1. Bytt flere ganger mellom **Tekstiler** og **Finn til prosjekt**.
+2. Kontroller at ingen fane fryser eller viser stale data etter normal navigasjon.
+3. Kjør et vanlig bibliotekssøk og kontroller at fritekstsøk/filter fortsatt fungerer.
+4. Kjør et prosjektsøk og kontroller at kriteriene fortsatt fungerer.
+5. Dra ned for manuell refresh i **Finn til prosjekt** og kontroller at dette fortsatt fungerer som eksplisitt fallback.
+6. Åpne et søkeresultat og kontroller at riktig tekstildetalj åpnes.
+7. Kontroller at vanlig Piece-redigering og reservasjon fortsatt fungerer.
+
+## 131. Stoppunkt for UX-/ytelsesopprydding
+
+**✅ STOPPUNKT**
+
+Blokken er godkjent når alle disse er bekreftet:
+
+- appen bygger uten nye feil eller varsler
+- vanlig appstart gjør ikke lenger unødvendig full lasting av prosjektsøk før fanen åpnes
+- første fokus i numeriske prosjektfelt er forbedret eller eventuell gjenværende plattformforsinkelse er dokumentert
+- talltastaturet kan lukkes med **Ferdig**
+- Piece-data oppdateres i prosjektsøk etter redigering uten krav om manuell refresh
+- reservasjon oppdaterer aktive prosjektresultater direkte
+- hele Piece-raden kan trykkes for redigering
+- lengde-/bredderaden i Piece-editoren kan trykkes for å fokusere feltet
+- swipe-sletting er bevart
+- bibliotekssøk, filter, prosjektsøk, Piece-redigering og reservasjon er bevart
+
+**Ikke gå videre til flere prosjektkriterier eller mer avansert rangering før punkt 131 er bekreftet.**

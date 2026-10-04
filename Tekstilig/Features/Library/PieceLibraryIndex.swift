@@ -46,6 +46,36 @@ final class PieceLibraryIndex {
         piecesByTextileID[textileID] ?? []
     }
 
+    func upsert(_ piece: Piece) {
+        var pieces = piecesByTextileID[piece.textileID] ?? []
+
+        if let index = pieces.firstIndex(where: { $0.id == piece.id }) {
+            pieces[index] = piece
+        } else {
+            pieces.append(piece)
+        }
+
+        piecesByTextileID[piece.textileID] = Self.sortedPieces(pieces)
+    }
+
+    func remove(_ piece: Piece) {
+        var pieces = piecesByTextileID[piece.textileID] ?? []
+        pieces.removeAll { $0.id == piece.id }
+        piecesByTextileID[piece.textileID] = Self.sortedPieces(pieces)
+    }
+
+    private static func sortedPieces(_ pieces: [Piece]) -> [Piece] {
+        pieces.sorted {
+            if $0.availableLengthCm != $1.availableLengthCm {
+                return $0.availableLengthCm > $1.availableLengthCm
+            }
+            if $0.widthCm != $1.widthCm {
+                return $0.widthCm > $1.widthCm
+            }
+            return $0.pieceID.localizedCaseInsensitiveCompare($1.pieceID) == .orderedAscending
+        }
+    }
+
     private static func description(for error: Error) -> String {
         if let cloudKitError = error as? CKError {
             return "CloudKit-feil \(cloudKitError.code.rawValue): \(cloudKitError.localizedDescription)"

@@ -9,6 +9,7 @@ struct PieceEditorView: View {
     @State private var hasReservation: Bool
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @FocusState private var focusedField: PieceEditorField?
 
     init(
         piece: Piece?,
@@ -29,13 +30,19 @@ struct PieceEditorView: View {
                         TextField("cm", value: $draft.lengthCm, format: .number)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing)
+                            .focused($focusedField, equals: .length)
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture { focusedField = .length }
 
                     LabeledContent("Bredde") {
                         TextField("cm", value: $draft.widthCm, format: .number)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing)
+                            .focused($focusedField, equals: .width)
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture { focusedField = .width }
                 }
 
                 Section("Reservasjon") {
@@ -48,8 +55,10 @@ struct PieceEditorView: View {
                             format: .number
                         )
                         .keyboardType(.numberPad)
+                        .focused($focusedField, equals: .reservedLength)
 
                         TextField("Prosjekt", text: $draft.project)
+                            .focused($focusedField, equals: .project)
                     }
                 }
 
@@ -62,6 +71,7 @@ struct PieceEditorView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(draft.cloudRecordName == nil ? "Nytt stoffstykke" : "Rediger stoffstykke")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -76,6 +86,13 @@ struct PieceEditorView: View {
                         save()
                     }
                     .disabled(!canSave)
+                }
+
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Ferdig") {
+                        focusedField = nil
+                    }
                 }
             }
             .interactiveDismissDisabled(isSaving)
@@ -139,4 +156,12 @@ struct PieceEditorView: View {
             }
         }
     }
+}
+
+
+private enum PieceEditorField: Hashable {
+    case length
+    case width
+    case reservedLength
+    case project
 }

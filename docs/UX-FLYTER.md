@@ -462,3 +462,13 @@ Følgende skal tas med i senere UX-/ytelsesopprydding:
 - numeriske felt i prosjektsøk har hatt merkbar forsinkelse ved første fokus
 - prosjektsøk skal automatisk få ferske Piece-data etter endringer; manuell pull-to-refresh skal ikke være nødvendig for korrekt resultat
 - når en visuell rad representerer én handling eller ett valg, skal hele raden være trykkbar, også for Piece-rader og tilsvarende editorrader
+
+### UX-/ytelsesopprydding – devpatch 0051
+
+Før videre utvidelse av prosjektsøket gjennomføres en mobilrettet opprydding basert på observasjonene fra test 104–122:
+
+- **Finn til prosjekt** skal ikke gjøre tunge child-record-kall før fanen faktisk åpnes.
+- Når brukeren kommer tilbake til **Finn til prosjekt**, skal relevant datagrunnlag oppdateres uten krav om manuell pull-to-refresh.
+- En Piece-endring eller reservasjon som allerede er lagret lokalt skal reflekteres direkte i aktive søkeresultater.
+- Numeriske søkefelt skal reagere raskt på første trykk og fortsatt ha tydelig **Ferdig**-handling for talltastaturet.
+- Når en rad representerer én handling, er hele raden trykkbar. Dette gjelder blant annet Piece-rader og dimensjonsrader i Piece-editoren.

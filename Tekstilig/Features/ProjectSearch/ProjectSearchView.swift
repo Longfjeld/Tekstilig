@@ -1,21 +1,57 @@
+import Foundation
 import SwiftUI
 
 struct ProjectSearchView: View {
+    let isActive: Bool
+
     @State private var textileModel = TextileLibraryModel()
     @State private var attributeIndex = TextileLibraryAttributeIndex()
     @State private var pieceIndex = PieceLibraryIndex()
 
-    @State private var requiredLengthCm: Int64?
-    @State private var minimumWidthCm: Int64?
+    @State private var requiredLengthText = ""
+    @State private var minimumWidthText = ""
     @State private var category = ""
     @State private var material = ""
-    @State private var minimumWeight: Int?
-    @State private var maximumWeight: Int?
+    @State private var minimumWeightText = ""
+    @State private var maximumWeightText = ""
     @State private var stretchLevel = ""
     @State private var hasSearched = false
     @State private var searchResults: [ProjectSearchMatch] = []
     @State private var reservationMatch: ProjectSearchMatch?
     @FocusState private var focusedNumberField: NumberField?
+
+    init(isActive: Bool = true) {
+        self.isActive = isActive
+    }
+
+    private var requiredLengthCm: Int64? {
+        Int64(requiredLengthText.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private var minimumWidthCm: Int64? {
+        Int64(minimumWidthText.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private var minimumWeight: Int? {
+        Int(minimumWeightText.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private var maximumWeight: Int? {
+        Int(maximumWeightText.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private var numericCriteriaAreValid: Bool {
+        let pairs: [(String, Any?)] = [
+            (requiredLengthText, requiredLengthCm),
+            (minimumWidthText, minimumWidthCm),
+            (minimumWeightText, minimumWeight),
+            (maximumWeightText, maximumWeight)
+        ]
+
+        return pairs.allSatisfy { text, value in
+            text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || value != nil
+        }
+    }
 
     private var isLoading: Bool {
         textileModel.isLoading || attributeIndex.isLoading || pieceIndex.isLoading
@@ -26,15 +62,14 @@ struct ProjectSearchView: View {
     }
 
     private var hasCriteria: Bool {
-        requiredLengthCm != nil ||
-        minimumWidthCm != nil ||
+        !requiredLengthText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !minimumWidthText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         !category.isEmpty ||
         !material.isEmpty ||
-        minimumWeight != nil ||
-        maximumWeight != nil ||
+        !minimumWeightText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !maximumWeightText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         !stretchLevel.isEmpty
     }
-
 
     var body: some View {
         NavigationStack {
@@ -59,6 +94,9 @@ struct ProjectSearchView: View {
                     .scrollDismissesKeyboard(.interactively)
                     .refreshable {
                         await reloadAll()
+                        if hasSearched {
+                            performSearch()
+                        }
                     }
                 }
             }
@@ -71,15 +109,37 @@ struct ProjectSearchView: View {
                     }
                 }
             }
-            .task {
-                await loadAllIfNeeded()
+            .task(id: isActive) {
+                guard isActive else { return }
+
+                if textileModel.hasLoaded && attributeIndex.hasLoaded && pieceIndex.hasLoaded {
+                    await reloadAll()
+                    if hasSearched {
+                        performSearch()
+                    }
+                } else {
+                    await loadAllIfNeeded()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .tekstiligPieceDidChange)) { notification in
+                guard let piece = notification.object as? Piece else { return }
+
+                if notification.userInfo?["deleted"] as? Bool == true {
+                    pieceIndex.remove(piece)
+                } else {
+                    pieceIndex.upsert(piece)
+                }
+
+                if hasSearched {
+                    performSearch()
+                }
             }
             .sheet(item: $reservationMatch) { match in
                 ProjectReservationView(
                     piece: match.piece,
                     suggestedLengthCm: requiredLengthCm
-                ) {
-                    await pieceIndex.load()
+                ) { savedPiece in
+                    pieceIndex.upsert(savedPiece)
                     performSearch()
                 }
             }
@@ -88,11 +148,11 @@ struct ProjectSearchView: View {
 
     private var criteriaSection: some View {
         Section {
-            TextField("Lengde minst (cm)", value: $requiredLengthCm, format: .number)
+            TextField("Lengde minst (cm)", text: $requiredLengthText)
                 .keyboardType(.numberPad)
                 .focused($focusedNumberField, equals: .length)
 
-            TextField("Bredde minst (cm)", value: $minimumWidthCm, format: .number)
+            TextField("Bredde minst (cm)", text: $minimumWidthText)
                 .keyboardType(.numberPad)
                 .focused($focusedNumberField, equals: .width)
 
@@ -112,12 +172,12 @@ struct ProjectSearchView: View {
             .disabled(attributeIndex.isLoading || attributeIndex.errorMessage != nil)
 
             HStack {
-                TextField("Min g/m²", value: $minimumWeight, format: .number)
+                TextField("Min g/m²", text: $minimumWeightText)
                     .keyboardType(.numberPad)
                     .focused($focusedNumberField, equals: .minimumWeight)
                 Text("–")
                     .foregroundStyle(.secondary)
-                TextField("Maks g/m²", value: $maximumWeight, format: .number)
+                TextField("Maks g/m²", text: $maximumWeightText)
                     .keyboardType(.numberPad)
                     .focused($focusedNumberField, equals: .maximumWeight)
             }
@@ -135,7 +195,7 @@ struct ProjectSearchView: View {
                 performSearch()
             }
             .buttonStyle(.borderedProminent)
-            .disabled(!hasCriteria || isLoading)
+            .disabled(!hasCriteria || !numericCriteriaAreValid || isLoading)
 
             if hasCriteria || hasSearched {
                 Button("Nullstill kriterier") {
@@ -180,6 +240,7 @@ struct ProjectSearchView: View {
                             )
                         } label: {
                             ProjectSearchResultRow(match: match)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
                         }
 
@@ -213,12 +274,12 @@ struct ProjectSearchView: View {
 
     private func resetCriteria() {
         focusedNumberField = nil
-        requiredLengthCm = nil
-        minimumWidthCm = nil
+        requiredLengthText = ""
+        minimumWidthText = ""
         category = ""
         material = ""
-        minimumWeight = nil
-        maximumWeight = nil
+        minimumWeightText = ""
+        maximumWeightText = ""
         stretchLevel = ""
         hasSearched = false
         searchResults = []

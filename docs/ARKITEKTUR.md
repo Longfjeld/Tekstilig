@@ -673,3 +673,9 @@ Denne første versjonen er bevisst lokal og oppretter ingen nye CloudKit-indekse
 Første reservasjon fra `ProjectSearchView` gjenbruker eksisterende `Piece` som lagringsenhet. `ProjectReservationView` redigerer bare `reservedLengthCm` og `project`, og lagrer gjennom eksisterende `PieceInventoryModel`/`PieceRepository`-kjede. Etter vellykket lagring reloader `ProjectSearchView` sitt `PieceLibraryIndex` og beregner gjeldende søkeresultat på nytt. Dermed er søkegrunnlaget konsistent uten manuell refresh.
 
 Denne arkitekturen støtter én reservasjon per Piece, i tråd med dagens datamodell. Flere samtidige reservasjoner per Piece krever senere en separat reservasjonsmodell og inngår ikke i denne blokken.
+
+## UX-/ytelsesopprydding – devpatch 0051
+
+`ProjectSearchView` er fortsatt en selvstendig feature med egne lokale indekser, men lastingen er nå bundet til aktiv fane. Dette unngår at prosjektfunksjonen konkurrerer med tekstilbiblioteket om CloudKit-bulklesinger under vanlig appstart.
+
+Piece-endringer propageres lokalt fra `PieceInventoryModel` via en enkel intern endringshendelse. `ProjectSearchView` oppdaterer `PieceLibraryIndex` direkte med lagret/slettet Piece og beregner aktive treff på nytt. Direkte reservasjon gjør tilsvarende med den lagrede Piece-verdien. CloudKit er fortsatt autoritativ lagring; den lokale hendelsen brukes bare til å holde samtidige feature-visninger konsistente uten å vente på ny server-query.

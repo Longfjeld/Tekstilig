@@ -1,7 +1,14 @@
-# Tekstilig devpatch 0050
+# Tekstilig devpatch 0051
 
-Bygger på `Tekstilig-SwiftUIActualApp0020.zip`.
+Grunnlag: `Tekstilig-SwiftUIActualApp0021.zip`
 
-Denne patchen legger til første reservasjon direkte fra **Finn til prosjekt** og dokumenterer validering av test 104–113 samt registrerte UX-/ytelsesobservasjoner.
+Denne patchen gjennomfører første UX-/ytelsesopprydding etter validering av prosjektsøk og reservasjon:
 
-Ingen nye CloudKit-felt eller indekser introduseres.
+- utsetter lasting av `Finn til prosjekt` til fanen faktisk aktiveres
+- oppdaterer lokale Piece-data direkte etter lagring/sletting/reservasjon
+- refresher prosjektdata når fanen aktiveres på nytt
+- forenkler numeriske søkefelt for mindre fokusarbeid
+- gjør Piece-rader og dimensjonsrader enklere å trykke på
+- dokumenterer test 123–131 som `❗️` frem til validering
+
+Ingen CloudKit-schemaendring er nødvendig.

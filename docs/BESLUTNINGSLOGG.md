@@ -902,3 +902,30 @@ Etter lagring lastes det lokale Piece-indekset på nytt og det aktive prosjekts�
 ### Begrunnelse
 
 Dette følger den allerede validerte datamodellen og gir korteste vei til en komplett søk → reserver-flyt uten schemaendring. Begrensningen til én reservasjon per Piece er eksplisitt og kan senere erstattes av en egen reservasjonsmodell dersom behovet for flere samtidige prosjekter oppstår.
+
+## B-049 – UX-/ytelsesopprydding etter første prosjektsøk
+
+**Dato:** 2026-10-04  
+**Status:** Besluttet
+
+### Beslutning
+
+Før flere kriterietyper eller mer avansert rangering legges til i **Finn til prosjekt**, gjennomføres en egen UX-/ytelsesblokk. `ProjectSearchView` skal ikke starte sine egne CloudKit-bulklesinger før fanen faktisk aktiveres. Når fanen aktiveres på nytt, oppdateres datagrunnlaget før videre søk.
+
+Piece-endringer som allerede er kjent lokalt skal samtidig formidles som lokale endringshendelser og oppdateres direkte i `PieceLibraryIndex`, i stedet for å være avhengig av at en ny CloudKit-query umiddelbart returnerer siste verdi. Direkte reservasjon fra prosjektsøket bruker den lagrede `Piece`-verdien til samme formål.
+
+Numeriske kriteriefelt i prosjektsøket bruker enkel tekstbinding og konverteres først når søket utføres. Interaktive Piece-rader og dimensjonsrader skal ha helrad-klikkflate der raden representerer én handling.
+
+### Begrunnelse
+
+Test 104–122 viste at funksjonene er korrekte, men avdekket tre gjentakende UX-problemer: tregere appstart etter at flere lokale child-record-indekser ble introdusert, merkbar forsinkelse ved første fokus i numeriske felt, og stale Piece-data frem til manuell refresh etter enkelte endringer. I tillegg ble små trykkflater observert som unødvendig friksjon på mobil.
+
+### Konsekvens
+
+- prosjektsøkets bulkdata lastes først når fanen **Finn til prosjekt** er aktiv
+- når fanen aktiveres på nytt, refresher prosjektsøket datagrunnlaget uten at brukeren må utføre pull-to-refresh
+- Piece-lagring/sletting sender lokal endringshendelse som oppdaterer `PieceLibraryIndex` og aktive søkeresultater
+- reservasjon fra prosjektsøk oppdaterer indeksen direkte med den lagrede Piece-verdien
+- numeriske søkefelt unngår `FormatStyle`-binding under fokus og valideres før søk
+- Piece-rader og dimensjonsrader får større/helrad trykkflate
+- CloudKit-schemaet endres ikke
