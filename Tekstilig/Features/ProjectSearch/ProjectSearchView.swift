@@ -23,6 +23,7 @@ struct ProjectSearchView: View {
     @State private var hasSearched = false
     @State private var searchResults: [ProjectSearchMatch] = []
     @State private var reservationMatch: ProjectSearchMatch?
+    @State private var isShowingSearchFeedback = false
     @FocusState private var focusedNumberField: NumberField?
 
     init(isActive: Bool = true) {
@@ -256,9 +257,18 @@ struct ProjectSearchView: View {
 
             Button("Finn tekstiler") {
                 focusedNumberField = nil
+                isShowingSearchFeedback = true
                 performSearch()
+
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(160))
+                    isShowingSearchFeedback = false
+                }
             }
             .buttonStyle(.borderedProminent)
+            .opacity(isShowingSearchFeedback ? 0.58 : 1.0)
+            .scaleEffect(isShowingSearchFeedback ? 0.985 : 1.0)
+            .animation(.easeOut(duration: 0.08), value: isShowingSearchFeedback)
             .disabled(!hasCriteria || !numericCriteriaAreValid || isLoading)
 
             if hasCriteria || hasSearched {
@@ -494,7 +504,35 @@ struct ProjectSearchView: View {
                 }
 
                 let isBetter: Bool
-                if availableLength != bestAvailableLength {
+                if let requiredLengthCm {
+                    let candidateSurplus = availableLength - requiredLengthCm
+                    let bestSurplus = bestAvailableLength - requiredLengthCm
+                    if bestPiece == nil || candidateSurplus != bestSurplus {
+                        isBetter = bestPiece == nil || candidateSurplus < bestSurplus
+                    } else if let minimumWidthCm {
+                        let candidateWidthSurplus = piece.widthCm - minimumWidthCm
+                        let bestWidthSurplus = bestWidth - minimumWidthCm
+                        if candidateWidthSurplus != bestWidthSurplus {
+                            isBetter = candidateWidthSurplus < bestWidthSurplus
+                        } else {
+                            isBetter = piece.pieceID.localizedCaseInsensitiveCompare(bestPieceID) == .orderedAscending
+                        }
+                    } else if piece.widthCm != bestWidth {
+                        isBetter = piece.widthCm < bestWidth
+                    } else {
+                        isBetter = piece.pieceID.localizedCaseInsensitiveCompare(bestPieceID) == .orderedAscending
+                    }
+                } else if let minimumWidthCm {
+                    let candidateWidthSurplus = piece.widthCm - minimumWidthCm
+                    let bestWidthSurplus = bestWidth - minimumWidthCm
+                    if bestPiece == nil || candidateWidthSurplus != bestWidthSurplus {
+                        isBetter = bestPiece == nil || candidateWidthSurplus < bestWidthSurplus
+                    } else if availableLength != bestAvailableLength {
+                        isBetter = availableLength < bestAvailableLength
+                    } else {
+                        isBetter = piece.pieceID.localizedCaseInsensitiveCompare(bestPieceID) == .orderedAscending
+                    }
+                } else if availableLength != bestAvailableLength {
                     isBetter = availableLength > bestAvailableLength
                 } else if piece.widthCm != bestWidth {
                     isBetter = piece.widthCm > bestWidth
@@ -515,6 +553,17 @@ struct ProjectSearchView: View {
                 continue
             }
 
+            var fitParts: [String] = []
+            if let requiredLengthCm {
+                fitParts.append("\(bestAvailableLength - requiredLengthCm) cm ekstra lengde")
+            }
+            if let minimumWidthCm {
+                fitParts.append("\(bestWidth - minimumWidthCm) cm ekstra bredde")
+            }
+            if !fitParts.isEmpty {
+                explanations.append("Tilpasning: \(fitParts.joined(separator: " · "))")
+            }
+
             result.append(
                 ProjectSearchMatch(
                     textile: textile,
@@ -528,11 +577,27 @@ struct ProjectSearchView: View {
         }
 
         searchResults = result.sorted { lhs, rhs in
-            if lhs.availableLengthCm != rhs.availableLengthCm {
-                return lhs.availableLengthCm > rhs.availableLengthCm
+            if let requiredLengthCm {
+                let lhsSurplus = lhs.availableLengthCm - requiredLengthCm
+                let rhsSurplus = rhs.availableLengthCm - requiredLengthCm
+                if lhsSurplus != rhsSurplus {
+                    return lhsSurplus < rhsSurplus
+                }
             }
-            if lhs.widthCm != rhs.widthCm {
-                return lhs.widthCm > rhs.widthCm
+            if let minimumWidthCm {
+                let lhsSurplus = lhs.widthCm - minimumWidthCm
+                let rhsSurplus = rhs.widthCm - minimumWidthCm
+                if lhsSurplus != rhsSurplus {
+                    return lhsSurplus < rhsSurplus
+                }
+            }
+            if requiredLengthCm == nil && minimumWidthCm == nil {
+                if lhs.availableLengthCm != rhs.availableLengthCm {
+                    return lhs.availableLengthCm > rhs.availableLengthCm
+                }
+                if lhs.widthCm != rhs.widthCm {
+                    return lhs.widthCm > rhs.widthCm
+                }
             }
             return lhs.textile.name.localizedCaseInsensitiveCompare(rhs.textile.name) == .orderedAscending
         }

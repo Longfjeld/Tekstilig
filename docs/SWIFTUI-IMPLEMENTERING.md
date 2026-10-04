@@ -2622,3 +2622,125 @@ Blokken er godkjent når alle disse er bekreftet:
 - ingen nye CloudKit-felt eller indekser er nødvendige
 
 **Ikke gå videre til egnethetsrangering eller rikere reservasjonsmodell før punkt 140 er bekreftet.**
+
+## 141. Legg inn devpatch 0053 – søkefeedback og egnethetsrangering
+
+**✅ AKSJON – DU**
+
+Denne patchen bygger på `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–140 er funksjonelt validert.
+
+1. Lukk Xcode 27 dersom prosjektet er åpent.
+2. Pakk ut `Tekstilig-devpatch-0053.zip` i `Downloads`.
+3. Kjør dry-run med vanlig rsync-metode.
+4. Kontroller at patchen bare erstatter `ProjectSearchView.swift` og relevant dokumentasjon.
+5. Kjør den faktiske rsync-oppdateringen.
+6. Åpne `Tekstilig.xcodeproj` i Xcode 27.
+7. Velg **Product → Build**.
+8. Kontroller at build fullføres uten nye feil eller varsler.
+9. Start appen på fysisk testtelefon.
+10. Åpne **Finn til prosjekt** og vent til skjermen er ferdig lastet.
+11. Kontroller at alle tidligere kriterier fortsatt vises.
+
+Stopp på punkt 141 dersom build, vanlig oppstart eller lasting av **Finn til prosjekt** feiler.
+
+## 142. Valider visuell feedback på «Finn tekstiler»
+
+**✅ AKSJON – DU**
+
+1. Angi et gyldig prosjektkriterium som gir treff.
+2. Finn knappen **Finn tekstiler** og kontroller at tekst, plassering og skillelinjen under ser ut som før 0053.
+3. Trykk **Finn tekstiler** én gang.
+4. Kontroller at hele knappen gir en tydelig, kort visuell puls når trykket registreres.
+5. Trykk knappen på nytt.
+6. Kontroller at feedbacken gjentas ved hvert trykk, at knappen ikke forskyves, og at søkeresultatet fortsatt oppdateres normalt.
+
+## 143. Valider «best fit» mellom flere Piece på samme tekstil
+
+**✅ AKSJON – DU**
+
+1. Finn eller opprett et tekstil med minst to tilgjengelige stoffstykker som begge kan dekke samme prosjektkrav, men med ulik tilgjengelig lengde.
+2. Noter tilgjengelig lengde på begge stykkene.
+3. Åpne **Finn til prosjekt** og nullstill kriteriene.
+4. Angi **Lengde minst** slik at begge stykkene er store nok.
+5. Trykk **Finn tekstiler**.
+6. Kontroller at resultatet bruker stoffstykket med minst overskytende lengde, ikke automatisk det største stykket.
+7. Kontroller at resultatraden viser **Tilpasning** og antall centimeter ekstra lengde.
+
+## 144. Valider «best fit» mellom flere tekstiler
+
+**✅ AKSJON – DU**
+
+1. Bruk et lengdekrav som gir minst to søkeresultater med ulik overskytende tilgjengelig lengde.
+2. Trykk **Finn tekstiler**.
+3. Kontroller at resultatet med minst overskytende lengde står først.
+4. Angi også **Bredde minst** slik at minst to resultater fortsatt oppfyller kravene.
+5. Trykk **Finn tekstiler** igjen.
+6. Kontroller at lengde fortsatt er første rangeringskriterium.
+7. Dersom to treff har samme lengdeoverskudd, kontroller at treffet med minst breddeoverskudd kommer først.
+8. Kontroller at resultatradene forklarer både ekstra lengde og ekstra bredde når begge dimensjonskrav er aktive.
+
+## 145. Valider rangering med bare breddekrav
+
+**✅ AKSJON – DU**
+
+1. Nullstill kriteriene.
+2. Angi bare **Bredde minst** med en verdi som gir minst to treff.
+3. Trykk **Finn tekstiler**.
+4. Kontroller at treffet med minst overskytende bredde rangeres først.
+5. Kontroller at **Tilpasning** viser ekstra bredde, men ikke en konstruert lengdeverdi.
+
+## 146. Valider søk uten dimensjonskrav
+
+**✅ AKSJON – DU**
+
+1. Nullstill kriteriene.
+2. Velg ett ikke-dimensjonalt krav, for eksempel **Materiale** eller **Fargegruppe**.
+3. Trykk **Finn tekstiler**.
+4. Kontroller at søket fungerer normalt og ikke krever lengde eller bredde.
+5. Kontroller at **Tilpasning** ikke vises når ingen dimensjonskrav er aktive.
+6. Kontroller at resultatene fortsatt har stabil og deterministisk rekkefølge.
+
+## 147. Valider reservasjon sammen med egnethetsrangering
+
+**✅ AKSJON – DU**
+
+1. Kjør et søk med **Lengde minst** som gir minst ett treff.
+2. Noter første treff og verdien for ekstra lengde.
+3. Åpne **Reserver stykke** eller **Endre reservasjon** på et relevant treff.
+4. Lagre en gyldig reservasjon som endrer tilgjengelig lengde, men fortsatt lar minst ett treff oppfylle søket.
+5. Kontroller at søkeresultatet oppdateres uten manuell refresh.
+6. Kontroller at rangering og **Tilpasning** beregnes på nytt ut fra ny tilgjengelig lengde.
+7. Kontroller at et stykke som ikke lenger oppfyller minimumslengden forsvinner fra resultatet.
+
+## 148. Valider kombinerte kriterier og regresjon
+
+**✅ AKSJON – DU**
+
+1. Nullstill kriteriene.
+2. Angi både lengde, bredde og minst to tidligere validerte egenskapskrav.
+3. Trykk **Finn tekstiler**.
+4. Kontroller at alle aktive krav fortsatt behandles som AND-krav.
+5. Kontroller at rangeringen bare rangerer blant tekstiler/stykker som faktisk oppfyller alle kravene.
+6. Åpne et treff og gå tilbake til søkeresultatet.
+7. Kontroller at kriteriene og resultatene er bevart.
+8. Nullstill kriteriene.
+9. Kontroller at alle kriterier og søkeresultater nullstilles som før.
+
+## 149. Stoppunkt for søkefeedback og første egnethetsrangering
+
+**✅ STOPPUNKT**
+
+Blokken er godkjent når alle disse er bekreftet:
+
+- **Finn tekstiler** gir tydelig visuell feedback ved hvert trykk
+- søkehandlingen og tidligere kriterier fungerer uendret
+- når lengde er angitt, velges og rangeres minst overskytende passende lengde først
+- når både lengde og bredde er angitt, brukes bredde som sekundært best-fit-kriterium
+- med bare breddekrav prioriteres minst overskytende passende bredde
+- resultatraden forklarer dimensjonsoverskuddet når dimensjonskrav er aktive
+- søk uten dimensjonskrav fungerer fortsatt deterministisk
+- reservasjon beregner best-fit på nytt uten manuell refresh
+- ingen ny poengscore, maskinlæring eller skjult anbefalingslogikk er innført
+- ingen CloudKit-schemaendring er nødvendig
+
+**Ikke gå videre til rikere reservasjonsmodell eller mer avansert poengbasert rangering før punkt 149 er bekreftet.**

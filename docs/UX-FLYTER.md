@@ -487,3 +487,21 @@ Etter validert UX-/ytelsesopprydding utvides **Finn til prosjekt** med flere all
 - eksisterende deterministiske sortering beholdes; «best fit»/egnethetsrangering behandles som en senere separat blokk
 
 I Piece-editoren skal fokus på et eksisterende lengde- eller breddefelt plassere markøren etter eksisterende tall, slik at brukeren kan fortsette å skrive uten først å flytte innsettingspunktet manuelt.
+
+
+### Søkefeedback og første egnethetsrangering – devpatch 0053
+
+Etter validering av test 132–140 forbedres **Finn til prosjekt** uten å endre datamodellen:
+
+- **Finn tekstiler** skal gi umiddelbar visuell feedback ved hvert trykk; første implementering bruker søkeikon med kort systemanimasjon
+- når prosjektet har minimumslengde, prioriteres det passende stoffstykket som har minst overskytende tilgjengelig lengde
+- når både lengde og bredde er krav, brukes minst breddeoverskudd som sekundært kriterium
+- når bare bredde er dimensjonskrav, prioriteres minst breddeoverskudd
+- samme forståelige best-fit-prinsipp brukes i rekkefølgen mellom tekstiltreff
+- resultatraden viser hvor mye ekstra lengde/bredde treffet har mot prosjektkravet
+- uten dimensjonskrav beholdes eksisterende stabile, deterministiske rekkefølge
+- dette er ikke en generell poengscore eller smart anbefalingsmotor; filtrering er fortsatt absolutte AND-krav og rangeringen kan forklares direkte fra dimensjonene
+
+### Finn tekstiler – trykkfeedback
+
+Knappen **Finn tekstiler** skal beholde sin etablerte tekst/layout og gi en kort, tydelig visuell puls ved hvert trykk. Feedbacken skal ikke flytte innhold eller påvirke skillelinjer i skjemaet.

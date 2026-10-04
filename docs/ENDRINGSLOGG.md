@@ -805,4 +805,27 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0022.zip`, der test 1–
 ### Teststatus
 
 - test 123–131 er beholdt som validert
-- test 132–140 er lagt inn som **❗️** frem til eksplisitt validering
+- test 132–140 er eksplisitt validert **✅**
+
+
+## Devpatch 0053 – søkefeedback og første egnethetsrangering
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–140 er validert.
+
+- **Finn tekstiler** får søkeikon med tydelig visuell bounce-feedback ved hvert trykk
+- ved aktivt lengdekrav velges Piece med minst overskytende passende lengde
+- ved lik lengdetilpasning brukes minst overskytende bredde som sekundært kriterium når breddekrav finnes
+- med bare breddekrav prioriteres minst overskytende passende bredde
+- samme best-fit-prinsipp brukes på rekkefølgen mellom søkeresultater
+- resultatraden forklarer ekstra lengde/bredde under **Tilpasning**
+- uten dimensjonskrav beholdes tidligere deterministiske rekkefølge
+- eksisterende AND-filtrering, reservasjon og automatiske Piece-oppdateringer beholdes
+- ingen CloudKit-schemaendring
+- test 141–149 er lagt inn som **❗️** frem til eksplisitt validering
+## Devpatch 0054 – korrigering av test 142
+
+- Fjernet søkeikonet og `symbolEffect` fra **Finn tekstiler**, fordi løsningen i 0053 ikke ga pålitelig synlig feedback og påvirket knappens layout.
+- Gjenopprettet knappens opprinnelige tekst og `.borderedProminent`-layout.
+- Lagt til kort visuell puls på hele knappen uten å endre ikon, bredde eller Form-struktur.
+- Punkt 142 skal retestes før 143–149 fortsetter.
+
