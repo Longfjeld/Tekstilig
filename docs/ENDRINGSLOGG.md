@@ -888,3 +888,13 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - Flytter **Nullstill** i filtervisningen til topplinjen til venstre for **Ferdig**. Nullstill er deaktivert når ingen filtre er aktive.
 - Ingen CloudKit-schema-, Textile-, Piece-, reservasjons- eller prosjektmatchingsendringer.
 - Korrigeringstest 170–173 er lagt til som **❗️** før roadmap-punkt 3 avsluttes.
+
+
+## Devpatch 0059 – stabil kameraåpning på eksisterende tekstil
+
+- Basert på autoritativ kilde `Tekstilig-SwiftUIActualApp0029.zip`.
+- Retter at kameraet i `TextileMainImageSection` kunne åpnes kort og deretter lukkes igjen på første forsøk når et eksisterende tekstil manglet hovedbilde.
+- Kameraet presenteres nå med `fullScreenCover` i stedet for vanlig `sheet`, som passer bedre for `UIImagePickerController` med kamerakilde og unngår den observerte første-presentasjonskonflikten.
+- Hurtigregistreringens allerede validerte kameraflyt er ikke endret.
+- Ingen endring i bildeoptimalisering, CloudKit-schema, datamodell, hovedside, filter, Piece, reservasjon eller prosjektsøk.
+- Test 170, 171 og 173 er validert; punkt 172 avventer kun korrigeringstest 174.

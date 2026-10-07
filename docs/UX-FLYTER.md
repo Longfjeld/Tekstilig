@@ -567,3 +567,11 @@ Etter praktisk validering av første hovedside forenkles normaltilstanden ytterl
 - i filterarket ligger **Nullstill** i topplinjen til venstre og **Ferdig** til høyre; Nullstill skal være deaktivert uten aktive filtre.
 
 Dette er funksjonell/strukturell opprydding. Den endelige visuelle identiteten, tint/accent og Liquid Glass-poleringen behandles fortsatt som egen 1.0-design-/plattformpolering og skal ikke løses ved å innføre tilfeldige custom-farger i denne patchen.
+
+
+## Kamera ved eksisterende tekstil – stabil presentasjon
+
+- Kamera fra seksjonen **Hovedbilde** skal åpnes stabilt på første trykk, også når tekstilet ikke har bilde fra før.
+- På iPhone/iPad presenteres kameraflyten som fullskjerm, mens bildevalg fra Bilder fortsatt bruker `PhotosPicker`.
+- Avbryt skal returnere direkte til tekstildetaljen uten å endre data.
+- Fullført bildeopptak skal fortsette å bruke samme JPEG-optimalisering og hovedbilde-lagring som tidligere.

@@ -3011,7 +3011,7 @@ Stopp på punkt 162 dersom forsiden fortsatt domineres av hele biblioteklisten e
 
 ## 169. Stoppunkt for roadmap-punkt 3 – Rask registrering
 
-**✅ STOPPUNKT – avventer korrigeringstest 170–173**
+**❗️ STOPPUNKT – avventer korrigeringstest 174**
 
 Roadmap-punkt 3 kan markeres ferdig når alle disse er bekreftet:
 
@@ -3059,7 +3059,7 @@ Punkt 171 er godkjent når både tekstilet og hovedbildet er synlige umiddelbart
 
 ## 172. Valider kamera og Bilder på eksisterende tekstil
 
-**✅ AKSJON – DU**
+**❗️ AKSJON – delvis validert; første kameraforsøk kunne lukkes umiddelbart**
 
 1. Åpne et eksisterende tekstil som ikke har hovedbilde.
 2. Finn seksjonen **Hovedbilde**.
@@ -3090,4 +3090,23 @@ Punkt 172 er godkjent når eksisterende tekstiler kan få eller bytte hovedbilde
 11. Trykk **Nullstill** og kontroller at alle filterverdier går tilbake til standard uten at filterarket lukkes.
 12. Trykk **Ferdig** og kontroller at filterarket lukkes normalt.
 
-Når punkt 170–173 er validert, kan punkt 163 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.
+Punkt 170, 171 og 173 er validert. Punkt 172 avdekket at kameraet på et eksisterende tekstil uten bilde kunne vises kort og deretter lukkes på første forsøk. Retest dette i punkt 174 før roadmap-punkt 3 avsluttes.
+
+
+## 174. Retest stabil kameraåpning på eksisterende tekstil uten bilde
+
+**❗️ AKSJON – DU**
+
+1. Legg inn `Tekstilig-devpatch-0059.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg en fysisk iPhone med iOS 27 og bygg/kjør appen.
+4. Åpne et eksisterende tekstil som ikke har hovedbilde.
+5. Trykk **Ta bilde** én gang.
+6. Kontroller at kameraet åpnes og forblir stabilt åpent på første forsøk.
+7. Avbryt kameraet og kontroller at du returnerer normalt til tekstildetaljen.
+8. Trykk **Ta bilde** på nytt, ta et bilde og bekreft det.
+9. Kontroller at bildet optimaliseres, lagres og vises som hovedbilde som før.
+
+Punkt 174 er godkjent når kameraet er stabilt allerede ved første åpning og både avbryt og fullført bildeopptak fungerer normalt.
+
+Når punkt 174 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.

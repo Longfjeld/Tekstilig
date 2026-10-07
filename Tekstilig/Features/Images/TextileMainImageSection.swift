@@ -106,7 +106,7 @@ struct TextileMainImageSection: View {
             loadAndSave(newItem)
         }
         #if os(iOS)
-        .sheet(isPresented: $showCamera) {
+        .fullScreenCover(isPresented: $showCamera) {
             TextileCameraPicker { data in
                 optimizeAndSave(data)
             }
