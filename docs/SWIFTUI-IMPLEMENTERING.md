@@ -2907,3 +2907,124 @@ Stopp på punkt 159 dersom prosjektet ikke bygger, appen ikke starter eller **Ta
 Punkt 160 er godkjent når **Ta nytt bilde** og **Velg annet** konsekvent åpner hver sin riktige kilde og begge kan erstatte forhåndsvisningen før lagring.
 
 **Ikke gå videre til neste del av punkt 3 før punkt 159–160 er bekreftet.**
+
+## 161. Legg inn devpatch 0057 – ny iPhone-hovedside
+
+**✅ AKSJON – DU**
+
+1. Legg inn filene fra `Tekstilig-devpatch-0057.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg en fysisk iPhone med iOS 27 som kjøredestinasjon.
+4. Bygg og kjør appen.
+5. Åpne fanen **Tekstiler**.
+6. Kontroller at appen bygger og starter uten nye feil.
+
+Stopp på punkt 161 dersom prosjektet ikke bygger eller appen ikke starter.
+
+## 162. Valider normaltilstanden på iPhone-forsiden
+
+**✅ AKSJON – DU**
+
+1. Sørg for at søkefeltet er tomt og at ingen filtre er aktive.
+2. Gå til fanen **Tekstiler**.
+3. Kontroller at hele biblioteklisten ikke vises automatisk.
+4. Kontroller at **Registrer nytt stoff** er en tydelig primærhandling.
+5. Kontroller at seksjonen **Nylig registrert** vises når biblioteket har tekstiler.
+6. Kontroller at **Vis alle tekstiler** vises.
+7. Kontroller at **Finn til prosjekt** vises.
+8. Kontroller at filterknappen fortsatt ligger øverst til venstre.
+
+Stopp på punkt 162 dersom forsiden fortsatt domineres av hele biblioteklisten eller de låste hovedhandlingene mangler.
+
+## 163. Valider Nylig registrert og bildevisning
+
+**✅ AKSJON – DU**
+
+1. Kontroller at **Nylig registrert** viser maksimalt fem tekstiler.
+2. Finn minst ett nylig tekstil med hovedbilde og kontroller at en kompakt thumbnail vises.
+3. Finn om mulig et nylig tekstil uten bilde og kontroller at det vises en rolig bilde-placeholder uten feil.
+4. Kontroller at navn vises tydelig under hvert kort.
+5. Opprett eventuelt et nytt testtekstil og kontroller at det kommer først i **Nylig registrert** etter lagring.
+6. Rediger et eldre tekstil uten å opprette det på nytt.
+7. Kontroller at det gamle tekstilet ikke flyttes først bare på grunn av redigeringen.
+
+## 164. Valider navigasjon fra Nylig registrert
+
+**✅ AKSJON – DU**
+
+1. Trykk på et tekstil i **Nylig registrert**.
+2. Kontroller at korrekt tekstildetalj åpnes.
+3. Kontroller at bilde og eksisterende metadata lastes som før.
+4. Gå tilbake til tekstiloversikten.
+5. Kontroller at oversikten fortsatt vises og at appen ikke har aktivert hele biblioteklisten uten grunn.
+
+## 165. Valider Vis alle tekstiler
+
+**✅ AKSJON – DU**
+
+1. Trykk **Vis alle tekstiler**.
+2. Kontroller at den komplette eksisterende tekstillisten vises.
+3. Scroll i listen og åpne et tekstil.
+4. Gå tilbake og kontroller at listen fortsatt fungerer som før.
+5. Kontroller at en **Oversikt**-handling er tilgjengelig i verktøylinjen når listen er åpnet eksplisitt.
+6. Trykk **Oversikt**.
+7. Kontroller at den rolige hovedsiden vises igjen.
+
+## 166. Valider automatisk liste ved søk
+
+**✅ AKSJON – DU**
+
+1. Start fra den rolige tekstiloversikten uten aktive filtre.
+2. Trykk i søkefeltet.
+3. Skriv en søketekst som gir minst ett kjent treff.
+4. Kontroller at komplett resultatliste vises umiddelbart uten at **Vis alle tekstiler** må trykkes.
+5. Kontroller at treffene fortsatt bruker eksisterende fritekstsøk, inkludert navn og andre registrerte søkbare egenskaper.
+6. Fjern hele søketeksten.
+7. Kontroller at visningen går tilbake til den rolige oversikten når **Vis alle tekstiler** ikke var aktivert manuelt.
+
+## 167. Valider automatisk liste ved filter
+
+**✅ AKSJON – DU**
+
+1. Start fra den rolige tekstiloversikten med tomt søk.
+2. Åpne filterknappen øverst til venstre.
+3. Aktiver ett filter som gir kjente treff.
+4. Lukk filtervisningen.
+5. Kontroller at den komplette filtrerte resultatlisten vises uten at **Vis alle tekstiler** må trykkes.
+6. Kontroller at filterikonet tydelig viser at filter er aktivt.
+7. Åpne filtre igjen og nullstill alle filtre.
+8. Lukk filtervisningen.
+9. Kontroller at visningen går tilbake til den rolige oversikten når listen ikke var åpnet manuelt.
+
+## 168. Valider kombinasjon av søk/filter og Finn til prosjekt
+
+**✅ AKSJON – DU**
+
+1. Aktiver et filter og skriv samtidig en søketekst.
+2. Kontroller at resultatlisten følger både søk og filter som før.
+3. Tøm søket og nullstill filteret.
+4. Kontroller at oversikten vises igjen.
+5. Trykk **Finn til prosjekt** på oversikten.
+6. Kontroller at appen skifter til den eksisterende fanen **Finn til prosjekt**.
+7. Utfør et enkelt kjent prosjektsøk og kontroller at eksisterende funksjonalitet fortsatt virker.
+8. Gå tilbake til fanen **Tekstiler** og kontroller at tekstiloversikten fortsatt fungerer.
+
+## 169. Stoppunkt for roadmap-punkt 3 – Rask registrering
+
+**✅ STOPPUNKT**
+
+Roadmap-punkt 3 kan markeres ferdig når alle disse er bekreftet:
+
+- hurtigregistreringen fra test 150–160 fungerer fortsatt
+- normal iPhone-start viser en rolig oversikt i stedet for hele biblioteket
+- **Nylig registrert** viser inntil fem faktiske nyregistreringer med bilde/placeholder
+- redigering alene endrer ikke hva som regnes som nylig registrert
+- nylige tekstiler kan åpnes direkte
+- **Vis alle tekstiler** åpner komplett bibliotek og kan gå tilbake til oversikten
+- søk aktiverer resultatlisten uten ekstra handling
+- filtre aktiverer resultatlisten uten ekstra handling
+- søk og filter kan fortsatt kombineres
+- **Finn til prosjekt** åpner eksisterende prosjektfunksjon
+- ingen eksisterende detalj-, Piece-, reservasjons- eller prosjektsøkfunksjon er brutt
+
+**Ikke gå videre til roadmap-punkt 4 før punkt 161–169 er eksplisitt validert.**

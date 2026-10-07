@@ -1,5 +1,11 @@
 import SwiftUI
 
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
+
 struct TextileLibraryView: View {
     @State private var model = TextileLibraryModel()
     @State private var attributeIndex = TextileLibraryAttributeIndex()
@@ -7,6 +13,7 @@ struct TextileLibraryView: View {
     @State private var searchText = ""
     @State private var filters = TextileLibraryFilters()
     @State private var showFilters = false
+    @State private var showAllTextiles = false
 
     private var listItems: [TextileListItem] {
         var items: [TextileListItem] = []
@@ -92,6 +99,29 @@ struct TextileLibraryView: View {
         filters.isActive
     }
 
+    private var hasActiveSearch: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var isLibraryListActive: Bool {
+        showAllTextiles || hasActiveSearch || hasActiveFilter
+    }
+
+    private var recentTextiles: [Textile] {
+        Array(
+            model.textiles
+                .sorted {
+                    if $0.createdAt != $1.createdAt {
+                        return $0.createdAt > $1.createdAt
+                    }
+                    return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                }
+                .prefix(5)
+        )
+    }
+
+    var onFindProject: () -> Void = { }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -113,53 +143,17 @@ struct TextileLibraryView: View {
                     ContentUnavailableView {
                         Label("Ingen tekstiler ennå", systemImage: "square.grid.2x2")
                     } description: {
-                        Text("Opprett det første tekstilet for å kontrollere den nye appflyten mot CloudKit.")
+                        Text("Registrer det første tekstilet for å starte samlingen.")
                     } actions: {
-                        Button("Nytt tekstil") {
+                        Button("Registrer nytt stoff") {
                             showNewTextile = true
                         }
                         .buttonStyle(.borderedProminent)
                     }
-                } else if filteredListItems.isEmpty {
-                    ContentUnavailableView {
-                        Label("Ingen treff", systemImage: "magnifyingglass")
-                    } description: {
-                        if hasActiveFilter {
-                            Text("Ingen tekstiler passer søket og valgte filtre.")
-                        } else {
-                            Text("Ingen tekstiler passer søket.")
-                        }
-                    } actions: {
-                        if hasActiveFilter {
-                            Button("Nullstill filtre") {
-                                filters.reset()
-                            }
-                        }
-
-                        if !searchText.isEmpty {
-                            Button("Tøm søk") {
-                                searchText = ""
-                            }
-                        }
-                    }
+                } else if isLibraryListActive {
+                    libraryListContent
                 } else {
-                    List(filteredListItems) { item in
-                        NavigationLink {
-                            TextileDetailView(
-                                textileIdentity: item.id,
-                                model: model
-                            )
-                        } label: {
-                            TextileRow(
-                                name: item.name,
-                                category: item.category
-                            )
-                        }
-                    }
-                    .refreshable {
-                        await model.load()
-                        await attributeIndex.load()
-                    }
+                    libraryHomeContent
                 }
             }
             .navigationTitle("Tekstiler")
@@ -169,7 +163,7 @@ struct TextileLibraryView: View {
                 prompt: "Søk i navn, materiale, farge og plassering"
             )
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItemGroup(placement: .topBarLeading) {
                     Button {
                         showFilters = true
                     } label: {
@@ -181,6 +175,15 @@ struct TextileLibraryView: View {
                         )
                     }
                     .accessibilityLabel(hasActiveFilter ? "Filtre, aktive filtre" : "Filtre")
+
+                    if showAllTextiles && !hasActiveSearch && !hasActiveFilter {
+                        Button {
+                            showAllTextiles = false
+                        } label: {
+                            Label("Oversikt", systemImage: "house")
+                        }
+                        .accessibilityLabel("Tilbake til oversikten")
+                    }
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -209,6 +212,115 @@ struct TextileLibraryView: View {
             }
         }
     }
+
+    @ViewBuilder
+    private var libraryListContent: some View {
+        if filteredListItems.isEmpty {
+            ContentUnavailableView {
+                Label("Ingen treff", systemImage: "magnifyingglass")
+            } description: {
+                if hasActiveFilter {
+                    Text("Ingen tekstiler passer søket og valgte filtre.")
+                } else {
+                    Text("Ingen tekstiler passer søket.")
+                }
+            } actions: {
+                if hasActiveFilter {
+                    Button("Nullstill filtre") {
+                        filters.reset()
+                    }
+                }
+
+                if hasActiveSearch {
+                    Button("Tøm søk") {
+                        searchText = ""
+                    }
+                }
+            }
+        } else {
+            List(filteredListItems) { item in
+                NavigationLink {
+                    TextileDetailView(
+                        textileIdentity: item.id,
+                        model: model
+                    )
+                } label: {
+                    TextileRow(
+                        name: item.name,
+                        category: item.category
+                    )
+                }
+            }
+            .refreshable {
+                await model.load()
+                await attributeIndex.load()
+            }
+        }
+    }
+
+    private var libraryHomeContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Button {
+                    showNewTextile = true
+                } label: {
+                    Label("Registrer nytt stoff", systemImage: "plus")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+
+                if !recentTextiles.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Nylig registrert")
+                            .font(.title3.weight(.semibold))
+
+                        ScrollView(.horizontal) {
+                            LazyHStack(spacing: 12) {
+                                ForEach(recentTextiles) { textile in
+                                    NavigationLink {
+                                        TextileDetailView(
+                                            textileIdentity: textile.id,
+                                            model: model
+                                        )
+                                    } label: {
+                                        TextileRecentCard(textile: textile)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .scrollIndicators(.hidden)
+                    }
+                }
+
+                Button {
+                    showAllTextiles = true
+                } label: {
+                    Label("Vis alle tekstiler", systemImage: "square.grid.2x2")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+
+                Button {
+                    onFindProject()
+                } label: {
+                    Label("Finn til prosjekt", systemImage: "magnifyingglass")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 16)
+        }
+        .refreshable {
+            await model.load()
+            await attributeIndex.load()
+        }
+    }
+
 }
 
 private struct TextileLibraryFilters: Equatable {
@@ -394,6 +506,79 @@ private struct TextileRow: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
+    }
+}
+
+private struct TextileRecentCard: View {
+    let textile: Textile
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextileRecentThumbnail(textileID: textile.textileID)
+
+            Text(textile.name)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(width: 132)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct TextileRecentThumbnail: View {
+    let textileID: String
+    @State private var model = TextileImageModel()
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.quaternary)
+
+            if let data = model.primaryImage?.data {
+                platformImage(data: data)
+            } else if model.isLoading {
+                ProgressView()
+            } else {
+                Image(systemName: "photo")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 132, height: 96)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .task(id: textileID) {
+            await model.loadIfNeeded(for: textileID)
+        }
+    }
+
+    @ViewBuilder
+    private func platformImage(data: Data) -> some View {
+        #if canImport(UIKit)
+        if let image = UIImage(data: data) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+        } else {
+            imagePlaceholder
+        }
+        #elseif canImport(AppKit)
+        if let image = NSImage(data: data) {
+            Image(nsImage: image)
+                .resizable()
+                .scaledToFill()
+        } else {
+            imagePlaceholder
+        }
+        #else
+        imagePlaceholder
+        #endif
+    }
+
+    private var imagePlaceholder: some View {
+        Image(systemName: "photo")
+            .font(.title2)
+            .foregroundStyle(.secondary)
     }
 }
 

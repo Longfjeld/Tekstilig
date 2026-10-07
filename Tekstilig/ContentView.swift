@@ -5,7 +5,9 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            TextileLibraryView()
+            TextileLibraryView {
+                selectedTab = .projectSearch
+            }
                 .tag(AppTab.textiles)
                 .tabItem {
                     Label("Tekstiler", systemImage: "square.grid.2x2")

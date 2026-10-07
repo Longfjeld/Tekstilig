@@ -856,3 +856,20 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - **Ta nytt bilde** åpner kamera; **Velg annet** åpner bildebiblioteket.
 - Ingen endring i bildeoptimalisering, CloudKit, Textile-datamodell, notat, Piece, reservasjon eller prosjektsøk.
 - Ny korrigeringstest 159–160 legges til før neste del av roadmap-punkt 3.
+
+## Devpatch 0057 – 1.0 punkt 3: ny iPhone-hovedside
+
+- Basert på autoritativ kilde `Tekstilig-SwiftUIActualApp0027.zip`, der test 150–160 er validert.
+- Biblioteket åpner nå i en rolig oversiktstilstand i stedet for å vise hele tekstillisten umiddelbart.
+- Oversikten har en tydelig **Registrer nytt stoff**-handling, **Nylig registrert**, **Vis alle tekstiler** og **Finn til prosjekt**.
+- **Nylig registrert** viser inntil fem tekstiler sortert på `createdAt`, ikke siste redigeringstidspunkt.
+- Nylige tekstiler viser hovedbilde som kompakt thumbnail når bilde finnes, og en rolig bilde-placeholder ellers.
+- Trykk på et nylig tekstil åpner eksisterende detaljvisning direkte.
+- **Vis alle tekstiler** aktiverer den eksisterende komplette biblioteklisten. En egen **Oversikt**-handling lar brukeren gå tilbake til startsiden når listen ble åpnet eksplisitt.
+- Søk aktiverer den komplette resultatlisten umiddelbart mens brukeren skriver.
+- Aktive filtre aktiverer den komplette resultatlisten uten at brukeren først må trykke **Vis alle tekstiler**.
+- Når søk/filtre som alene aktiverte listen fjernes, går visningen tilbake til oversikten.
+- Filterknappen beholdes øverst til venstre og markerer fortsatt aktive filtre.
+- **Finn til prosjekt** på oversikten skifter til den eksisterende prosjektfanen; prosjektlogikken er ikke duplisert.
+- Ingen CloudKit-schema-, Textile-, Piece-, reservasjons- eller prosjektmatchingsendringer.
+- Ny testblokk 161–169 er lagt inn som **❗️** frem til eksplisitt validering.

@@ -530,3 +530,25 @@ Etter at et bilde er valgt eller tatt i **Nytt tekstil**, skal bildekildene vær
 - **Velg annet** åpner bildebiblioteket.
 - Kontrollene skal ha egne trykkhandlinger også når de står på samme `Form`-rad.
 - Den primære **Ta bilde**-knappen skal ha visuelt sentrert tekst uten at et ikon forskyver etiketten.
+
+## 1.0 – iPhone-hovedside / bibliotekaktivering (devpatch 0057)
+
+Normaltilstanden i tekstilfanen skal være en rolig oversikt og ikke hele biblioteklisten. Oversikten inneholder:
+
+1. **Registrer nytt stoff** som tydelig primærhandling.
+2. Systemets søkefelt.
+3. **Nylig registrert** med inntil fem kompakte, bildeorienterte tekstilkort.
+4. **Vis alle tekstiler**.
+5. **Finn til prosjekt**.
+
+**Nylig registrert** baseres på når Textile ble opprettet (`createdAt`), ikke når det sist ble redigert. Et gammelt tekstil skal derfor ikke flyttes inn i denne raden bare fordi metadata endres.
+
+Den komplette eksisterende biblioteklisten aktiveres når minst én av disse tilstandene gjelder:
+
+- brukeren velger **Vis alle tekstiler**
+- søkefeltet inneholder en søketekst
+- minst ett filter er aktivt
+
+Søk og filter skal dermed ikke kreve et ekstra trykk på **Vis alle tekstiler**. Når søk/filtre som alene aktiverte listen fjernes, går brukergrensesnittet tilbake til den rolige oversikten. Dersom brukeren eksplisitt valgte **Vis alle tekstiler**, kan listen beholdes til **Oversikt** velges.
+
+Filterknappen beholdes øverst til venstre og viser tydelig når filtre er aktive. **Finn til prosjekt** gjenbruker den eksisterende prosjektfanen fremfor å lage en ny prosjektflyt inne i biblioteket.
