@@ -873,3 +873,18 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - **Finn til prosjekt** på oversikten skifter til den eksisterende prosjektfanen; prosjektlogikken er ikke duplisert.
 - Ingen CloudKit-schema-, Textile-, Piece-, reservasjons- eller prosjektmatchingsendringer.
 - Ny testblokk 161–169 er lagt inn som **❗️** frem til eksplisitt validering.
+
+
+## Devpatch 0058 – korrigering og opprydding før roadmap-punkt 3 avsluttes
+
+- Basert på autoritativ kilde `Tekstilig-SwiftUIActualApp0028.zip`.
+- Retter at et nyregistrert hovedbilde kunne mangle thumbnail under **Nylig registrert** frem til appen ble lastet på nytt. Thumbnailene får nå en eksplisitt refresh når nyregistreringsarket lukkes.
+- Eksisterende tekstiler kan nå ta hovedbilde direkte med kamera på iPhone/iPad, i tillegg til å velge fra Bilder.
+- Bilde som legges til eller byttes på eksisterende tekstil går gjennom samme JPEG-optimalisering som hurtigregistrering (maks 2048 px, kvalitet 0,82).
+- `TextileMainImageSection` bruker betinget UIKit/AppKit-bildevisning slik at denne delen ikke lenger krever UIKit ved macOS-kompilering.
+- Fjerner den store **Registrer nytt stoff**-knappen fra den rolige hovedsiden; `+` i topplinjen er eneste primære inngang der.
+- Fjerner den dupliserte **Finn til prosjekt**-knappen fra hovedsiden; eksisterende tab-navigasjon beholdes.
+- **Vis alle tekstiler** beholdes som lokal handling for biblioteket.
+- Flytter **Nullstill** i filtervisningen til topplinjen til venstre for **Ferdig**. Nullstill er deaktivert når ingen filtre er aktive.
+- Ingen CloudKit-schema-, Textile-, Piece-, reservasjons- eller prosjektmatchingsendringer.
+- Korrigeringstest 170–173 er lagt til som **❗️** før roadmap-punkt 3 avsluttes.

@@ -100,5 +100,5 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |:---|:---|
 |1. Plattform- og UX-strategi|✅ Fullført. Native iPhone, iPad og macOS 27 fra samme SwiftUI-kodebase er låst retning.|
 |2. Visuell retning|✅ Fullført. Liquid Glass/native SwiftUI, konteksttilpassede bilder, rolig iPhone-hovedside og stor-skjerm split-view er låst retning.|
-|3. Rask registrering|❗️ Pågår. Devpatch 0055–0056 har validert hurtigregistrering/kamera/notat. Devpatch 0057 legger til den låste iPhone-hovedsiden med Nylig registrert og automatisk aktivert bibliotek; test 161–169 gjenstår.|
+|3. Rask registrering|❗️ Pågår. Devpatch 0055–0057 er funksjonelt validert, men praktisk test avdekket fire avsluttende UX-/bildepunkter. Devpatch 0058 retter umiddelbar thumbnail, kamera på eksisterende tekstil, duplisert hovedside-navigasjon og plassering av Nullstill i filterarket. Test 170–173 gjenstår før punkt 3 lukkes.|
 |4–12|❗️ Ikke startet.|

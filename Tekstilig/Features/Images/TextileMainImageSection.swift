@@ -1,7 +1,14 @@
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
+
+#if os(iOS)
 import UIKit
+#endif
+
+#if os(macOS)
+import AppKit
+#endif
 
 struct TextileMainImageSection: View {
     let textile: Textile
@@ -9,28 +16,38 @@ struct TextileMainImageSection: View {
     @State private var model = TextileImageModel()
     @State private var selectedPhotoItem: PhotosPickerItem?
 
+    #if os(iOS)
+    @State private var showCamera = false
+    #endif
+
     var body: some View {
         Section {
             if model.isLoading && model.primaryImage == nil {
                 ProgressView("Henter hovedbilde …")
-            } else if let primaryImage = model.primaryImage,
-                      let uiImage = UIImage(data: primaryImage.data) {
+            } else if let primaryImage = model.primaryImage {
                 let isSaving = model.isSaving
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFit()
+                    platformImage(data: primaryImage.data)
                         .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Label(
-                            isSaving ? "Lagrer bilde …" : "Bytt hovedbilde",
-                            systemImage: "photo.badge.plus"
-                        )
+                    HStack(spacing: 12) {
+                        #if os(iOS)
+                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                            Button("Ta nytt bilde") {
+                                showCamera = true
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(isSaving)
+                        }
+                        #endif
+
+                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                            Text("Velg annet")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isSaving)
                     }
-                    .disabled(isSaving)
                 }
                 .padding(.vertical, 4)
             } else if let errorMessage = model.errorMessage {
@@ -52,10 +69,23 @@ struct TextileMainImageSection: View {
                     Label("Ingen bilder registrert", systemImage: "photo")
                         .foregroundStyle(.secondary)
 
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Label("Velg hovedbilde", systemImage: "photo.badge.plus")
+                    HStack(spacing: 12) {
+                        #if os(iOS)
+                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                            Button("Ta bilde") {
+                                showCamera = true
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(model.isSaving)
+                        }
+                        #endif
+
+                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                            Text("Velg fra Bilder")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(model.isSaving)
                     }
-                    .disabled(model.isSaving)
                 }
                 .padding(.vertical, 4)
             }
@@ -66,7 +96,7 @@ struct TextileMainImageSection: View {
         } header: {
             Text("Hovedbilde")
         } footer: {
-            Text("Denne versjonen velger bilde fra Bilder. Kamera og bildeoptimalisering kommer i et senere steg.")
+            Text("Ta bilde med kamera eller velg fra Bilder. Tekstilig optimaliserer bildet til JPEG før det lagres i CloudKit.")
         }
         .task(id: textile.textileID) {
             await model.loadIfNeeded(for: textile.textileID)
@@ -75,6 +105,14 @@ struct TextileMainImageSection: View {
             guard let newItem else { return }
             loadAndSave(newItem)
         }
+        #if os(iOS)
+        .sheet(isPresented: $showCamera) {
+            TextileCameraPicker { data in
+                optimizeAndSave(data)
+            }
+            .ignoresSafeArea()
+        }
+        #endif
         .alert(
             "Kunne ikke lagre bilde",
             isPresented: Binding(
@@ -88,6 +126,35 @@ struct TextileMainImageSection: View {
         }
     }
 
+    @ViewBuilder
+    private func platformImage(data: Data) -> some View {
+        #if os(iOS)
+        if let image = UIImage(data: data) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+        } else {
+            imagePlaceholder
+        }
+        #elseif os(macOS)
+        if let image = NSImage(data: data) {
+            Image(nsImage: image)
+                .resizable()
+                .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+        } else {
+            imagePlaceholder
+        }
+        #else
+        imagePlaceholder
+        #endif
+    }
+
+    private var imagePlaceholder: some View {
+        ContentUnavailableView("Kunne ikke vise bildet", systemImage: "photo")
+    }
+
     private func loadAndSave(_ item: PhotosPickerItem) {
         Task {
             do {
@@ -96,23 +163,34 @@ struct TextileMainImageSection: View {
                     throw TextileImageSelectionError.emptyData
                 }
 
-                let contentType = item.supportedContentTypes.first ?? .data
-                let fileExtension = contentType.preferredFilenameExtension ?? "bin"
-                let mimeType = contentType.preferredMIMEType ?? "application/octet-stream"
-                let fileName = "tekstilig-main-\(UUID().uuidString.lowercased()).\(fileExtension)"
-
-                await model.savePrimaryImage(
-                    textileID: textile.textileID,
-                    data: data,
-                    fileName: fileName,
-                    contentType: mimeType
-                )
-
+                await saveOptimized(data)
                 selectedPhotoItem = nil
             } catch {
                 model.errorMessage = error.localizedDescription
                 selectedPhotoItem = nil
             }
+        }
+    }
+
+    private func optimizeAndSave(_ data: Data) {
+        Task {
+            await saveOptimized(data)
+        }
+    }
+
+    private func saveOptimized(_ data: Data) async {
+        do {
+            let optimized = try QuickRegistrationImageOptimizer.optimize(data)
+            let fileName = "tekstilig-main-\(UUID().uuidString.lowercased()).jpg"
+
+            await model.savePrimaryImage(
+                textileID: textile.textileID,
+                data: optimized,
+                fileName: fileName,
+                contentType: "image/jpeg"
+            )
+        } catch {
+            model.errorMessage = error.localizedDescription
         }
     }
 }

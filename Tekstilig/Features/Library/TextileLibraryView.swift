@@ -14,6 +14,7 @@ struct TextileLibraryView: View {
     @State private var filters = TextileLibraryFilters()
     @State private var showFilters = false
     @State private var showAllTextiles = false
+    @State private var recentImageRefreshToken = UUID()
 
     private var listItems: [TextileListItem] {
         var items: [TextileListItem] = []
@@ -201,7 +202,12 @@ struct TextileLibraryView: View {
                     attributeIndexErrorMessage: attributeIndex.errorMessage
                 )
             }
-            .sheet(isPresented: $showNewTextile) {
+            .sheet(
+                isPresented: $showNewTextile,
+                onDismiss: {
+                    recentImageRefreshToken = UUID()
+                }
+            ) {
                 TextileEditorView(textile: nil) { candidate in
                     try await model.save(candidate)
                 }
@@ -261,15 +267,6 @@ struct TextileLibraryView: View {
     private var libraryHomeContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Button {
-                    showNewTextile = true
-                } label: {
-                    Label("Registrer nytt stoff", systemImage: "plus")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-
                 if !recentTextiles.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Nylig registrert")
@@ -284,7 +281,7 @@ struct TextileLibraryView: View {
                                             model: model
                                         )
                                     } label: {
-                                        TextileRecentCard(textile: textile)
+                                        TextileRecentCard(textile: textile, refreshToken: recentImageRefreshToken)
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -303,14 +300,6 @@ struct TextileLibraryView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.large)
 
-                Button {
-                    onFindProject()
-                } label: {
-                    Label("Finn til prosjekt", systemImage: "magnifyingglass")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
             }
             .padding(.horizontal)
             .padding(.vertical, 16)
@@ -430,17 +419,17 @@ private struct TextileLibraryFilterView: View {
                     }
                 }
 
-                if filters.isActive {
-                    Section {
-                        Button("Nullstill alle filtre", role: .destructive) {
-                            filters.reset()
-                        }
-                    }
-                }
             }
             .navigationTitle("Filtre")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Nullstill") {
+                        filters.reset()
+                    }
+                    .disabled(!filters.isActive)
+                }
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Ferdig") {
                         dismiss()
@@ -511,10 +500,11 @@ private struct TextileRow: View {
 
 private struct TextileRecentCard: View {
     let textile: Textile
+    let refreshToken: UUID
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            TextileRecentThumbnail(textileID: textile.textileID)
+            TextileRecentThumbnail(textileID: textile.textileID, refreshToken: refreshToken)
 
             Text(textile.name)
                 .font(.subheadline.weight(.semibold))
@@ -528,6 +518,7 @@ private struct TextileRecentCard: View {
 
 private struct TextileRecentThumbnail: View {
     let textileID: String
+    let refreshToken: UUID
     @State private var model = TextileImageModel()
 
     var body: some View {
@@ -547,8 +538,8 @@ private struct TextileRecentThumbnail: View {
         }
         .frame(width: 132, height: 96)
         .clipShape(RoundedRectangle(cornerRadius: 14))
-        .task(id: textileID) {
-            await model.loadIfNeeded(for: textileID)
+        .task(id: refreshToken) {
+            await model.load(for: textileID)
         }
     }
 

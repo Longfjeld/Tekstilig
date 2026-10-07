@@ -552,3 +552,18 @@ Den komplette eksisterende biblioteklisten aktiveres når minst én av disse til
 Søk og filter skal dermed ikke kreve et ekstra trykk på **Vis alle tekstiler**. Når søk/filtre som alene aktiverte listen fjernes, går brukergrensesnittet tilbake til den rolige oversikten. Dersom brukeren eksplisitt valgte **Vis alle tekstiler**, kan listen beholdes til **Oversikt** velges.
 
 Filterknappen beholdes øverst til venstre og viser tydelig når filtre er aktive. **Finn til prosjekt** gjenbruker den eksisterende prosjektfanen fremfor å lage en ny prosjektflyt inne i biblioteket.
+
+
+### 1.0 – opprydding av iPhone-hovedside og bildearbeidsflyt (devpatch 0058)
+
+Etter praktisk validering av første hovedside forenkles normaltilstanden ytterligere:
+
+- `+` i topplinjen er primær inngang til nyregistrering; den store dupliserte **Registrer nytt stoff**-knappen fjernes.
+- **Finn til prosjekt** nås via den faste tab-navigasjonen; duplisert stor knapp på tekstiloversikten fjernes.
+- **Vis alle tekstiler** beholdes fordi den endrer lokal visning av tekstilbiblioteket.
+- `Nylig registrert` skal vise hovedbildet umiddelbart etter nyregistrering, uten restart eller manuell refresh.
+- eksisterende tekstiler skal kunne få/bytte hovedbilde både med kamera og Bilder på iPhone/iPad.
+- alle nye hovedbilder som går gjennom denne flyten optimaliseres til samme JPEG-format som hurtigregistreringen.
+- i filterarket ligger **Nullstill** i topplinjen til venstre og **Ferdig** til høyre; Nullstill skal være deaktivert uten aktive filtre.
+
+Dette er funksjonell/strukturell opprydding. Den endelige visuelle identiteten, tint/accent og Liquid Glass-poleringen behandles fortsatt som egen 1.0-design-/plattformpolering og skal ikke løses ved å innføre tilfeldige custom-farger i denne patchen.

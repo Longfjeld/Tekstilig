@@ -2938,7 +2938,7 @@ Stopp på punkt 162 dersom forsiden fortsatt domineres av hele biblioteklisten e
 
 ## 163. Valider Nylig registrert og bildevisning
 
-**✅ AKSJON – DU**
+**❗️ RETEST ETTER DEVPATCH 0058**
 
 1. Kontroller at **Nylig registrert** viser maksimalt fem tekstiler.
 2. Finn minst ett nylig tekstil med hovedbilde og kontroller at en kompakt thumbnail vises.
@@ -3011,7 +3011,7 @@ Stopp på punkt 162 dersom forsiden fortsatt domineres av hele biblioteklisten e
 
 ## 169. Stoppunkt for roadmap-punkt 3 – Rask registrering
 
-**✅ STOPPUNKT**
+**✅ STOPPUNKT – avventer korrigeringstest 170–173**
 
 Roadmap-punkt 3 kan markeres ferdig når alle disse er bekreftet:
 
@@ -3028,3 +3028,66 @@ Roadmap-punkt 3 kan markeres ferdig når alle disse er bekreftet:
 - ingen eksisterende detalj-, Piece-, reservasjons- eller prosjektsøkfunksjon er brutt
 
 **Ikke gå videre til roadmap-punkt 4 før punkt 161–169 er eksplisitt validert.**
+
+
+## 170. Legg inn devpatch 0058 – korrigering før punkt 3 avsluttes
+
+**✅ AKSJON – DU**
+
+1. Legg inn filene fra `Tekstilig-devpatch-0058.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg en fysisk iPhone med iOS 27 som kjøredestinasjon.
+4. Bygg og kjør appen.
+5. Gå til fanen **Tekstiler** med tomt søk og uten aktive filtre.
+6. Kontroller at den rolige hovedsiden vises.
+
+Stopp på punkt 170 dersom prosjektet ikke bygger, appen ikke starter eller tekstiloversikten ikke vises normalt.
+
+## 171. Retest umiddelbar thumbnail etter hurtigregistrering
+
+**✅ AKSJON – DU**
+
+1. Trykk `+` øverst på tekstilsiden.
+2. Ta et tydelig bilde med kamera.
+3. Skriv et unikt navn.
+4. Trykk **Lagre**.
+5. Vent til registreringsarket lukkes.
+6. Kontroller at det nye tekstilet ligger først under **Nylig registrert**.
+7. Kontroller at thumbnail-bildet vises med én gang uten omstart, manuell refresh eller ny navigasjon.
+
+Punkt 171 er godkjent når både tekstilet og hovedbildet er synlige umiddelbart etter lagring.
+
+## 172. Valider kamera og Bilder på eksisterende tekstil
+
+**✅ AKSJON – DU**
+
+1. Åpne et eksisterende tekstil som ikke har hovedbilde.
+2. Finn seksjonen **Hovedbilde**.
+3. Kontroller at **Ta bilde** er tilgjengelig på fysisk iPhone/iPad.
+4. Trykk **Ta bilde**, ta et testbilde og bekreft det.
+5. Kontroller at bildet lagres og vises som hovedbilde.
+6. Trykk **Velg annet** eller tilsvarende bildevalg etter at hovedbildet finnes.
+7. Kontroller at bildebiblioteket åpnes.
+8. Velg et annet bilde og kontroller at hovedbildet erstattes.
+9. Kontroller at bildeoperasjonene ikke lager et nytt Textile-record.
+
+Punkt 172 er godkjent når eksisterende tekstiler kan få eller bytte hovedbilde både fra kamera og Bilder, og bildet lagres gjennom samme JPEG-optimalisering som hurtigregistreringen.
+
+## 173. Valider ryddet hovedside og filterverktøylinje
+
+**✅ AKSJON – DU**
+
+1. Gå tilbake til den rolige tekstiloversikten.
+2. Kontroller at den store **Registrer nytt stoff**-knappen ikke lenger vises på hovedsiden.
+3. Kontroller at `+` i topplinjen fortsatt åpner **Nytt tekstil**.
+4. Kontroller at den store **Finn til prosjekt**-knappen ikke lenger vises på hovedsiden.
+5. Kontroller at fanen **Finn til prosjekt** nederst fortsatt åpner prosjektfunksjonen som før.
+6. Kontroller at **Vis alle tekstiler** fortsatt er tilgjengelig på hovedsiden.
+7. Åpne filtervisningen.
+8. Kontroller at **Nullstill** står øverst til venstre og **Ferdig** øverst til høyre.
+9. Kontroller at **Nullstill** er deaktivert når ingen filter er aktive.
+10. Aktiver minst ett filter og kontroller at **Nullstill** blir aktiv.
+11. Trykk **Nullstill** og kontroller at alle filterverdier går tilbake til standard uten at filterarket lukkes.
+12. Trykk **Ferdig** og kontroller at filterarket lukkes normalt.
+
+Når punkt 170–173 er validert, kan punkt 163 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.

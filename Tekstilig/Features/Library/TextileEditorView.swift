@@ -248,7 +248,7 @@ private struct QuickRegistrationImage {
     let contentType: String
 }
 
-private enum QuickRegistrationImageOptimizer {
+enum QuickRegistrationImageOptimizer {
     static let maximumPixelSize = 2_048
     static let jpegQuality = 0.82
 
@@ -343,7 +343,7 @@ private struct QuickRegistrationImagePreview: View {
 }
 
 #if os(iOS)
-private struct TextileCameraPicker: UIViewControllerRepresentable {
+struct TextileCameraPicker: UIViewControllerRepresentable {
     let onImageData: (Data) -> Void
     @Environment(\.dismiss) private var dismiss
 
