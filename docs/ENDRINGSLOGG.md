@@ -920,3 +920,14 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - Det store SwiftUI-modifier-uttrykket i `textileScreen(for:)` er delt i mindre funksjoner for basevisning, editor-presentasjoner, Piece-presentasjoner, kamera-presentasjon og alerts.
 - Ingen funksjonell endring i kamera, bildeoptimalisering, CloudKit, datamodell, hovedside, filter, Piece, reservasjon eller prosjektsøk.
 - Ny build-/kameraretest er punkt 176.
+
+## Devpatch 0062 – korriger relativ path for TextileDetailView
+
+- Basert på autoritativ kilde `Tekstilig-SwiftUIActualApp0032.zip`.
+- Gjennomgang av 0032 viste at devpatch 0060 og 0061 hadde pakket den nye `TextileDetailView.swift` under feil relativ path: `Features/Library/TextileDetailView.swift`.
+- Xcode-targetet bruker den filsystemsynkroniserte roten `Tekstilig/`, og den faktiske target-filen er `Tekstilig/Features/Library/TextileDetailView.swift`.
+- `TextileMainImageSection.swift` var derimot oppdatert i riktig target-path. Dermed ble den nye bildeseksjonen kompilert sammen med den gamle `TextileDetailView`, noe som ga den diffuse Xcode 27-feilen om at uttrykket ikke kunne type-sjekkes i rimelig tid.
+- 0062 legger den allerede planlagte stabile kameraarkitekturen fra 0060/0061 inn i korrekt target-fil.
+- Den feilplasserte root-filen skal slettes som opprydding.
+- Ingen ny funksjonell kamera-, bildeoptimaliserings-, CloudKit-, datamodell-, Piece-, filter- eller søkelogikk introduseres.
+- Ny build-/kameraretest er punkt 177.

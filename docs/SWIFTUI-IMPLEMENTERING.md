@@ -3152,3 +3152,28 @@ Når punkt 175 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadm
 Punkt 176 er godkjent når både build og første kameraåpning fungerer stabilt for minst to forskjellige tekstiler.
 
 Punkt 175 ble ikke funksjonstestet fordi devpatch 0060 ikke bygget i Xcode 27. Når punkt 176 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.
+
+## 177. Retest 0062 – korrekt target-path, build og stabil kameraåpning
+
+**❗️ AKSJON – DU**
+
+1. Legg inn `Tekstilig-devpatch-0062.zip` i prosjektet med samme relative plassering.
+2. Slett `Features/Library/TextileDetailView.swift` i prosjektroten dersom filen finnes der. Ikke slett `Tekstilig/Features/Library/TextileDetailView.swift`.
+3. Åpne prosjektet i Xcode 27.
+4. Velg en fysisk iPhone med iOS 27 som kjøredestinasjon.
+5. Bygg prosjektet.
+6. Kontroller at `TextileDetailView` bygger uten feilen `The compiler is unable to type-check this expression in reasonable time`.
+7. Kjør appen.
+8. Åpne et eksisterende tekstil uten hovedbilde.
+9. Trykk **Ta bilde** én gang.
+10. Kontroller at kameraet åpnes og forblir stabilt på første forsøk.
+11. Avbryt kameraet og kontroller at du returnerer normalt til samme tekstildetalj.
+12. Gå til et annet eksisterende tekstil uten hovedbilde.
+13. Trykk **Ta bilde** én gang og kontroller at kameraet også her er stabilt på første forsøk.
+14. Ta og bekreft et bilde på ett av tekstilene.
+15. Kontroller at bildet optimaliseres, lagres og vises som hovedbilde.
+16. Kontroller at **Velg fra Bilder** fortsatt fungerer.
+
+Punkt 177 er godkjent når både build og første kameraåpning fungerer stabilt for minst to forskjellige tekstiler.
+
+Punkt 176 regnes som build-blokkert av feil relativ filplassering i devpatch 0060/0061, ikke som en funksjonell test av kameraarkitekturen. Når punkt 177 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.

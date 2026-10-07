@@ -586,3 +586,7 @@ Kravet er fortsatt at første trykk på **Ta bilde** skal åpne et stabilt kamer
 ### Kamera ved eksisterende tekstil – build-korrigering
 
 Devpatch 0061 endrer ikke ønsket UX. Kamera skal fortsatt åpne stabilt på første trykk for et eksisterende tekstil uten bilde. Endringen deler kun opp `TextileDetailView` slik at Xcode 27 kan type-sjekke SwiftUI-visningen.
+
+### Kamera ved eksisterende tekstil – path-korrigering
+
+Devpatch 0062 endrer ikke ønsket kamera-UX. Den korrigerer at den stabile kamerapresentasjonen fra 0060/0061 tidligere ble pakket utenfor Xcode-targetets `Tekstilig/`-rot. Første trykk på **Ta bilde** skal fortsatt åpne kamera stabilt for hvert tekstil uten timing-hacks.

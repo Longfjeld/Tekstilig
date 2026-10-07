@@ -5,3 +5,7 @@ Ved manuell oppdatering fra Tekstilig-current(6):
 3. Slett eventuelle *.xcuserstate-filer fra repositoryet
 
 Tekstilig/TekstiligApp.swift erstatter MyApp.swift.
+
+Etter feil relativ path i devpatch 0060/0061:
+4. Slett Features/Library/TextileDetailView.swift dersom denne finnes i prosjektroten. Den korrekte target-filen ligger i Tekstilig/Features/Library/TextileDetailView.swift.
+5. Slett den tomme Features/Library- og Features-katalogen i prosjektroten dersom de blir tomme etter punkt 4.

@@ -106,3 +106,7 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 ### Statusnotat – roadmap punkt 3
 
 Devpatch 0060 ble build-blokkert i Xcode 27 av en SwiftUI-typecheck-feil i `TextileDetailView`. Devpatch 0061 deler view-uttrykket opp uten å endre kamerafunksjonen. Roadmap-punkt 3 står derfor fortsatt åpent til test 176 er validert.
+
+### Korrigering etter devpatch 0061
+
+Gjennomgang av `Tekstilig-SwiftUIActualApp0032.zip` viste at `TextileDetailView.swift` fra devpatch 0060/0061 var pakket under feil relativ path utenfor Xcode-targetets `Tekstilig/`-rot. Devpatch 0062 legger samme strukturelle kamerafiks i korrekt target-path. Roadmap-punkt 3 står fortsatt åpent til test 177 er validert.

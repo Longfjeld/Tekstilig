@@ -5,19 +5,21 @@ struct TextileDetailView: View {
     let model: TextileLibraryModel
 
     @State private var textileSnapshot: Textile?
-    @State private var attributesModel = TextileAttributesModel()
-    @State private var pieceModel = PieceInventoryModel()
-    @State private var isEditingBasics = false
-    @State private var isEditingMaterial = false
-    @State private var materialToEdit: TextileMaterial?
-    @State private var isEditingColor = false
-    @State private var colorToEdit: TextileColor?
-    @State private var isEditingPhysicalProperties = false
-    @State private var isEditingCare = false
-    @State private var isEditingLocation = false
-    @State private var isAddingPiece = false
+    @State private var showEditor = false
+    @State private var showNewPiece = false
     @State private var editingPiece: Piece?
     @State private var piecePendingDeletion: Piece?
+    @State private var pieceModel = PieceInventoryModel()
+    @State private var attributesModel = TextileAttributesModel()
+    @State private var attributeEditorRoute: AttributeEditorRoute?
+    @State private var showLocationEditor = false
+    @State private var showCareEditor = false
+    @State private var showPhysicalPropertiesEditor = false
+    @State private var imageModel = TextileImageModel()
+
+    #if os(iOS)
+    @State private var showImageCamera = false
+    #endif
 
     init(textileIdentity: String, model: TextileLibraryModel) {
         self.textileIdentity = textileIdentity
@@ -28,212 +30,334 @@ struct TextileDetailView: View {
     var body: some View {
         Group {
             if let textile = textileSnapshot {
-                List {
-                    Section("Tekstil") {
-                        LabeledContent("Navn", value: textile.name)
-                        LabeledContent(
-                            "Kategori",
-                            value: textile.category.isEmpty ? "Ikke registrert" : textile.category
-                        )
-                    }
-
-                    TextileMainImageSection(textile: textile)
-
-                    TextileAttributesSection(
-                        textile: textile,
-                        model: attributesModel,
-                        onAddMaterial: {
-                            materialToEdit = nil
-                            isEditingMaterial = true
-                        },
-                        onEditMaterial: { material in
-                            materialToEdit = material
-                            isEditingMaterial = true
-                        },
-                        onAddColor: {
-                            colorToEdit = nil
-                            isEditingColor = true
-                        },
-                        onEditColor: { color in
-                            colorToEdit = color
-                            isEditingColor = true
-                        }
-                    )
-
-                    TextilePhysicalPropertiesSection(
-                        textile: textile,
-                        onEdit: {
-                            isEditingPhysicalProperties = true
-                        }
-                    )
-
-                    TextileCareSection(
-                        textile: textile,
-                        onEditCare: {
-                            isEditingCare = true
-                        }
-                    )
-
-                    TextileLocationSection(
-                        textile: textile,
-                        onEditLocation: {
-                            isEditingLocation = true
-                        }
-                    )
-
-                    if !textile.notes.isEmpty {
-                        Section("Notat") {
-                            Text(textile.notes)
-                                .textSelection(.enabled)
-                        }
-                    }
-
-                    piecesReadOnlySection
-
-                    Section("Status") {
-                        LabeledContent("Opprettet") {
-                            Text(textile.createdAt, format: .dateTime.day().month().year())
-                        }
-                        LabeledContent("Sist endret") {
-                            Text(textile.updatedAt, format: .dateTime.day().month().year().hour().minute())
-                        }
-                    }
-
-                    Section("CloudKit") {
-                        LabeledContent("Tekstilig-ID", value: textile.textileID)
-
-                        if let cloudRecordName = textile.cloudRecordName {
-                            LabeledContent("Record name", value: cloudRecordName)
-                        }
-                    }
-                }
-                .refreshable {
-                    await pieceModel.load(for: textile.textileID)
-                }
-                .task(id: textile.textileID) {
-                    await pieceModel.loadIfNeeded(for: textile.textileID)
-                }
+                textileScreen(for: textile)
             } else {
-                ContentUnavailableView(
-                    "Tekstilet finnes ikke",
-                    systemImage: "questionmark.folder"
-                )
+                missingTextileView
             }
-        }
-        .navigationTitle(textileSnapshot?.name ?? "Tekstil")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Rediger") {
-                    isEditingBasics = true
-                }
-                .disabled(textileSnapshot == nil)
-            }
-        }
-        .sheet(isPresented: $isEditingBasics) {
-            if let textile = textileSnapshot {
-                TextileEditorView(textile: textile) { candidate in
-                    let saved = try await model.save(candidate)
-                    textileSnapshot = saved
-                    return saved
-                }
-            }
-        }
-        .sheet(isPresented: $isEditingMaterial) {
-            if let textile = textileSnapshot {
-                TextileMaterialEditorView(
-                    material: materialToEdit,
-                    textileID: textile.textileID
-                ) { candidate in
-                    try await attributesModel.saveMaterial(candidate)
-                }
-            }
-        }
-        .sheet(isPresented: $isEditingColor) {
-            if let textile = textileSnapshot {
-                TextileColorEditorView(
-                    color: colorToEdit,
-                    textileID: textile.textileID
-                ) { candidate in
-                    try await attributesModel.saveColor(candidate)
-                }
-            }
-        }
-        .sheet(isPresented: $isEditingPhysicalProperties) {
-            if let textile = textileSnapshot {
-                TextilePhysicalPropertiesEditorView(textile: textile) { candidate in
-                    let saved = try await model.save(candidate)
-                    textileSnapshot = saved
-                    return saved
-                }
-            }
-        }
-        .sheet(isPresented: $isEditingCare) {
-            if let textile = textileSnapshot {
-                TextileCareEditorView(textile: textile) { candidate in
-                    let saved = try await model.save(candidate)
-                    textileSnapshot = saved
-                    return saved
-                }
-            }
-        }
-        .sheet(isPresented: $isEditingLocation) {
-            if let textile = textileSnapshot {
-                TextileLocationEditorView(textile: textile) { candidate in
-                    let saved = try await model.save(candidate)
-                    textileSnapshot = saved
-                    return saved
-                }
-            }
-        }
-        .sheet(isPresented: $isAddingPiece) {
-            if let textile = textileSnapshot {
-                PieceEditorView(
-                    piece: nil,
-                    textileID: textile.textileID
-                ) { candidate in
-                    try await pieceModel.save(candidate)
-                }
-            }
-        }
-        .sheet(item: $editingPiece) { piece in
-            if let textile = textileSnapshot {
-                PieceEditorView(
-                    piece: piece,
-                    textileID: textile.textileID
-                ) { candidate in
-                    try await pieceModel.save(candidate)
-                }
-            }
-        }
-        .alert(
-            "Slett stoffstykke?",
-            isPresented: Binding(
-                get: { piecePendingDeletion != nil },
-                set: { if !$0 { piecePendingDeletion = nil } }
-            ),
-            presenting: piecePendingDeletion
-        ) { piece in
-            Button("Slett", role: .destructive) {
-                deletePiece(piece)
-            }
-            Button("Avbryt", role: .cancel) { }
-        } message: { piece in
-            Text("Stoffstykket på \(piece.lengthCm) × \(piece.widthCm) cm slettes permanent fra CloudKit.")
-        }
-        .alert(
-            "Kunne ikke endre stoffstykker",
-            isPresented: Binding(
-                get: { pieceModel.errorMessage != nil && !pieceModel.pieces.isEmpty },
-                set: { if !$0 { pieceModel.errorMessage = nil } }
-            )
-        ) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(pieceModel.errorMessage ?? "Ukjent feil")
         }
     }
 
-    private func deletePiece(_ piece: Piece) {
+    private var missingTextileView: some View {
+        ContentUnavailableView(
+            "Tekstilet finnes ikke",
+            systemImage: "questionmark.folder",
+            description: Text("Oppdater tekstilbiblioteket og prøv igjen.")
+        )
+    }
+
+    private func textileScreen(for textile: Textile) -> some View {
+        let base = textileBaseScreen(for: textile)
+        let withEditors = editorPresentations(base, textile: textile)
+        let withPieces = piecePresentations(withEditors, textile: textile)
+        let withCamera = cameraPresentation(withPieces, textile: textile)
+        return alertPresentations(withCamera)
+    }
+
+    private func textileBaseScreen(for textile: Textile) -> some View {
+        textileList(for: textile)
+            .navigationTitle(textile.name)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Rediger") {
+                        showEditor = true
+                    }
+                }
+            }
+            .refreshable {
+                await pieceModel.load(for: textile.textileID)
+            }
+            .task(id: textile.textileID) {
+                await pieceModel.loadIfNeeded(for: textile.textileID)
+            }
+    }
+
+    private func editorPresentations<Content: View>(
+        _ content: Content,
+        textile: Textile
+    ) -> some View {
+        content
+            .sheet(isPresented: $showEditor) {
+                TextileEditorView(textile: textile) { candidate in
+                    try await saveTextile(candidate)
+                }
+            }
+            .sheet(item: $attributeEditorRoute) { route in
+                attributeEditor(for: route, textile: textile)
+            }
+            .sheet(isPresented: $showCareEditor) {
+                TextileCareEditorView(textile: textile) { candidate in
+                    try await saveTextile(candidate)
+                }
+            }
+            .sheet(isPresented: $showPhysicalPropertiesEditor) {
+                TextilePhysicalPropertiesEditorView(textile: textile) { candidate in
+                    try await saveTextile(candidate)
+                }
+            }
+            .sheet(isPresented: $showLocationEditor) {
+                TextileLocationEditorView(textile: textile) { candidate in
+                    try await saveTextile(candidate)
+                }
+            }
+    }
+
+    private func piecePresentations<Content: View>(
+        _ content: Content,
+        textile: Textile
+    ) -> some View {
+        content
+            .sheet(isPresented: $showNewPiece) {
+                PieceEditorView(piece: nil, textileID: textile.textileID) { candidate in
+                    try await pieceModel.save(candidate)
+                }
+            }
+            .sheet(item: $editingPiece) { piece in
+                PieceEditorView(piece: piece, textileID: textile.textileID) { candidate in
+                    try await pieceModel.save(candidate)
+                }
+            }
+    }
+
+    @ViewBuilder
+    private func cameraPresentation<Content: View>(
+        _ content: Content,
+        textile: Textile
+    ) -> some View {
+        #if os(iOS)
+        content
+            .fullScreenCover(isPresented: $showImageCamera) {
+                TextileCameraPicker { data in
+                    saveCameraImage(data, textileID: textile.textileID)
+                }
+                .ignoresSafeArea()
+            }
+        #else
+        content
+        #endif
+    }
+
+    private func alertPresentations<Content: View>(_ content: Content) -> some View {
+        content
+            .alert(
+                "Slett stoffstykke?",
+                isPresented: Binding(
+                    get: { piecePendingDeletion != nil },
+                    set: { if !$0 { piecePendingDeletion = nil } }
+                ),
+                presenting: piecePendingDeletion
+            ) { piece in
+                Button("Slett", role: .destructive) {
+                    delete(piece)
+                }
+                Button("Avbryt", role: .cancel) { }
+            } message: { piece in
+                Text("Stoffstykket på \(piece.lengthCm) × \(piece.widthCm) cm slettes permanent fra CloudKit.")
+            }
+            .alert(
+                "Kunne ikke endre stoffstykker",
+                isPresented: Binding(
+                    get: { pieceModel.errorMessage != nil && !pieceModel.pieces.isEmpty },
+                    set: { if !$0 { pieceModel.errorMessage = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(pieceModel.errorMessage ?? "Ukjent feil")
+            }
+    }
+
+    private func textileList(for textile: Textile) -> some View {
+        List {
+            textileSummarySection(for: textile)
+
+            TextileMainImageSection(
+                textile: textile,
+                model: imageModel,
+                onTakePhoto: {
+                    #if os(iOS)
+                    showImageCamera = true
+                    #endif
+                }
+            )
+
+            TextileAttributesSection(
+                textile: textile,
+                model: attributesModel,
+                onAddMaterial: {
+                    attributeEditorRoute = .newMaterial
+                },
+                onEditMaterial: { material in
+                    attributeEditorRoute = .editMaterial(material)
+                },
+                onAddColor: {
+                    attributeEditorRoute = .newColor
+                },
+                onEditColor: { color in
+                    attributeEditorRoute = .editColor(color)
+                }
+            )
+
+            TextileCareSection(
+                textile: textile,
+                onEditCare: {
+                    showCareEditor = true
+                }
+            )
+
+            TextilePhysicalPropertiesSection(
+                textile: textile,
+                onEdit: {
+                    showPhysicalPropertiesEditor = true
+                }
+            )
+
+            TextileLocationSection(
+                textile: textile,
+                onEditLocation: {
+                    showLocationEditor = true
+                }
+            )
+
+            piecesSection(for: textile)
+            cloudKitSection(for: textile)
+            statusSection(for: textile)
+        }
+    }
+
+    private func textileSummarySection(for textile: Textile) -> some View {
+        Section("Tekstil") {
+            LabeledContent("Navn", value: textile.name)
+            LabeledContent(
+                "Kategori",
+                value: textile.category.isEmpty ? "Ikke registrert" : textile.category
+            )
+        }
+    }
+
+    private func piecesSection(for textile: Textile) -> some View {
+        Section {
+            pieceRows(for: textile)
+
+            Button {
+                showNewPiece = true
+            } label: {
+                Label("Legg til stoffstykke", systemImage: "plus")
+            }
+        } header: {
+            Text("Stoffstykker")
+        } footer: {
+            Text("Trykk på et stoffstykke for å redigere dimensjoner eller reservasjon.")
+        }
+    }
+
+    @ViewBuilder
+    private func pieceRows(for textile: Textile) -> some View {
+        if pieceModel.isLoading && pieceModel.pieces.isEmpty {
+            ProgressView("Henter stoffstykker …")
+        } else if let errorMessage = pieceModel.errorMessage,
+                  pieceModel.pieces.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Kunne ikke hente stoffstykker", systemImage: "icloud.slash")
+                    .font(.headline)
+                Text(errorMessage)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Button("Prøv igjen") {
+                    Task {
+                        await pieceModel.load(for: textile.textileID)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+        } else if pieceModel.pieces.isEmpty {
+            Text("Ingen stoffstykker registrert")
+                .foregroundStyle(.secondary)
+        } else {
+            ForEach(pieceModel.pieces) { piece in
+                Button {
+                    editingPiece = piece
+                } label: {
+                    PieceRow(piece: piece)
+                }
+                .buttonStyle(.plain)
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button("Slett", role: .destructive) {
+                        piecePendingDeletion = piece
+                    }
+                }
+            }
+        }
+    }
+
+    private func cloudKitSection(for textile: Textile) -> some View {
+        Section("CloudKit") {
+            LabeledContent("Tekstilig-ID", value: textile.textileID)
+
+            if let cloudRecordName = textile.cloudRecordName {
+                LabeledContent("Record name", value: cloudRecordName)
+            }
+        }
+    }
+
+    private func statusSection(for textile: Textile) -> some View {
+        Section("Status") {
+            LabeledContent("Opprettet") {
+                Text(textile.createdAt, format: .dateTime.day().month().year())
+            }
+            LabeledContent("Sist endret") {
+                Text(textile.updatedAt, format: .dateTime.day().month().year().hour().minute())
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func attributeEditor(for route: AttributeEditorRoute, textile: Textile) -> some View {
+        switch route {
+        case .newMaterial:
+            TextileMaterialEditorView(material: nil, textileID: textile.textileID) { candidate in
+                try await attributesModel.saveMaterial(candidate)
+            }
+        case .editMaterial(let material):
+            TextileMaterialEditorView(material: material, textileID: textile.textileID) { candidate in
+                try await attributesModel.saveMaterial(candidate)
+            }
+        case .newColor:
+            TextileColorEditorView(color: nil, textileID: textile.textileID) { candidate in
+                try await attributesModel.saveColor(candidate)
+            }
+        case .editColor(let color):
+            TextileColorEditorView(color: color, textileID: textile.textileID) { candidate in
+                try await attributesModel.saveColor(candidate)
+            }
+        }
+    }
+
+    private func saveTextile(_ candidate: Textile) async throws {
+        let saved = try await model.save(candidate)
+        textileSnapshot = saved
+    }
+
+    #if os(iOS)
+    private func saveCameraImage(_ data: Data, textileID: String) {
+        Task {
+            do {
+                let optimized = try QuickRegistrationImageOptimizer.optimize(data)
+                let fileName = "tekstilig-main-\(UUID().uuidString.lowercased()).jpg"
+
+                await imageModel.savePrimaryImage(
+                    textileID: textileID,
+                    data: optimized,
+                    fileName: fileName,
+                    contentType: "image/jpeg"
+                )
+            } catch {
+                imageModel.errorMessage = error.localizedDescription
+            }
+        }
+    }
+    #endif
+
+    private func delete(_ piece: Piece) {
         Task {
             do {
                 try await pieceModel.delete(piece)
@@ -244,59 +368,24 @@ struct TextileDetailView: View {
             }
         }
     }
+}
 
-    @ViewBuilder
-    private var piecesReadOnlySection: some View {
-        Section {
-            if pieceModel.isLoading && pieceModel.pieces.isEmpty {
-                ProgressView("Henter stoffstykker …")
-            } else if let errorMessage = pieceModel.errorMessage,
-                      pieceModel.pieces.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Kunne ikke hente stoffstykker", systemImage: "icloud.slash")
-                        .font(.headline)
-                    Text(errorMessage)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    Button("Prøv igjen") {
-                        if let textile = textileSnapshot {
-                            Task {
-                                await pieceModel.load(for: textile.textileID)
-                            }
-                        }
-                    }
-                }
-                .padding(.vertical, 4)
-            } else if pieceModel.pieces.isEmpty {
-                Text("Ingen stoffstykker registrert")
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(pieceModel.pieces) { piece in
-                    Button {
-                        editingPiece = piece
-                    } label: {
-                        PieceRow(piece: piece)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button("Slett", role: .destructive) {
-                            piecePendingDeletion = piece
-                        }
-                    }
-                }
-            }
+private enum AttributeEditorRoute: Identifiable {
+    case newMaterial
+    case editMaterial(TextileMaterial)
+    case newColor
+    case editColor(TextileColor)
 
-            Button {
-                isAddingPiece = true
-            } label: {
-                Label("Legg til stoffstykke", systemImage: "plus")
-            }
-        } header: {
-            Text("Stoffstykker")
-        } footer: {
-            Text("Trykk på et stoffstykke for å redigere dimensjoner eller reservasjon.")
+    var id: String {
+        switch self {
+        case .newMaterial:
+            return "new-material"
+        case .editMaterial(let material):
+            return "edit-material-\(material.id)"
+        case .newColor:
+            return "new-color"
+        case .editColor(let color):
+            return "edit-color-\(color.id)"
         }
     }
 }
