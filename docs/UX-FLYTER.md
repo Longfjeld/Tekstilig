@@ -521,3 +521,12 @@ Hurtigregistrering skal prioritere capture fremfor full metadataregistrering. F�
 Bilder som går gjennom hurtigregistreringen optimaliseres før CloudKit-lagring. UI-et skal vise forhåndsvisning av valgt/tatt bilde uten at bildet tar hele skjermen.
 
 Generelt fritekstnotat per Textile er et 1.0-krav, men skal ikke gjøre hurtigregistreringen tyngre. Notatet redigeres derfor først fra eksisterende tekstils **Rediger**-flyt.
+
+### Hurtigregistrering – separate bildekilder (devpatch 0056)
+
+Etter at et bilde er valgt eller tatt i **Nytt tekstil**, skal bildekildene være tydelig separate:
+
+- **Ta nytt bilde** åpner kamera.
+- **Velg annet** åpner bildebiblioteket.
+- Kontrollene skal ha egne trykkhandlinger også når de står på samme `Form`-rad.
+- Den primære **Ta bilde**-knappen skal ha visuelt sentrert tekst uten at et ikon forskyver etiketten.

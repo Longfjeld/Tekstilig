@@ -138,18 +138,23 @@ struct TextileEditorView: View {
                 QuickRegistrationImagePreview(data: pendingImage.data)
                     .frame(maxWidth: .infinity)
 
-                HStack {
+                HStack(spacing: 12) {
                     #if os(iOS)
                     if UIImagePickerController.isSourceTypeAvailable(.camera) {
                         Button("Ta nytt bilde") {
                             showCamera = true
                         }
+                        .buttonStyle(.bordered)
+                        .frame(maxWidth: .infinity)
                     }
                     #endif
 
                     PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                         Text("Velg annet")
+                            .frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(.bordered)
+                    .frame(maxWidth: .infinity)
                 }
             } else {
                 #if os(iOS)
@@ -157,7 +162,8 @@ struct TextileEditorView: View {
                     Button {
                         showCamera = true
                     } label: {
-                        Label("Ta bilde", systemImage: "camera")
+                        Text("Ta bilde")
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                 }

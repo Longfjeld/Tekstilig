@@ -845,3 +845,14 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - Notat vises på tekstildetaljen, redigeres via eksisterende **Rediger tekstil** og inngår i klientens fritekstsøk.
 - Ingen Piece-, reservasjons- eller prosjektmatchingslogikk er endret.
 - Ny testblokk 150–158 er lagt inn som **❗️** frem til eksplisitt validering.
+
+## Devpatch 0056 – korrigering av hurtigregistreringens bildeknapper
+
+- Basert på autoritativ kilde `Tekstilig-SwiftUIActualApp0026.zip`.
+- Retter UX-feilen der teksten i **Ta bilde** fremstod forskjøvet på grunn av ikon + tekst i samme prominent-knapp.
+- **Ta bilde** bruker nå en sentrert tekstetikett over hele knappens bredde.
+- Retter funksjonsfeilen etter forhåndsvisning der **Ta nytt bilde** og **Velg annet** kunne utløse samme radhandling i `Form`.
+- **Ta nytt bilde** og **Velg annet** har nå eksplisitte, separate `.bordered`-kontroller i samme rad.
+- **Ta nytt bilde** åpner kamera; **Velg annet** åpner bildebiblioteket.
+- Ingen endring i bildeoptimalisering, CloudKit, Textile-datamodell, notat, Piece, reservasjon eller prosjektsøk.
+- Ny korrigeringstest 159–160 legges til før neste del av roadmap-punkt 3.

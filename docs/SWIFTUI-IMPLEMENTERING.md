@@ -2873,3 +2873,37 @@ Blokken er godkjent når alle disse er bekreftet:
 - eksisterende prosjekt-/Piece-funksjonalitet er ikke påvirket
 
 **Ikke gå videre til neste del av punkt 3 (ny iPhone-hovedside med Nylig registrert og automatisk aktivert bibliotek) før punkt 158 er bekreftet.**
+
+## 159. Legg inn devpatch 0056 – korrigering av bildeknapper
+
+**✅ AKSJON – DU**
+
+1. Legg inn filene fra `Tekstilig-devpatch-0056.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg en fysisk iPhone med iOS 27 som kjøredestinasjon.
+4. Bygg og kjør appen.
+5. Åpne **Nytt tekstil**.
+6. Kontroller at **Ta bilde** vises som en tydelig prominent knapp med sentrert tekst og uten forskjøvet ikon-/tekstlayout.
+
+Stopp på punkt 159 dersom prosjektet ikke bygger, appen ikke starter eller **Ta bilde** fortsatt ser feiljustert ut.
+
+## 160. Retest bildebytte i hurtigregistreringen
+
+**✅ AKSJON – DU**
+
+1. Åpne **Nytt tekstil** på fysisk iPhone.
+2. Trykk **Ta bilde**, ta et testbilde og bekreft bildet.
+3. Kontroller at forhåndsvisningen vises.
+4. Trykk **Ta nytt bilde**.
+5. Kontroller at kamera åpnes.
+6. Avbryt kameraet eller ta og bekreft et nytt testbilde.
+7. Trykk **Velg annet**.
+8. Kontroller at bildebiblioteket åpnes – ikke kameraet.
+9. Velg et annet bilde fra Bilder.
+10. Kontroller at forhåndsvisningen erstattes av bildet du nettopp valgte.
+11. Skriv et unikt navn og trykk **Lagre**.
+12. Åpne det lagrede tekstilet og kontroller at det sist valgte bildet er hovedbildet.
+
+Punkt 160 er godkjent når **Ta nytt bilde** og **Velg annet** konsekvent åpner hver sin riktige kilde og begge kan erstatte forhåndsvisningen før lagring.
+
+**Ikke gå videre til neste del av punkt 3 før punkt 159–160 er bekreftet.**
