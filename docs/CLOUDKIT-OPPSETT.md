@@ -574,6 +574,16 @@ Felt:
 
 Alle tre feltene er valgfrie. Tomme verdier fjernes fra recorden ved lagring. Query/search-indekser opprettes først når søk og filter implementeres.
 
+## Native produktfelt for generelt notat – devpatch 0055
+
+Det generelle notatfeltet lagres direkte på eksisterende `Textile` record type i **Development**. Feltet opprettes når første ikke-tomme notat lagres fra appen, eller kan opprettes manuelt i CloudKit Dashboard.
+
+| Felt | Type | Påkrevd | Indeks nå |
+|:---|:---|:---|:---|
+| `notes` | String | Nei | Ingen |
+
+Tom verdi fjernes fra recorden ved lagring. Feltet brukes foreløpig i klient-side fritekstsøk, så ingen `QUERYABLE`-indeks er nødvendig for 1.0-funksjonen. Production deployes fortsatt ikke.
+
 ## Native produktfelt for vedlikehold – devpatch 0008
 
 Vedlikehold lagres direkte på eksisterende `Textile` record type i **Development**. Opprett feltene før første lagringstest:

@@ -81,6 +81,13 @@ struct TextileDetailView: View {
                         }
                     )
 
+                    if !textile.notes.isEmpty {
+                        Section("Notat") {
+                            Text(textile.notes)
+                                .textSelection(.enabled)
+                        }
+                    }
+
                     piecesReadOnlySection
 
                     Section("Status") {

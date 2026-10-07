@@ -505,3 +505,19 @@ Etter validering av test 132–140 forbedres **Finn til prosjekt** uten å endre
 ### Finn tekstiler – trykkfeedback
 
 Knappen **Finn tekstiler** skal beholde sin etablerte tekst/layout og gi en kort, tydelig visuell puls ved hvert trykk. Feedbacken skal ikke flytte innhold eller påvirke skillelinjer i skjemaet.
+
+
+## 1.0 – Rask registrering på iPhone (låst retning / devpatch 0055)
+
+Hurtigregistrering skal prioritere capture fremfor full metadataregistrering. Første implementeringsblokk følger denne flyten:
+
+1. Åpne **Nytt tekstil**.
+2. Ta bilde direkte med kamera eller velg eksisterende bilde fra Bilder. Bilde er valgfritt.
+3. Skriv navn. Navn er eneste obligatoriske brukerfelt.
+4. Utvid **Plassering (valgfritt)** bare dersom plassering er naturlig å registrere der og da.
+5. Trykk **Lagre**.
+6. Materiale, farge, kategori, Piece, vekt, elastisitet, krymp, vedlikehold og generelt notat kompletteres senere.
+
+Bilder som går gjennom hurtigregistreringen optimaliseres før CloudKit-lagring. UI-et skal vise forhåndsvisning av valgt/tatt bilde uten at bildet tar hele skjermen.
+
+Generelt fritekstnotat per Textile er et 1.0-krav, men skal ikke gjøre hurtigregistreringen tyngre. Notatet redigeres derfor først fra eksisterende tekstils **Rediger**-flyt.

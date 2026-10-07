@@ -42,13 +42,14 @@ final class TextileImageModel {
         isLoading = false
     }
 
+    @discardableResult
     func savePrimaryImage(
         textileID: String,
         data: Data,
         fileName: String,
         contentType: String
-    ) async {
-        guard !isSaving else { return }
+    ) async -> Bool {
+        guard !isSaving else { return false }
 
         isSaving = true
         errorMessage = nil
@@ -63,9 +64,12 @@ final class TextileImageModel {
             loadedTextileID = textileID
         } catch {
             errorMessage = Self.description(for: error)
+            isSaving = false
+            return false
         }
 
         isSaving = false
+        return true
     }
 
     private static func description(for error: Error) -> String {

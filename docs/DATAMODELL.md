@@ -473,6 +473,8 @@ Fra devpatch 0005 er den avtalte plasseringen også mappet direkte på `Textile`
 - `locationShelf`
 - `locationContainer`
 
+Fra devpatch 0055 er det generelle fritekstfeltet `notes` også implementert direkte på `Textile`. Feltet er valgfritt, synkroniseres via CloudKit og inngår i klientens fritekstsøk.
+
 Permanent ID for nye native records genereres som `T-<UUID>`. Eksempelet `T0042` i datamodellen beskriver fortsatt en mulig lesbar ID-form, men er ikke et krav til formatet. Viktigste krav er stabil og unik permanent Tekstilig-ID som er uavhengig av CloudKit Record Name.
 
 Fra devpatch 0002 er `Piece` også introdusert som faktisk Swift-domenetype. Første native persistensutsnitt for `Piece` bruker eksisterende CloudKit-schema:
@@ -496,7 +498,7 @@ Fra devpatch 0003 er `TextileImage` introdusert som faktisk Swift-domenetype. F�
 - `contentType`
 - `imageAsset`
 
-Første produktimplementering håndterer ett hovedbilde per tekstil. Bildet velges fra Bilder og lagres som `CKAsset`. Flere bilder, bildetyper, kamera, thumbnails og lokal bildeoptimalisering kommer senere. Materialer, farger og øvrige tekstilegenskaper kobles på i senere vertikale implementeringssteg.
+Første produktimplementering håndterer ett hovedbilde per tekstil og lagrer det som `CKAsset`. Fra devpatch 0055 kan et hovedbilde tas direkte med kamera under hurtigregistrering eller velges fra Bilder. Nye bilder fra hurtigregistreringen normaliseres til JPEG med maksimal lengste side på 2048 piksler og kompresjonskvalitet 0,82 før lagring. Flere bilder, bildetyper og thumbnails kommer senere. Materialer, farger og øvrige tekstilegenskaper kobles på i senere vertikale implementeringssteg.
 
 
 
@@ -533,6 +535,16 @@ Plassering er en 1:1-egenskap ved et tekstil og lagres derfor direkte på `Texti
 | `location.container` | `locationContainer` | String, valgfri |
 
 Alle tre verdiene kan lagres uavhengig av hverandre. Tomme verdier fjernes fra recorden ved lagring. Query-/search-indekser på disse feltene opprettes først når søk og filtre implementeres.
+
+### Devpatch 0055 – generelt notatfelt
+
+Det logiske `notes`-feltet er nå implementert direkte på `Textile` og mappes slik:
+
+| Logisk felt | CloudKit-felt | Type |
+|:---|:---|:---|
+| `notes` | `notes` | String, valgfri |
+
+Tom verdi fjernes fra recorden ved lagring. Feltet brukes i klientens fritekstsøk uten server-side query-indeks og skal tas med i senere eksport/import.
 
 ### Devpatch 0008 – vedlikehold
 

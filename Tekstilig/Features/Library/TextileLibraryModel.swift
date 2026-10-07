@@ -49,6 +49,7 @@ final class TextileLibraryModel {
         normalized.locationArea = textile.locationArea.trimmingCharacters(in: .whitespacesAndNewlines)
         normalized.locationShelf = textile.locationShelf.trimmingCharacters(in: .whitespacesAndNewlines)
         normalized.locationContainer = textile.locationContainer.trimmingCharacters(in: .whitespacesAndNewlines)
+        normalized.notes = textile.notes.trimmingCharacters(in: .whitespacesAndNewlines)
         normalized.care = textile.care.normalized()
         normalized.stretch = textile.stretch.normalized()
         normalized.shrinkage = textile.shrinkage.normalized()

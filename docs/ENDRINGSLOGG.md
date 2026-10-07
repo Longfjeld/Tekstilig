@@ -829,3 +829,19 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - Lagt til kort visuell puls på hele knappen uten å endre ikon, bredde eller Form-struktur.
 - Punkt 142 skal retestes før 143–149 fortsetter.
 
+
+
+## Devpatch 0055 – 1.0 punkt 3: første hurtigregistreringsblokk
+
+- Basert på `Tekstilig-SwiftUIActualApp0025`.
+- `Nytt tekstil` er forenklet til hurtigregistrering: bilde, navn og valgfri plassering.
+- Kategori og øvrige metadata er fjernet fra førstegangsregistreringen og kompletteres senere.
+- Direkte kamera er lagt til på iOS når fysisk kamera er tilgjengelig.
+- Eksisterende bilde kan fortsatt velges via PhotosPicker.
+- Kamera-/PhotosPicker-bilder i hurtigregistreringen normaliseres til JPEG, maksimal lengste side 2048 piksler, kvalitet 0,82 før CloudKit-lagring.
+- Bildet lagres etter at Textile-recorden er opprettet; ved bildefeil beholdes registreringen åpen slik at lagring kan prøves igjen uten å opprette nytt Textile.
+- `NSCameraUsageDescription` er lagt inn i generert Info.plist-konfigurasjon.
+- Generelt valgfritt `Textile.notes` er lagt til i domenemodell og CloudKit-mapping.
+- Notat vises på tekstildetaljen, redigeres via eksisterende **Rediger tekstil** og inngår i klientens fritekstsøk.
+- Ingen Piece-, reservasjons- eller prosjektmatchingslogikk er endret.
+- Ny testblokk 150–158 er lagt inn som **❗️** frem til eksplisitt validering.

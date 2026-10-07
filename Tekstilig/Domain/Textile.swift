@@ -11,6 +11,7 @@ struct Textile: Identifiable, Hashable {
     var locationArea: String = ""
     var locationShelf: String = ""
     var locationContainer: String = ""
+    var notes: String = ""
     var care: TextileCare = .empty
     var weightGsm: Int? = nil
     var stretch: TextileStretch = .empty

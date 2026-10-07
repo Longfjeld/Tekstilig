@@ -122,6 +122,8 @@ final class CloudKitTextileRepository: TextileRepository {
             record["locationContainer"] = locationContainer as CKRecordValue
         }
 
+        Self.setOptionalString(textile.notes, field: "notes", on: record)
+
         let care = textile.care.normalized()
 
         if let washAllowed = care.washAllowed {
@@ -198,6 +200,7 @@ final class CloudKitTextileRepository: TextileRepository {
         let locationArea = record["locationArea"] as? String ?? ""
         let locationShelf = record["locationShelf"] as? String ?? ""
         let locationContainer = record["locationContainer"] as? String ?? ""
+        let notes = record["notes"] as? String ?? ""
         let care = TextileCare(
             washAllowed: (record["careWashAllowed"] as? NSNumber).map { $0.intValue != 0 },
             washTemperatureC: (record["careWashTemperatureC"] as? NSNumber)?.intValue,
@@ -232,6 +235,7 @@ final class CloudKitTextileRepository: TextileRepository {
             locationArea: locationArea,
             locationShelf: locationShelf,
             locationContainer: locationContainer,
+            notes: notes,
             care: care,
             weightGsm: weightGsm,
             stretch: stretch,

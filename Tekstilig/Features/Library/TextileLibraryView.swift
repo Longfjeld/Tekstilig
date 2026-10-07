@@ -22,6 +22,7 @@ struct TextileLibraryView: View {
                     locationArea: textile.locationArea,
                     locationShelf: textile.locationShelf,
                     locationContainer: textile.locationContainer,
+                    notes: textile.notes,
                     weightGsm: textile.weightGsm,
                     stretchLevel: textile.stretch.level,
                     materials: attributeIndex.materials(for: textile.textileID),
@@ -346,6 +347,7 @@ private struct TextileListItem: Identifiable {
     let locationArea: String
     let locationShelf: String
     let locationContainer: String
+    let notes: String
     let weightGsm: Int?
     let stretchLevel: String
     let materials: [TextileMaterial]
@@ -365,7 +367,8 @@ private struct TextileListItem: Identifiable {
             category,
             locationArea,
             locationShelf,
-            locationContainer
+            locationContainer,
+            notes
         ]
 
         components.append(contentsOf: materials.map(\.material))

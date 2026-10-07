@@ -2744,3 +2744,132 @@ Blokken er godkjent når alle disse er bekreftet:
 - ingen CloudKit-schemaendring er nødvendig
 
 **Ikke gå videre til rikere reservasjonsmodell eller mer avansert poengbasert rangering før punkt 149 er bekreftet.**
+
+
+# Punkt 3 mot 1.0 – rask registrering
+
+## 150. Legg inn devpatch 0055 – første hurtigregistreringsblokk
+
+**✅ AKSJON – DU**
+
+1. Legg inn filene fra `Tekstilig-devpatch-0055.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg en fysisk iPhone med iOS 27 som kjøredestinasjon.
+4. Bygg og kjør appen.
+5. Kontroller at Tekstilig starter og at eksisterende tekstiler lastes som før.
+6. Åpne **Nytt tekstil**.
+7. Kontroller at skjermen nå viser **Bilde**, **Navn** og en sammenfoldet **Plassering (valgfritt)**, og at kategori ikke lenger kreves ved førstegangsregistrering.
+
+Stopp på punkt 150 dersom prosjektet ikke bygger, appen ikke starter eller den nye hurtigregistreringen ikke vises.
+
+## 151. Valider hurtigregistrering med bare navn
+
+**✅ AKSJON – DU**
+
+1. Åpne **Nytt tekstil**.
+2. Ikke velg eller ta bilde.
+3. Skriv et unikt testnavn.
+4. La **Plassering (valgfritt)** være sammenfoldet og tom.
+5. Trykk **Lagre**.
+6. Finn det nye tekstilet i biblioteket.
+7. Åpne tekstilet og kontroller at navn er lagret og at manglende bilde/plassering ikke hindret opprettelsen.
+
+## 152. Valider bilde fra Bilder under førstegangsregistrering
+
+**✅ AKSJON – DU**
+
+1. Åpne **Nytt tekstil** på nytt.
+2. Trykk **Velg fra Bilder**.
+3. Velg et tydelig bilde, gjerne et bilde med høy oppløsning og en kjent orientering.
+4. Kontroller at bildet vises som forhåndsvisning i registreringsskjermen.
+5. Skriv et unikt navn.
+6. Trykk **Lagre**.
+7. Åpne det nyopprettede tekstilet.
+8. Kontroller at hovedbildet er lagret, har riktig orientering og ser visuelt korrekt ut.
+9. Kontroller at registreringsflyten ikke opprettet et ekstra/duplisert Textile.
+
+## 153. Valider direkte kamera på fysisk iPhone
+
+**✅ AKSJON – DU**
+
+1. Åpne **Nytt tekstil** på fysisk iPhone.
+2. Trykk **Ta bilde**.
+3. Dersom iOS spør om kameratilgang, velg **Tillat**.
+4. Ta et bilde av et stoff eller annet tydelig testmotiv.
+5. Bekreft bildet i kameragrensesnittet.
+6. Kontroller at bildet vises som forhåndsvisning i **Nytt tekstil**.
+7. Skriv et unikt navn og trykk **Lagre**.
+8. Åpne tekstilet etter lagring.
+9. Kontroller at bildet vises korrekt som hovedbilde og at orienteringen er riktig.
+
+## 154. Valider bytte av bilde før lagring
+
+**✅ AKSJON – DU**
+
+1. Åpne **Nytt tekstil**.
+2. Ta et bilde eller velg et bilde fra Bilder.
+3. Kontroller at forhåndsvisningen vises.
+4. Bruk **Ta nytt bilde** eller **Velg annet**.
+5. Velg/tar et annet tydelig bilde.
+6. Kontroller at forhåndsvisningen erstattes av det nye bildet.
+7. Skriv et unikt navn og lagre.
+8. Åpne tekstilet og kontroller at bare det sist valgte bildet brukes som hovedbilde.
+
+## 155. Valider valgfri plassering under hurtigregistrering
+
+**✅ AKSJON – DU**
+
+1. Åpne **Nytt tekstil**.
+2. Skriv et unikt navn.
+3. Utvid **Plassering (valgfritt)**.
+4. Fyll inn minst **Område / rom** og én av de andre plasseringene.
+5. Lagre tekstilet.
+6. Åpne det nye tekstilet.
+7. Kontroller at plasseringen vises korrekt i plasseringseksjonen.
+8. Kontroller at ingen materiale-, farge-, Piece- eller vedlikeholdsdata måtte fylles inn for å lagre.
+
+## 156. Valider generelt notatfelt på eksisterende tekstil
+
+**✅ AKSJON – DU**
+
+1. Åpne et eksisterende tekstil.
+2. Trykk **Rediger**.
+3. Finn seksjonen **Notat**.
+4. Skriv en unik testtekst som ikke finnes i navn, materiale, farge eller plassering.
+5. Trykk **Lagre**.
+6. Kontroller at notatet vises i en egen **Notat**-seksjon på tekstildetaljen.
+7. Åpne **Rediger** på nytt og kontroller at samme tekst fortsatt står i notatfeltet.
+
+## 157. Valider notat i fritekstsøk og regresjon
+
+**✅ AKSJON – DU**
+
+1. Gå tilbake til tekstilbiblioteket.
+2. Søk etter den unike teksten du lagret i punkt 156.
+3. Kontroller at riktig tekstil kommer som treff.
+4. Tøm søket.
+5. Åpne et eldre tekstil som ikke har generelt notat.
+6. Kontroller at tekstilet fortsatt åpnes normalt og at eldre CloudKit-records ikke krever `notes`-felt.
+7. Rediger navn eller kategori på et eksisterende tekstil og lagre.
+8. Kontroller at eksisterende redigeringsflyt fortsatt fungerer.
+9. Åpne **Finn til prosjekt** og kontroller at skjermen fortsatt laster uten endringer i eksisterende kriterier/resultater.
+
+## 158. Stoppunkt for første hurtigregistreringsblokk
+
+**✅ STOPPUNKT**
+
+Blokken er godkjent når alle disse er bekreftet:
+
+- nytt tekstil kan fortsatt opprettes med bare navn
+- kategori er ikke nødvendig i førstegangsregistreringen
+- bilde kan velges fra Bilder før Textile opprettes
+- kamera kan brukes direkte på fysisk iPhone
+- forhåndsvisningen viser valgt/tatt bilde før lagring
+- valgt bilde lagres som hovedbilde uten duplisert Textile
+- plassering kan registreres valgfritt i samme hurtigflyt
+- generelt Textile-notat kan lagres og vises på eksisterende tekstil
+- notat inngår i fritekstsøk
+- eldre Textile-records uten `notes` fungerer fortsatt
+- eksisterende prosjekt-/Piece-funksjonalitet er ikke påvirket
+
+**Ikke gå videre til neste del av punkt 3 (ny iPhone-hovedside med Nylig registrert og automatisk aktivert bibliotek) før punkt 158 er bekreftet.**
