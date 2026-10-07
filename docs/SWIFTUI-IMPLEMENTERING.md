@@ -3107,6 +3107,25 @@ Punkt 170, 171 og 173 er validert. Punkt 172 avdekket at kameraet på et eksiste
 8. Trykk **Ta bilde** på nytt, ta et bilde og bekreft det.
 9. Kontroller at bildet optimaliseres, lagres og vises som hovedbilde som før.
 
-Punkt 174 er godkjent når kameraet er stabilt allerede ved første åpning og både avbryt og fullført bildeopptak fungerer normalt.
+Punkt 174 er **ikke godkjent**. Testen viste at kameraet fortsatt kunne åpnes og lukkes igjen på første forsøk for hvert tekstil, selv med `fullScreenCover`. Andre åpning var stabil. Dette viser at problemet ikke bare skyldes presentasjonstypen.
 
-Når punkt 174 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.
+## 175. Retest kamera med presentasjon eid av TextileDetailView
+
+**❗️ AKSJON – DU**
+
+1. Legg inn `Tekstilig-devpatch-0060.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg en fysisk iPhone med iOS 27 og bygg/kjør appen.
+4. Åpne et eksisterende tekstil uten hovedbilde.
+5. Trykk **Ta bilde** én gang.
+6. Kontroller at kameraet åpnes og forblir stabilt åpent på første forsøk.
+7. Avbryt kameraet og kontroller at du returnerer normalt til samme tekstildetalj.
+8. Gå til et **annet** eksisterende tekstil uten hovedbilde.
+9. Trykk **Ta bilde** én gang og kontroller at kameraet også her er stabilt allerede på første forsøk.
+10. Avbryt, gå tilbake til ett av tekstilene og ta et bilde.
+11. Kontroller at bildet optimaliseres, lagres og vises som hovedbilde som før.
+12. Kontroller at **Velg fra Bilder** fortsatt fungerer på samme tekstil.
+
+Punkt 175 er godkjent når kameraet er stabilt på første åpning for minst to forskjellige tekstiler, og både avbryt, bildeopptak og Bilder fungerer normalt.
+
+Når punkt 175 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.

@@ -15,6 +15,11 @@ struct TextileDetailView: View {
     @State private var showLocationEditor = false
     @State private var showCareEditor = false
     @State private var showPhysicalPropertiesEditor = false
+    @State private var imageModel = TextileImageModel()
+
+    #if os(iOS)
+    @State private var showImageCamera = false
+    #endif
 
     init(textileIdentity: String, model: TextileLibraryModel) {
         self.textileIdentity = textileIdentity
@@ -89,6 +94,14 @@ struct TextileDetailView: View {
                     try await pieceModel.save(candidate)
                 }
             }
+            #if os(iOS)
+            .fullScreenCover(isPresented: $showImageCamera) {
+                TextileCameraPicker { data in
+                    saveCameraImage(data, textileID: textile.textileID)
+                }
+                .ignoresSafeArea()
+            }
+            #endif
             .alert(
                 "Slett stoffstykke?",
                 isPresented: Binding(
@@ -121,7 +134,15 @@ struct TextileDetailView: View {
         List {
             textileSummarySection(for: textile)
 
-            TextileMainImageSection(textile: textile)
+            TextileMainImageSection(
+                textile: textile,
+                model: imageModel,
+                onTakePhoto: {
+                    #if os(iOS)
+                    showImageCamera = true
+                    #endif
+                }
+            )
 
             TextileAttributesSection(
                 textile: textile,
@@ -279,6 +300,26 @@ struct TextileDetailView: View {
         let saved = try await model.save(candidate)
         textileSnapshot = saved
     }
+
+    #if os(iOS)
+    private func saveCameraImage(_ data: Data, textileID: String) {
+        Task {
+            do {
+                let optimized = try QuickRegistrationImageOptimizer.optimize(data)
+                let fileName = "tekstilig-main-\(UUID().uuidString.lowercased()).jpg"
+
+                await imageModel.savePrimaryImage(
+                    textileID: textileID,
+                    data: optimized,
+                    fileName: fileName,
+                    contentType: "image/jpeg"
+                )
+            } catch {
+                imageModel.errorMessage = error.localizedDescription
+            }
+        }
+    }
+    #endif
 
     private func delete(_ piece: Piece) {
         Task {

@@ -12,13 +12,10 @@ import AppKit
 
 struct TextileMainImageSection: View {
     let textile: Textile
+    let model: TextileImageModel
+    let onTakePhoto: () -> Void
 
-    @State private var model = TextileImageModel()
     @State private var selectedPhotoItem: PhotosPickerItem?
-
-    #if os(iOS)
-    @State private var showCamera = false
-    #endif
 
     var body: some View {
         Section {
@@ -35,7 +32,7 @@ struct TextileMainImageSection: View {
                         #if os(iOS)
                         if UIImagePickerController.isSourceTypeAvailable(.camera) {
                             Button("Ta nytt bilde") {
-                                showCamera = true
+                                onTakePhoto()
                             }
                             .buttonStyle(.bordered)
                             .disabled(isSaving)
@@ -73,7 +70,7 @@ struct TextileMainImageSection: View {
                         #if os(iOS)
                         if UIImagePickerController.isSourceTypeAvailable(.camera) {
                             Button("Ta bilde") {
-                                showCamera = true
+                                onTakePhoto()
                             }
                             .buttonStyle(.bordered)
                             .disabled(model.isSaving)
@@ -105,14 +102,6 @@ struct TextileMainImageSection: View {
             guard let newItem else { return }
             loadAndSave(newItem)
         }
-        #if os(iOS)
-        .fullScreenCover(isPresented: $showCamera) {
-            TextileCameraPicker { data in
-                optimizeAndSave(data)
-            }
-            .ignoresSafeArea()
-        }
-        #endif
         .alert(
             "Kunne ikke lagre bilde",
             isPresented: Binding(
@@ -169,12 +158,6 @@ struct TextileMainImageSection: View {
                 model.errorMessage = error.localizedDescription
                 selectedPhotoItem = nil
             }
-        }
-    }
-
-    private func optimizeAndSave(_ data: Data) {
-        Task {
-            await saveOptimized(data)
         }
     }
 

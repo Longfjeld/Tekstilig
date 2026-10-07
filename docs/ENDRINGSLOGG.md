@@ -898,3 +898,16 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - Hurtigregistreringens allerede validerte kameraflyt er ikke endret.
 - Ingen endring i bildeoptimalisering, CloudKit-schema, datamodell, hovedside, filter, Piece, reservasjon eller prosjektsøk.
 - Test 170, 171 og 173 er validert; punkt 172 avventer kun korrigeringstest 174.
+
+
+## Devpatch 0060 – kamera eies av stabil tekstildetalj
+
+- Basert på autoritativ kilde `Tekstilig-SwiftUIActualApp0030.zip`, der devpatch 0059 er innbakt.
+- Test 174 bekreftet at bytte fra `sheet` til `fullScreenCover` alene ikke løste problemet: første kameraåpning kunne fortsatt lukkes automatisk én gang per tekstil.
+- Kamera-state og selve `fullScreenCover`-presentasjonen flyttes derfor ut av `TextileMainImageSection` og opp til den stabile `TextileDetailView`.
+- `TextileMainImageSection` sender nå bare en `onTakePhoto`-handling til forelderen.
+- `TextileImageModel` eies av `TextileDetailView` og deles med bildeseksjonen, slik at bilde-state ikke går tapt når en `List`-seksjon rekonstrueres.
+- Kameraresultatet går fortsatt gjennom samme JPEG-optimalisering og lagres som samme hovedbilde-record som tidligere.
+- Hurtigregistreringens kamera er urørt.
+- Ingen CloudKit-schema-, datamodell-, hovedside-, filter-, Piece-, reservasjons- eller prosjektsøksendringer.
+- Ny retest er punkt 175.

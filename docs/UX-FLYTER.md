@@ -575,3 +575,10 @@ Dette er funksjonell/strukturell opprydding. Den endelige visuelle identiteten, 
 - På iPhone/iPad presenteres kameraflyten som fullskjerm, mens bildevalg fra Bilder fortsatt bruker `PhotosPicker`.
 - Avbryt skal returnere direkte til tekstildetaljen uten å endre data.
 - Fullført bildeopptak skal fortsette å bruke samme JPEG-optimalisering og hovedbilde-lagring som tidligere.
+
+
+### Stabil kamera-presentasjon på eksisterende tekstil (devpatch 0060)
+
+Kamerapresentasjon på en eksisterende tekstildetalj skal eies av den stabile `TextileDetailView`, ikke av `TextileMainImageSection` inne i `List`. Bildeseksjonen skal bare be forelderen åpne kamera. Dette hindrer at kameraet lukkes dersom seksjonen rekonstrueres ved første lasting eller bilde-state oppdateres.
+
+Kravet er fortsatt at første trykk på **Ta bilde** skal åpne et stabilt kamera for hvert tekstil, uten forsinkelses- eller timing-hacks.
