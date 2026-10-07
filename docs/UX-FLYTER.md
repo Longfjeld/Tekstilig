@@ -582,3 +582,7 @@ Dette er funksjonell/strukturell opprydding. Den endelige visuelle identiteten, 
 Kamerapresentasjon på en eksisterende tekstildetalj skal eies av den stabile `TextileDetailView`, ikke av `TextileMainImageSection` inne i `List`. Bildeseksjonen skal bare be forelderen åpne kamera. Dette hindrer at kameraet lukkes dersom seksjonen rekonstrueres ved første lasting eller bilde-state oppdateres.
 
 Kravet er fortsatt at første trykk på **Ta bilde** skal åpne et stabilt kamera for hvert tekstil, uten forsinkelses- eller timing-hacks.
+
+### Kamera ved eksisterende tekstil – build-korrigering
+
+Devpatch 0061 endrer ikke ønsket UX. Kamera skal fortsatt åpne stabilt på første trykk for et eksisterende tekstil uten bilde. Endringen deler kun opp `TextileDetailView` slik at Xcode 27 kan type-sjekke SwiftUI-visningen.

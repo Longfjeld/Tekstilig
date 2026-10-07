@@ -46,6 +46,14 @@ struct TextileDetailView: View {
     }
 
     private func textileScreen(for textile: Textile) -> some View {
+        let base = textileBaseScreen(for: textile)
+        let withEditors = editorPresentations(base, textile: textile)
+        let withPieces = piecePresentations(withEditors, textile: textile)
+        let withCamera = cameraPresentation(withPieces, textile: textile)
+        return alertPresentations(withCamera)
+    }
+
+    private func textileBaseScreen(for textile: Textile) -> some View {
         textileList(for: textile)
             .navigationTitle(textile.name)
             .toolbar {
@@ -61,6 +69,13 @@ struct TextileDetailView: View {
             .task(id: textile.textileID) {
                 await pieceModel.loadIfNeeded(for: textile.textileID)
             }
+    }
+
+    private func editorPresentations<Content: View>(
+        _ content: Content,
+        textile: Textile
+    ) -> some View {
+        content
             .sheet(isPresented: $showEditor) {
                 TextileEditorView(textile: textile) { candidate in
                     try await saveTextile(candidate)
@@ -84,6 +99,13 @@ struct TextileDetailView: View {
                     try await saveTextile(candidate)
                 }
             }
+    }
+
+    private func piecePresentations<Content: View>(
+        _ content: Content,
+        textile: Textile
+    ) -> some View {
+        content
             .sheet(isPresented: $showNewPiece) {
                 PieceEditorView(piece: nil, textileID: textile.textileID) { candidate in
                     try await pieceModel.save(candidate)
@@ -94,14 +116,28 @@ struct TextileDetailView: View {
                     try await pieceModel.save(candidate)
                 }
             }
-            #if os(iOS)
+    }
+
+    @ViewBuilder
+    private func cameraPresentation<Content: View>(
+        _ content: Content,
+        textile: Textile
+    ) -> some View {
+        #if os(iOS)
+        content
             .fullScreenCover(isPresented: $showImageCamera) {
                 TextileCameraPicker { data in
                     saveCameraImage(data, textileID: textile.textileID)
                 }
                 .ignoresSafeArea()
             }
-            #endif
+        #else
+        content
+        #endif
+    }
+
+    private func alertPresentations<Content: View>(_ content: Content) -> some View {
+        content
             .alert(
                 "Slett stoffstykke?",
                 isPresented: Binding(

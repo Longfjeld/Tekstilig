@@ -911,3 +911,12 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - Hurtigregistreringens kamera er urørt.
 - Ingen CloudKit-schema-, datamodell-, hovedside-, filter-, Piece-, reservasjons- eller prosjektsøksendringer.
 - Ny retest er punkt 175.
+
+## Devpatch 0061 – del opp TextileDetailView for Swift-typechecking
+
+- Basert på `Tekstilig-SwiftUIActualApp0030.zip` med devpatch 0060-endringene lagt oppå.
+- Test 175 kunne ikke gjennomføres fordi Xcode 27 stoppet i `TextileDetailView` med `The compiler is unable to type-check this expression in reasonable time`.
+- Kameraarkitekturen fra 0060 beholdes uendret: kamera-state og presentasjon eies fortsatt av `TextileDetailView`.
+- Det store SwiftUI-modifier-uttrykket i `textileScreen(for:)` er delt i mindre funksjoner for basevisning, editor-presentasjoner, Piece-presentasjoner, kamera-presentasjon og alerts.
+- Ingen funksjonell endring i kamera, bildeoptimalisering, CloudKit, datamodell, hovedside, filter, Piece, reservasjon eller prosjektsøk.
+- Ny build-/kameraretest er punkt 176.

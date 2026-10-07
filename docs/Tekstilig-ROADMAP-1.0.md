@@ -102,3 +102,7 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |2. Visuell retning|✅ Fullført. Liquid Glass/native SwiftUI, konteksttilpassede bilder, rolig iPhone-hovedside og stor-skjerm split-view er låst retning.|
 |3. Rask registrering|❗️ Nesten ferdig. Devpatch 0055–0058 er funksjonelt validert. Test 170, 171 og 173 er godkjent. Test 174 viste at 0059 ikke løste første-gangs-lukking av kamera. Devpatch 0060 flytter kamerapresentasjonen til stabile `TextileDetailView`; test 175 gjenstår før punkt 3 lukkes.|
 |4–12|❗️ Ikke startet.|
+
+### Statusnotat – roadmap punkt 3
+
+Devpatch 0060 ble build-blokkert i Xcode 27 av en SwiftUI-typecheck-feil i `TextileDetailView`. Devpatch 0061 deler view-uttrykket opp uten å endre kamerafunksjonen. Roadmap-punkt 3 står derfor fortsatt åpent til test 176 er validert.

@@ -3129,3 +3129,26 @@ Punkt 174 er **ikke godkjent**. Testen viste at kameraet fortsatt kunne åpnes o
 Punkt 175 er godkjent når kameraet er stabilt på første åpning for minst to forskjellige tekstiler, og både avbryt, bildeopptak og Bilder fungerer normalt.
 
 Når punkt 175 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.
+
+## 176. Retest 0061 – bygg og stabil kameraåpning
+
+**❗️ AKSJON – DU**
+
+1. Legg inn `Tekstilig-devpatch-0061.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg en fysisk iPhone med iOS 27 og bygg prosjektet.
+4. Kontroller at `TextileDetailView` bygger uten typecheck-feilen fra 0060.
+5. Kjør appen.
+6. Åpne et eksisterende tekstil uten hovedbilde.
+7. Trykk **Ta bilde** én gang.
+8. Kontroller at kameraet åpnes og forblir stabilt åpent på første forsøk.
+9. Avbryt kameraet og kontroller at du returnerer normalt til samme tekstildetalj.
+10. Gå til et annet eksisterende tekstil uten hovedbilde.
+11. Trykk **Ta bilde** én gang og kontroller at kameraet også her er stabilt på første forsøk.
+12. Ta og bekreft et bilde på ett av tekstilene.
+13. Kontroller at bildet optimaliseres, lagres og vises som hovedbilde.
+14. Kontroller at **Velg fra Bilder** fortsatt fungerer.
+
+Punkt 176 er godkjent når både build og første kameraåpning fungerer stabilt for minst to forskjellige tekstiler.
+
+Punkt 175 ble ikke funksjonstestet fordi devpatch 0060 ikke bygget i Xcode 27. Når punkt 176 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.
