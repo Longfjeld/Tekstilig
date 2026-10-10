@@ -332,9 +332,10 @@ struct TextileDetailView: View {
         }
     }
 
-    private func saveTextile(_ candidate: Textile) async throws {
+    private func saveTextile(_ candidate: Textile) async throws -> Textile {
         let saved = try await model.save(candidate)
         textileSnapshot = saved
+        return saved
     }
 
     #if os(iOS)

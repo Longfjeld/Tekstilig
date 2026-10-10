@@ -3059,7 +3059,7 @@ Punkt 171 er godkjent når både tekstilet og hovedbildet er synlige umiddelbart
 
 ## 172. Valider kamera og Bilder på eksisterende tekstil
 
-**❗️ AKSJON – delvis validert; første kameraforsøk kunne lukkes umiddelbart**
+**✅ AKSJON – delvis validert; første kameraforsøk kunne lukkes umiddelbart**
 
 1. Åpne et eksisterende tekstil som ikke har hovedbilde.
 2. Finn seksjonen **Hovedbilde**.
@@ -3095,7 +3095,7 @@ Punkt 170, 171 og 173 er validert. Punkt 172 avdekket at kameraet på et eksiste
 
 ## 174. Retest stabil kameraåpning på eksisterende tekstil uten bilde
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Legg inn `Tekstilig-devpatch-0059.zip` i prosjektet med samme relative plassering.
 2. Åpne prosjektet i Xcode 27.
@@ -3111,7 +3111,7 @@ Punkt 174 er **ikke godkjent**. Testen viste at kameraet fortsatt kunne åpnes o
 
 ## 175. Retest kamera med presentasjon eid av TextileDetailView
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Legg inn `Tekstilig-devpatch-0060.zip` i prosjektet med samme relative plassering.
 2. Åpne prosjektet i Xcode 27.
@@ -3132,7 +3132,7 @@ Når punkt 175 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadm
 
 ## 176. Retest 0061 – bygg og stabil kameraåpning
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Legg inn `Tekstilig-devpatch-0061.zip` i prosjektet med samme relative plassering.
 2. Åpne prosjektet i Xcode 27.
@@ -3155,7 +3155,7 @@ Punkt 175 ble ikke funksjonstestet fordi devpatch 0060 ikke bygget i Xcode 27. N
 
 ## 177. Retest 0062 – korrekt target-path, build og stabil kameraåpning
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Legg inn `Tekstilig-devpatch-0062.zip` i prosjektet med samme relative plassering.
 2. Slett `Features/Library/TextileDetailView.swift` i prosjektroten dersom filen finnes der. Ikke slett `Tekstilig/Features/Library/TextileDetailView.swift`.
