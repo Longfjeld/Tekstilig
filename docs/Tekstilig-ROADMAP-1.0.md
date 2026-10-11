@@ -25,7 +25,7 @@ Den endelige plattform- og UX-strategien fastsettes i punkt 1 før større UI-en
 |2. Visuell retning|Fastsett grunnleggende design for 1.0: bildebruk, bibliotekpresentasjon, navigasjon, typografi, spacing, knapper, ikoner, tomtilstander og visuell identitet. Vurder spesielt en mer bildeorientert presentasjon av tekstiler.|
 |3. Rask registrering|Optimaliser registrering på iPhone slik at et nytt tekstil kan registreres svært raskt, primært med bilde, navn og eventuelt lagringssted. Øvrige egenskaper skal kunne kompletteres senere uten å gjøre førstegangsregistreringen tung.|
 |4. Ufullstendige registreringer|Gjør det enkelt å identifisere og komplettere tekstiler som bare er hurtigregistrert eller mangler viktige data, spesielt på iPad og Mac. Avklar hvilke opplysninger som skal regnes som manglende uten å gjøre alle metadata obligatoriske.|
-|5. iCloud-/CloudKit-robusthet|Implementer tydelig status og forståelige feiltilstander når iCloud, iCloud Drive, nettverk eller CloudKit ikke er tilgjengelig. Appen skal ikke fremstå som om den laster uten forklaring når datatilgangen faktisk har feilet.|
+|5. iCloud-/CloudKit-robusthet|Implementer tydelig status og forståelige feiltilstander når iCloud-konto, nettverk eller CloudKit ikke er tilgjengelig. Avklar eksplisitt forholdet til iCloud Drive, men ikke anta at iCloud Drive-filsynkronisering er en forutsetning for CloudKit. Appen skal ikke fremstå som om den laster uten forklaring når datatilgangen faktisk har feilet.|
 |6. Eksport og backup|Definer og implementer et stabilt og lesbart eksportformat for brukerens tekstildata og bilder. Eksporten skal være egnet som uavhengig sikkerhetskopi og utformes med tanke på senere gjenoppretting/import.|
 |7. Import og restore|Implementer kontrollert import av det definerte eksportformatet. Avklar håndtering av eksisterende data, duplikater, bilder og feil under import, og test en komplett eksport→import/gjenoppretting-flyt.|
 |8. Bilder|Implementer direkte kamera der det gir mening og optimaliser bildebehandlingen for lagring, synkronisering og ytelse. Før implementeringen avsluttes skal det også tas en eksplisitt beslutning om flere bilder per tekstil skal inngå i 1.0 eller utsettes.|
@@ -102,7 +102,7 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |2. Visuell retning|✅ Fullført. Liquid Glass/native SwiftUI, konteksttilpassede bilder, rolig iPhone-hovedside og stor-skjerm split-view er låst retning.|
 |3. Rask registrering|✅ Fullført og validert etter devpatch 0063 på autoritativ kilde 0035. Hurtigregistrering, hovedbilde og kamera på eksisterende tekstil er validert OK.|
 |4. Ufullstendige registreringer|✅ Fullført og validert på iPhone, iPad og native macOS etter devpatch 0068. «Kan kompletteres», filter og detaljforklaring fungerer på alle tre plattformer.|
-|5. iCloud-/CloudKit-robusthet|❗️ Pågår. Punkt 187–190 er validert. Devpatch 0071/punkt 191–193 gjenbruker den forståelige CloudKit-feilpresentasjonen for hovedbilde, materiale/farge og stoffstykker før eksplisitt test av iCloud-konto/iCloud Drive.|
+|5. iCloud-/CloudKit-robusthet|❗️ Pågår. Punkt 187–194 er validert. Punkt 194 avklarte at avslått iCloud Drive-synkronisering alene ikke blokkerer CloudKit; tidligere gjenopprettingstest 195 utgår. Neste aktive validering er manglende iCloud-konto i punkt 196.|
 |6–12|❗️ Ikke startet.|
 
 ### Statusnotat – roadmap punkt 3
@@ -163,6 +163,6 @@ Devpatch 0069:
 - viser **Venter på iCloud** med konkret veiledning dersom første biblioteklast varer mer enn omtrent åtte sekunder
 - endrer ikke CloudKit-schema, Textile-data eller eksisterende funksjonslogikk
 
-Etter validering av denne blokken skal neste blokk eksplisitt dekke iCloud/iCloud Drive-tilgjengelighet og deretter gjenbruke samme feilpresentasjon for øvrige CloudKit-avhengige deler av appen.
+Etter validering av denne blokken skal neste blokk eksplisitt dekke reell iCloud-/CloudKit-tilgjengelighet og deretter gjenbruke samme feilpresentasjon for øvrige CloudKit-avhengige deler av appen. Punkt 194 viste senere at iCloud Drive-filsynkronisering kan være slått av uten at privat CloudKit-database blir utilgjengelig; dette skal derfor ikke behandles som en feiltilstand i seg selv.
 
 **Observasjon etter test 189:** Selve biblioteket kom tilbake etter gjenopprettet tilgang, men materiale-/farge- og bildemetadata for **Kan kompletteres** krevde manuell refresh. Devpatch 0070 gjør derfor **Prøv igjen** til en samlet gjenlasting av bibliotek og kompletteringsmetadata før neste robusthetsblokk.

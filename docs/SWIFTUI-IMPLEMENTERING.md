@@ -3451,7 +3451,7 @@ De tre modellene gjenbruker nå samme `CloudKitUserFacingError` som biblioteket.
 
 ## 192. Valider detaljfeil uten nettverk
 
-**✅ RETEST ETTER DEVPATCH 0077**
+**✅ VALIDERT ETTER DEVPATCH 0077**
 
 Første gjennomføring av punkt 192 viste tre forhold som skal korrigeres før punkt 193:
 
@@ -3625,3 +3625,62 @@ Devpatch 0077 flytter derfor eierskapet til den automatiske attributtlasten opp 
 
 **Stopp fortsatt på punkt 192 dersom Materialer/Farger blir stående på permanent loading, får permanent feil med normalt nettverk, reell offline-feil presenteres rått, Rediger plassering viser `CKErrorDomain`, eller scroll-problemet kommer tilbake. Punkt 193 er sperret til punkt 192 er eksplisitt validert.**
 
+
+
+## 194. Avklar forholdet mellom iCloud Drive og CloudKit på fysisk iPhone
+
+**✅ VALIDERT**
+
+Testen ble gjennomført på fysisk test-iPhone med normalt nettverk. iCloud Drive-synkronisering for enheten ble slått av, mens iCloud-kontoen og nettverket forble tilgjengelige.
+
+Resultat:
+
+- Tekstilig fortsatte å laste bibliotek og detaljdata normalt
+- ingen CloudKit-feil eller ventetilstand oppstod
+- ingen rå `CKErrorDomain`-feil ble vist
+- appen oppførte seg som normalt
+
+Konklusjon: iCloud Drive-filsynkronisering er ikke i seg selv en forutsetning for Tekstilig sin private CloudKit-database. Den tidligere antakelsen om at avslått iCloud Drive alene skulle gjøre CloudKit utilgjengelig var derfor feil. Roadmap-punkt 5 skal videre teste faktisk CloudKit-tilgjengelighet, ikke iCloud Drive-bryteren som sådan.
+
+## 195. Tidligere gjenopprettingstest for iCloud Drive utgår
+
+**⏭️ UTGÅR ETTER RESULTATET I 194**
+
+Den opprinnelige testen skulle slå iCloud Drive på igjen og kontrollere at Tekstilig gjenopprettet CloudKit-tilgangen. Punkt 194 viste at CloudKit-tilgangen aldri forsvant da iCloud Drive-synkronisering ble slått av. Det finnes derfor ingen relevant gjenopprettingstilstand å validere her.
+
+Ingen appkode skal endres som følge av dette punktet. Arbeidet fortsetter direkte til punkt 196.
+
+## 196. Valider manglende iCloud-konto i simulator
+
+**✅ AKSJON – DU**
+
+Dette er neste aktive test. Den skal gjøres i en iOS 27-simulator som **ikke er logget inn på iCloud**, slik at den fysiske testtelefonens Apple-konto ikke må logges ut.
+
+1. Åpne Xcode 27.
+2. Opprett om nødvendig en ny iPhone-simulator med iOS 27.
+3. Start simulatoren og kontroller i **Innstillinger** at den ikke er logget inn med en Apple-konto/iCloud.
+4. Velg denne simulatoren som Run Destination i Xcode.
+5. Bygg og kjør Tekstilig.
+6. Vent på bibliotekets første last.
+7. Kontroller at Tekstilig ikke blir stående med en uforklart spinner.
+8. Kontroller at manglende iCloud-/CloudKit-konto presenteres som en forståelig tilgjengelighets- eller iCloud-feil, ikke som rå `CKErrorDomain`-tekst.
+9. Kontroller at appen fortsatt er navigerbar og ikke krasjer.
+10. Noter den nøyaktige teksten som vises dersom resultatet avviker fra forventningen.
+
+**Stopp på punkt 196 dersom manglende iCloud-konto ikke gir en forståelig tilstand, appen blir stående permanent på loading, viser rå teknisk feil eller krasjer. Ikke gå videre til punkt 197 før punkt 196 er eksplisitt validert.**
+
+## 197. Stoppunkt for roadmap-punkt 5 – iCloud-/CloudKit-robusthet
+
+**✅ STOPPUNKT**
+
+Roadmap-punkt 5 kan avsluttes når følgende er eksplisitt validert:
+
+- biblioteket viser forståelig ventetilstand eller feil uten nettverk
+- **Prøv igjen** gjenoppretter bibliotek og kompletteringsmetadata uten manuell refresh
+- hovedbilde, materiale/farge og stoffstykker bruker forståelige feiltilstander
+- Textile-, farge- og plasseringslagring viser ikke rå CloudKit-feil ved utilgjengelig nettverk
+- Materialer/Farger har stabil async-livssyklus uten cancellation-loop eller permanent spinner
+- avslått iCloud Drive-synkronisering alene blokkerer ikke Tekstilig så lenge iCloud-konto, CloudKit og nettverk er tilgjengelige
+- manglende iCloud-konto gir forståelig tilstand uten krasj eller permanent spinner
+
+**Ikke start roadmap-punkt 6 – Eksport og backup – før punkt 196 er validert og dette stoppunktet kan markeres ✅.**
