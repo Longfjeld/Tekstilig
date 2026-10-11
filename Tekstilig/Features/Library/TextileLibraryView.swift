@@ -9,6 +9,7 @@ import AppKit
 struct TextileLibraryView: View {
     @State private var model = TextileLibraryModel()
     @State private var attributeIndex = TextileLibraryAttributeIndex()
+    @State private var imageIndex = TextileLibraryImageIndex()
     @State private var showNewTextile = false
     @State private var searchText = ""
     @State private var filters = TextileLibraryFilters()
@@ -34,7 +35,8 @@ struct TextileLibraryView: View {
                     weightGsm: textile.weightGsm,
                     stretchLevel: textile.stretch.level,
                     materials: attributeIndex.materials(for: textile.textileID),
-                    colors: attributeIndex.colors(for: textile.textileID)
+                    colors: attributeIndex.colors(for: textile.textileID),
+                    hasPrimaryImage: imageIndex.hasPrimaryImage(for: textile.textileID)
                 )
             )
         }
@@ -88,6 +90,10 @@ struct TextileLibraryView: View {
                 return false
             }
 
+            if filters.canBeCompleted, !item.canBeCompleted {
+                return false
+            }
+
             guard !query.isEmpty else {
                 return true
             }
@@ -119,6 +125,13 @@ struct TextileLibraryView: View {
                 }
                 .prefix(5)
         )
+    }
+
+    private var indexesReadyForCompletion: Bool {
+        attributeIndex.hasLoaded &&
+        imageIndex.hasLoaded &&
+        attributeIndex.errorMessage == nil &&
+        imageIndex.errorMessage == nil
     }
 
     var onFindProject: () -> Void = { }
@@ -199,7 +212,9 @@ struct TextileLibraryView: View {
                 TextileLibraryFilterView(
                     filters: $filters,
                     attributeIndexIsLoading: attributeIndex.isLoading,
-                    attributeIndexErrorMessage: attributeIndex.errorMessage
+                    attributeIndexErrorMessage: attributeIndex.errorMessage,
+                    completionIndexIsLoading: attributeIndex.isLoading || imageIndex.isLoading,
+                    completionIndexErrorMessage: attributeIndex.errorMessage ?? imageIndex.errorMessage
                 )
             }
             .sheet(
@@ -215,6 +230,7 @@ struct TextileLibraryView: View {
             .task {
                 await model.loadIfNeeded()
                 await attributeIndex.loadIfNeeded()
+                await imageIndex.loadIfNeeded()
             }
         }
     }
@@ -253,13 +269,22 @@ struct TextileLibraryView: View {
                 } label: {
                     TextileRow(
                         name: item.name,
-                        category: item.category
+                        category: item.category,
+                        canBeCompleted: indexesReadyForCompletion && item.canBeCompleted
                     )
                 }
             }
             .refreshable {
                 await model.load()
                 await attributeIndex.load()
+                await imageIndex.load()
+            }
+            .onAppear {
+                guard attributeIndex.hasLoaded || imageIndex.hasLoaded else { return }
+                Task {
+                    await attributeIndex.load()
+                    await imageIndex.load()
+                }
             }
         }
     }
@@ -307,6 +332,7 @@ struct TextileLibraryView: View {
         .refreshable {
             await model.load()
             await attributeIndex.load()
+            await imageIndex.load()
         }
     }
 
@@ -320,6 +346,7 @@ private struct TextileLibraryFilters: Equatable {
     var stretchLevel = ""
     var material = ""
     var colorGroup = ""
+    var canBeCompleted = false
 
     var isActive: Bool {
         !category.isEmpty ||
@@ -328,7 +355,8 @@ private struct TextileLibraryFilters: Equatable {
         maximumWeight != nil ||
         !stretchLevel.isEmpty ||
         !material.isEmpty ||
-        !colorGroup.isEmpty
+        !colorGroup.isEmpty ||
+        canBeCompleted
     }
 
     mutating func reset() {
@@ -340,11 +368,28 @@ private struct TextileLibraryFilterView: View {
     @Binding var filters: TextileLibraryFilters
     let attributeIndexIsLoading: Bool
     let attributeIndexErrorMessage: String?
+    let completionIndexIsLoading: Bool
+    let completionIndexErrorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             Form {
+                Section("Registrering") {
+                    Toggle("Kan kompletteres", isOn: $filters.canBeCompleted)
+                        .disabled(completionIndexIsLoading || completionIndexErrorMessage != nil)
+
+                    if completionIndexIsLoading {
+                        ProgressView("Kontrollerer registreringsstatus …")
+                    } else if let completionIndexErrorMessage {
+                        Text("Registreringsstatus kunne ikke oppdateres.")
+                            .foregroundStyle(.secondary)
+                        Text(completionIndexErrorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 Section("Kategori") {
                     Picker("Kategori", selection: $filters.category) {
                         Text("Alle kategorier").tag("")
@@ -453,6 +498,7 @@ private struct TextileListItem: Identifiable {
     let stretchLevel: String
     let materials: [TextileMaterial]
     let colors: [TextileColor]
+    let hasPrimaryImage: Bool
 
     var materialNames: [String] {
         materials.map(\.material)
@@ -460,6 +506,19 @@ private struct TextileListItem: Identifiable {
 
     var colorGroups: [String] {
         colors.map(\.group)
+    }
+
+    var canBeCompleted: Bool {
+        !hasPrimaryImage ||
+        materials.isEmpty ||
+        category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !hasLocation
+    }
+
+    private var hasLocation: Bool {
+        !locationArea.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !locationShelf.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !locationContainer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var searchableText: String {
@@ -484,6 +543,7 @@ private struct TextileListItem: Identifiable {
 private struct TextileRow: View {
     let name: String
     let category: String
+    let canBeCompleted: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -493,6 +553,12 @@ private struct TextileRow: View {
             Text(category.isEmpty ? "Kategori ikke registrert" : category)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+
+            if canBeCompleted {
+                Label("Kan kompletteres", systemImage: "circle.dashed")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(.vertical, 4)
     }

@@ -5,6 +5,8 @@
 > **Fast arbeidsmetodikk:** Les `ARBEIDSMETODIKK.md` før nye kodeendringer. `SWIFTUI-IMPLEMENTERING.md` er hovedsporet. Nye/ikke-validerte punkter markeres ❗️ og endres først til ✅ etter brukerens validering. Ved konkrete feil kan hovedsporet midlertidig erstattes av målrettet ad-hoc feilisolering; når feilen er løst fortsetter arbeidet fra neste ufullførte nummererte punkt.
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
+> **Aktuell status 2026-10-10:** Roadmap-punkt 3 **Rask registrering** er lukket ✅ etter devpatch 0063. Devpatch 0064 er implementert og test 179–183 er validert ✅. Arbeidet fortsetter nå strengt sekvensielt fra **punkt 184**. Se også `LEVERANSE-OG-TESTMETODIKK.md` for fast leveranse-, rsync-, test-, Git- og snapshot-arbeidsflyt.
+
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
 
 Statusmarkeringer:
@@ -3177,3 +3179,139 @@ Punkt 175 ble ikke funksjonstestet fordi devpatch 0060 ikke bygget i Xcode 27. N
 Punkt 177 er godkjent når både build og første kameraåpning fungerer stabilt for minst to forskjellige tekstiler.
 
 Punkt 176 regnes som build-blokkert av feil relativ filplassering i devpatch 0060/0061, ikke som en funksjonell test av kameraarkitekturen. Når punkt 177 er validert, kan punkt 172 og stoppunkt 169 markeres ✅ og roadmap-punkt 3 **Rask registrering** avsluttes.
+
+
+## 178. Fastsett kriterier for «Kan kompletteres»
+
+**✅ BESLUTTET**
+
+Et tekstil regnes som **Kan kompletteres** dersom minst ett av disse fire kriteriene mangler:
+
+- hovedbilde
+- materiale
+- kategori
+- lagringssted
+
+Farge, Piece/dimensjoner, vekt, elastisitet, krymp, vedlikehold og notat gjør ikke i seg selv registreringen ufullstendig.
+
+Statusen skal være en diskret hjelp og ikke presenteres som feil eller advarsel. Biblioteket skal kunne filtreres på **Kan kompletteres**, og detaljvisningen skal forklare hvilke av de fire feltene som mangler.
+
+## 179. Legg inn devpatch 0064 og bygg
+
+**✅ VALIDERT**
+
+1. Legg inn filene fra `Tekstilig-devpatch-0064.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg fysisk test-iPhone som kjøredestinasjon.
+4. Bygg og kjør appen.
+5. Kontroller at biblioteket og eksisterende tekstiler åpnes normalt.
+
+Resultat: validert OK av bruker.
+
+## 180. Valider status i full tekstilliste
+
+**✅ VALIDERT**
+
+1. Åpne **Vis alle tekstiler**.
+2. Finn et tekstil som mangler minst ett av hovedbilde, materiale, kategori eller lagringssted.
+3. Kontroller at tekstilet viser **Kan kompletteres**.
+4. Finn et tekstil som har alle fire kriteriene.
+5. Kontroller at dette tekstilet ikke viser statusen.
+
+Resultat: validert OK av bruker.
+
+## 181. Valider filter «Kan kompletteres»
+
+**✅ VALIDERT**
+
+1. Åpne **Filtre**.
+2. Aktiver **Kan kompletteres**.
+3. Kontroller at bare tekstiler som mangler minst ett av de fire kriteriene vises.
+4. Nullstill filteret.
+5. Kontroller at vanlig tekstilliste gjenopprettes.
+
+Resultat: validert OK av bruker.
+
+## 182. Valider forklaring i detaljvisning
+
+**✅ VALIDERT**
+
+1. Åpne et tekstil som er markert **Kan kompletteres**.
+2. Finn seksjonen **Registrering**.
+3. Kontroller at detaljvisningen konkret oppgir hvilke av de fire kriteriene som mangler.
+
+Resultat: validert OK av bruker.
+
+## 183. Valider oppdatering etter komplettering
+
+**✅ VALIDERT**
+
+1. Legg til eller rediger ett eller flere manglende kriterier.
+2. Kontroller at detaljstatusen oppdateres etter lagring.
+3. Fyll inn alle fire kriteriene på et testtekstil.
+4. Kontroller at **Kan kompletteres** forsvinner.
+5. Gå tilbake til biblioteket.
+6. Kontroller at status og filtergrunnlag oppdateres uten app-omstart.
+
+Resultat: validert OK av bruker.
+
+**Observasjon – iOS/iPadOS 27:** Xcode kan logge `-[UIApplication setStatusBarHidden:animationParameters:] API has been deprecated and is a no-op on 27.0 and later.` Det finnes ikke et direkte kall til dette API-et i Tekstilig-koden. Ingen funksjonell feil er observert. Ingen spekulativ kodeendring gjøres nå.
+
+## 184. Valider «Kan kompletteres» på iPad
+
+**✅ AKSJON – DU**
+
+Roadmap-punkt 4 skal fungere godt også på større skjerm. Test den allerede implementerte funksjonen før ny kode skrives.
+
+1. Bruk siste fungerende kode der devpatch 0064 er implementert.
+2. Åpne prosjektet i Xcode 27.
+3. Velg en fysisk iPad med iPadOS 27 som kjøredestinasjon.
+4. Bygg og kjør appen.
+5. Åpne **Vis alle tekstiler**.
+6. Kontroller at **Kan kompletteres** vises tydelig, men diskret, uten å bryte radlayouten.
+7. Åpne **Filtre** og aktiver **Kan kompletteres**.
+8. Kontroller at filtreringen fungerer som på iPhone.
+9. Åpne et ufullstendig tekstil.
+10. Kontroller at seksjonen **Registrering** og listen over mangler er lett å lese og ikke får uheldig layout på iPad.
+11. Fyll inn ett manglende felt og lagre.
+12. Kontroller at statusen oppdateres som forventet.
+
+**Stopp på punkt 184 dersom layout, navigasjon eller oppdatering av status avviker fra iPhone. Ikke gå videre til punkt 185 før punkt 184 er validert.**
+
+## 185. Valider «Kan kompletteres» på Mac
+
+**❗️ AKSJON – DU**
+
+Utfør først dette punktet når punkt 184 er validert.
+
+1. Åpne samme prosjekt i Xcode 27.
+2. Velg macOS-appen som kjøredestinasjon på Apple Silicon Mac.
+3. Bygg og kjør appen.
+4. Åpne komplett tekstilliste.
+5. Kontroller at **Kan kompletteres** vises uten å forstyrre den eksisterende Mac-/split-view-layouten.
+6. Aktiver filteret **Kan kompletteres**.
+7. Kontroller at bare ufullstendige tekstiler vises.
+8. Åpne et ufullstendig tekstil.
+9. Kontroller at **Registrering** viser de manglende feltene tydelig.
+10. Kompletter minst ett manglende felt og lagre.
+11. Kontroller at detaljvisning og bibliotekstatus oppdateres uten app-omstart.
+
+**Stopp på punkt 185 dersom build, layout, navigasjon eller statusoppdatering feiler. Ikke gå videre til punkt 186 før punkt 185 er validert.**
+
+## 186. Stoppunkt for roadmap-punkt 4 – Ufullstendige registreringer
+
+**❗️ STOPPUNKT**
+
+Roadmap-punkt 4 kan markeres ferdig når alle disse er eksplisitt bekreftet:
+
+- kriteriene fra punkt 178 er fortsatt riktige
+- test 179–183 er validert på fysisk iPhone
+- test 184 er validert på iPad
+- test 185 er validert på Mac
+- **Kan kompletteres** er diskret og forståelig på alle tre plattformer
+- filteret fungerer på alle tre plattformer
+- detaljvisningen forklarer hva som mangler
+- statusen oppdateres etter komplettering uten app-omstart
+- eksisterende Textile-, bilde-, Piece-, reservasjons- og prosjektsøkfunksjon er ikke brutt
+
+**Ikke gå videre til roadmap-punkt 5 – iCloud-/CloudKit-robusthet før punkt 186 er validert.**

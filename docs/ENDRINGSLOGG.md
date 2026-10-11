@@ -931,3 +931,19 @@ Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0023.zip`, der test 1–
 - Den feilplasserte root-filen skal slettes som opprydding.
 - Ingen ny funksjonell kamera-, bildeoptimaliserings-, CloudKit-, datamodell-, Piece-, filter- eller søkelogikk introduseres.
 - Ny build-/kameraretest er punkt 177.
+
+
+## Devpatch 0064 – roadmap punkt 4: «Kan kompletteres»
+
+Bygger på autoritativ kilde `Tekstilig-SwiftUIActualApp0035.zip`, der roadmap-punkt 3 er validert og lukket.
+
+- låser beslutningen i punkt 178: hovedbilde, materiale, kategori og lagringssted er de fire kriteriene for komplett registrering
+- legger til diskret **Kan kompletteres**-status i den komplette tekstillisten
+- legger til filteret **Kan kompletteres** i eksisterende filtervisning
+- detaljvisningen forklarer konkret hvilke av de fire feltene som mangler
+- legger til et lett CloudKit-metadataoppslag for å vite hvilke tekstiler som har hovedbilde, uten å laste bilde-assetene til hele biblioteket
+- eksisterende bildevisning og bildelagring er ikke endret
+- farge, Piece/dimensjoner, vekt, elastisitet, krymp, vedlikehold og notat påvirker ikke komplett-statusen
+- ingen nye CloudKit record-typer, felt eller schemaendringer
+- iOS/iPadOS 27-meldingen om deprecated `setStatusBarHidden` dokumenteres som observasjon; ingen direkte bruk av API-et finnes i appkoden
+- test 179–183 er lagt inn som **❗️** frem til eksplisitt validering

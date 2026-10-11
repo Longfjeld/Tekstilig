@@ -170,6 +170,10 @@ struct TextileDetailView: View {
         List {
             textileSummarySection(for: textile)
 
+            if let missingFields = completionMissingFields(for: textile), !missingFields.isEmpty {
+                completionSection(missingFields: missingFields)
+            }
+
             TextileMainImageSection(
                 textile: textile,
                 model: imageModel,
@@ -232,6 +236,44 @@ struct TextileDetailView: View {
                 value: textile.category.isEmpty ? "Ikke registrert" : textile.category
             )
         }
+    }
+
+    private func completionSection(missingFields: [String]) -> some View {
+        Section("Registrering") {
+            Label("Kan kompletteres", systemImage: "circle.dashed")
+                .font(.headline)
+
+            Text("Mangler: \(missingFields.joined(separator: ", ")).")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func completionMissingFields(for textile: Textile) -> [String]? {
+        guard imageModel.loadedTextileID == textile.textileID,
+              !imageModel.isLoading,
+              imageModel.errorMessage == nil,
+              attributesModel.loadedTextileID == textile.textileID,
+              !attributesModel.isLoading,
+              attributesModel.loadErrorMessage == nil else {
+            return nil
+        }
+
+        var missingFields: [String] = []
+
+        if imageModel.primaryImage == nil {
+            missingFields.append("hovedbilde")
+        }
+        if attributesModel.materials.isEmpty {
+            missingFields.append("materiale")
+        }
+        if textile.category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            missingFields.append("kategori")
+        }
+        if !textile.hasLocation {
+            missingFields.append("lagringssted")
+        }
+
+        return missingFields
     }
 
     private func piecesSection(for textile: Textile) -> some View {

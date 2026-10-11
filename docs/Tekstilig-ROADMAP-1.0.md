@@ -100,8 +100,9 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |:---|:---|
 |1. Plattform- og UX-strategi|✅ Fullført. Native iPhone, iPad og macOS 27 fra samme SwiftUI-kodebase er låst retning.|
 |2. Visuell retning|✅ Fullført. Liquid Glass/native SwiftUI, konteksttilpassede bilder, rolig iPhone-hovedside og stor-skjerm split-view er låst retning.|
-|3. Rask registrering|❗️ Nesten ferdig. Devpatch 0055–0058 er funksjonelt validert. Test 170, 171 og 173 er godkjent. Test 174 viste at 0059 ikke løste første-gangs-lukking av kamera. Devpatch 0060 flytter kamerapresentasjonen til stabile `TextileDetailView`; test 175 gjenstår før punkt 3 lukkes.|
-|4–12|❗️ Ikke startet.|
+|3. Rask registrering|✅ Fullført og validert etter devpatch 0063 på autoritativ kilde 0035. Hurtigregistrering, hovedbilde og kamera på eksisterende tekstil er validert OK.|
+|4. Ufullstendige registreringer|❗️ Pågår. Punkt 178 er besluttet: «Kan kompletteres» betyr at hovedbilde, materiale, kategori eller lagringssted mangler. Første implementasjon er devpatch 0064.|
+|5–12|❗️ Ikke startet.|
 
 ### Statusnotat – roadmap punkt 3
 
@@ -110,3 +111,41 @@ Devpatch 0060 ble build-blokkert i Xcode 27 av en SwiftUI-typecheck-feil i `Text
 ### Korrigering etter devpatch 0061
 
 Gjennomgang av `Tekstilig-SwiftUIActualApp0032.zip` viste at `TextileDetailView.swift` fra devpatch 0060/0061 var pakket under feil relativ path utenfor Xcode-targetets `Tekstilig/`-rot. Devpatch 0062 legger samme strukturelle kamerafiks i korrekt target-path. Roadmap-punkt 3 står fortsatt åpent til test 177 er validert.
+
+
+### Roadmap punkt 4 – Ufullstendige registreringer
+
+**178. Kriterier og UX-beslutning – ✅**
+
+Et tekstil regnes som **Kan kompletteres** dersom minst ett av følgende mangler:
+
+- hovedbilde
+- materiale
+- kategori
+- lagringssted
+
+Farge, Piece/dimensjoner, vekt, elastisitet, krymp, vask/vedlikehold og notat gjør ikke i seg selv registreringen ufullstendig. Statusen skal være en diskret hjelp, ikke en feil/advarsel. Biblioteket skal kunne filtreres på **Kan kompletteres**, og detaljvisningen skal forklare hvilke av de fire feltene som mangler.
+
+**179. ❗️ Bygg og åpne biblioteket**
+
+Appen skal bygge uten nye feil. Bibliotek og eksisterende tekstiler skal åpnes normalt.
+
+**180. ❗️ Status i full tekstilliste**
+
+Et tekstil som mangler minst ett av hovedbilde, materiale, kategori eller lagringssted skal vise den diskrete statusen **Kan kompletteres**. Et tekstil som har alle fire skal ikke vise statusen.
+
+**181. ❗️ Filter «Kan kompletteres»**
+
+Aktiver filteret **Kan kompletteres**. Bare tekstiler som mangler minst ett av de fire kriteriene skal vises. Nullstilling av filteret skal gjenopprette vanlig liste.
+
+**182. ❗️ Detaljvisning forklarer mangler**
+
+Åpne et ufullstendig tekstil. Under **Registrering** skal detaljvisningen vise **Kan kompletteres** og en konkret liste over manglende felt, for eksempel `Mangler: materiale, kategori.`
+
+**183. ❗️ Status oppdateres etter komplettering**
+
+Legg til eller rediger manglende hovedbilde, materiale, kategori og/eller lagringssted. Detaljstatusen skal oppdateres direkte når data lagres. Når du går tilbake til biblioteket, skal status/filtergrunnlaget oppdateres uten app-omstart.
+
+**Observasjon – iOS/iPadOS 27 statusbar-API**
+
+Xcode kan logge `-[UIApplication setStatusBarHidden:animationParameters:] API has been deprecated and is a no-op on 27.0 and later.` Det finnes ikke noe direkte kall til dette deprecated API-et i Tekstilig-koden. Ingen funksjonell feil er observert, og det gjøres derfor ingen spekulativ kodeendring nå. Revurderes dersom meldingen kan knyttes til en faktisk UI-feil.

@@ -92,6 +92,61 @@ final class CloudKitTextileImageRepository: TextileImageRepository {
             .image
     }
 
+    func fetchPrimaryImageTextileIDs() async throws -> Set<String> {
+        let query = CKQuery(
+            recordType: Self.recordType,
+            predicate: NSPredicate(value: true)
+        )
+
+        var textileIDs: Set<String> = []
+        var cursor: CKQueryOperation.Cursor?
+
+        repeat {
+            let response: (
+                matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)],
+                queryCursor: CKQueryOperation.Cursor?
+            )
+
+            if let cursor {
+                response = try await database.records(
+                    continuingMatchFrom: cursor,
+                    desiredKeys: ["textileId", "primary"],
+                    resultsLimit: 100
+                )
+            } else {
+                response = try await database.records(
+                    matching: query,
+                    inZoneWith: nil,
+                    desiredKeys: ["textileId", "primary"],
+                    resultsLimit: 100
+                )
+            }
+
+            for (_, result) in response.matchResults {
+                switch result {
+                case .success(let record):
+                    guard !Self.diagnosticRecordNames.contains(record.recordID.recordName),
+                          ((record["primary"] as? NSNumber)?.intValue ?? 0) == 1,
+                          let textileID = record["textileId"] as? String else {
+                        continue
+                    }
+
+                    let normalizedTextileID = textileID.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !normalizedTextileID.isEmpty {
+                        textileIDs.insert(normalizedTextileID)
+                    }
+
+                case .failure(let error):
+                    throw error
+                }
+            }
+
+            cursor = response.queryCursor
+        } while cursor != nil
+
+        return textileIDs
+    }
+
     func savePrimaryImage(
         textileID: String,
         data: Data,
