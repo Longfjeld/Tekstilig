@@ -159,6 +159,8 @@ struct TextileLibraryView: View {
                         Button("Prøv igjen") {
                             Task {
                                 await model.load()
+                                await attributeIndex.load()
+                                await imageIndex.load()
                             }
                         }
                     }

@@ -3396,3 +3396,33 @@ Denne testen skal utføres på test-iPhone, ikke på Mac-en som inneholder prosj
 8. Gå tilbake til biblioteket og kontroller at normal navigasjon fungerer.
 
 Når punkt 187–189 er validert, er første robusthetsblokk for biblioteklast godkjent. Neste blokk skal eksplisitt teste og håndtere iCloud/iCloud Drive-tilgjengelighet og deretter spre samme forståelige feilpresentasjon til bilde-, attributt- og Piece-last uten å endre datamodellen.
+
+### Observasjon etter punkt 189
+
+**✅ Punkt 187–189 er validert.** Etter gjenopprettet nettverk/iCloud lastet selve tekstilbiblioteket igjen, men metadataene som brukes av **Kan kompletteres** måtte hentes på nytt med manuell refresh før statusen og filteret var tilgjengelig. Dette blokkerer ikke valideringen av punkt 187–189, men følges opp direkte i punkt 190.
+
+## 190. Legg inn devpatch 0070 – last kompletteringsmetadata på nytt etter «Prøv igjen»
+
+**✅ AKSJON – DU**
+
+Devpatch 0070 bygger på `Tekstilig-SwiftUIActualApp0038.zip` og retter bare gjenopprettingen etter en bibliotekfeil. Når **Prøv igjen** brukes, skal appen nå hente både Textile-listen og de eksisterende materiale-/farge- og bildemetadataene som brukes av **Kan kompletteres**.
+
+1. Legg inn `Tekstilig-devpatch-0070.zip` med vanlig dry-run og rsync.
+2. Åpne prosjektet i Xcode 27.
+3. Velg fysisk test-iPhone med iOS 27 som kjøredestinasjon.
+4. Bygg og kjør appen med normalt nettverk og kontroller at biblioteket åpnes som før.
+5. Avslutt Tekstilig helt.
+6. Slå av Wi-Fi og mobildata på test-iPhone.
+7. Start Tekstilig og vent til den viser feil-/ventetilstanden fra punkt 188.
+8. Slå på nettverk igjen.
+9. Dersom **Prøv igjen** vises, trykk den én gang.
+10. Vent til biblioteket er ferdig lastet.
+11. Åpne **Vis alle tekstiler** uten å utføre pull-to-refresh eller annen manuell refresh.
+12. Kontroller at tekstiler som mangler ett av kriteriene fortsatt viser **Kan kompletteres**.
+13. Åpne **Filtre**.
+14. Kontroller at filteret **Kan kompletteres** kan aktiveres uten manuell refresh.
+15. Aktiver filteret og kontroller at forventede tekstiler vises.
+16. Nullstill filteret og kontroller at vanlig liste gjenopprettes.
+
+**Stopp på punkt 190 dersom manuell refresh fortsatt er nødvendig for å få tilbake «Kan kompletteres»-status eller filteret etter «Prøv igjen». Ikke gå videre til neste robusthetsblokk før punkt 190 er validert.**
+

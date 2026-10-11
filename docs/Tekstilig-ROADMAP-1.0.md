@@ -102,7 +102,7 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |2. Visuell retning|✅ Fullført. Liquid Glass/native SwiftUI, konteksttilpassede bilder, rolig iPhone-hovedside og stor-skjerm split-view er låst retning.|
 |3. Rask registrering|✅ Fullført og validert etter devpatch 0063 på autoritativ kilde 0035. Hurtigregistrering, hovedbilde og kamera på eksisterende tekstil er validert OK.|
 |4. Ufullstendige registreringer|✅ Fullført og validert på iPhone, iPad og native macOS etter devpatch 0068. «Kan kompletteres», filter og detaljforklaring fungerer på alle tre plattformer.|
-|5. iCloud-/CloudKit-robusthet|❗️ Pågår. Første blokk fra punkt 187 forbedrer bibliotekets lasting, forståelige CloudKit-feil og langvarig ventetilstand.|
+|5. iCloud-/CloudKit-robusthet|❗️ Pågår. Punkt 187–189 er validert. Neste blokk (punkt 190/devpatch 0070) sikrer at «Kan kompletteres»-metadata lastes på nytt sammen med biblioteket etter «Prøv igjen».|
 |6–12|❗️ Ikke startet.|
 
 ### Statusnotat – roadmap punkt 3
@@ -164,3 +164,5 @@ Devpatch 0069:
 - endrer ikke CloudKit-schema, Textile-data eller eksisterende funksjonslogikk
 
 Etter validering av denne blokken skal neste blokk eksplisitt dekke iCloud/iCloud Drive-tilgjengelighet og deretter gjenbruke samme feilpresentasjon for øvrige CloudKit-avhengige deler av appen.
+
+**Observasjon etter test 189:** Selve biblioteket kom tilbake etter gjenopprettet tilgang, men materiale-/farge- og bildemetadata for **Kan kompletteres** krevde manuell refresh. Devpatch 0070 gjør derfor **Prøv igjen** til en samlet gjenlasting av bibliotek og kompletteringsmetadata før neste robusthetsblokk.
