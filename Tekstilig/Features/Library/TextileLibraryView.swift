@@ -16,6 +16,7 @@ struct TextileLibraryView: View {
     @State private var showFilters = false
     @State private var showAllTextiles = false
     @State private var recentImageRefreshToken = UUID()
+    @State private var initialLoadIsTakingLong = false
 
     private var listItems: [TextileListItem] {
         var items: [TextileListItem] = []
@@ -140,10 +141,18 @@ struct TextileLibraryView: View {
         NavigationStack {
             Group {
                 if model.isLoading && !model.hasLoaded {
-                    ProgressView("Henter tekstiler …")
+                    if initialLoadIsTakingLong {
+                        ContentUnavailableView {
+                            Label("Venter på iCloud", systemImage: "icloud")
+                        } description: {
+                            Text("Dette tar lengre tid enn normalt. Kontroller at enheten har nettverk, at du er logget inn på iCloud og at iCloud Drive er slått på. Tekstilig fortsetter å vente på svar fra iCloud.")
+                        }
+                    } else {
+                        ProgressView("Henter tekstiler …")
+                    }
                 } else if let errorMessage = model.errorMessage, model.textiles.isEmpty {
                     ContentUnavailableView {
-                        Label("Kunne ikke hente tekstiler", systemImage: "icloud.slash")
+                        Label(model.errorTitle ?? "Kunne ikke hente tekstiler", systemImage: "icloud.slash")
                     } description: {
                         Text(errorMessage)
                     } actions: {
@@ -225,6 +234,26 @@ struct TextileLibraryView: View {
                 await model.loadIfNeeded()
                 await attributeIndex.loadIfNeeded()
                 await imageIndex.loadIfNeeded()
+            }
+            .task(id: model.isLoading && !model.hasLoaded) {
+                guard model.isLoading && !model.hasLoaded else {
+                    initialLoadIsTakingLong = false
+                    return
+                }
+
+                initialLoadIsTakingLong = false
+
+                do {
+                    try await Task.sleep(for: .seconds(8))
+                } catch {
+                    return
+                }
+
+                guard !Task.isCancelled, model.isLoading, !model.hasLoaded else {
+                    return
+                }
+
+                initialLoadIsTakingLong = true
             }
         }
     }

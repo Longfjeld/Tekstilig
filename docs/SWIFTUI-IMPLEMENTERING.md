@@ -3280,7 +3280,7 @@ Roadmap-punkt 4 skal fungere godt også på større skjerm. Test den allerede im
 
 ## 185. Valider «Kan kompletteres» på Mac
 
-**✅ RETEST ETTER DEVPATCH 0068 – første native macOS-build**
+**✅ VALIDERT – første vellykkede native macOS-build**
 
 Punkt 184 er validert på iPad. Punkt 185 er første gang den native macOS-appen bygges som del av 1.0-løpet. Første buildforsøk stoppet i `PieceEditorView.swift` på ubetinget UIKit-avhengighet. Devpatch 0066 gjorde denne Piece-editor-hjelpekoden plattformbetinget.
 
@@ -3324,7 +3324,7 @@ Etter 0067 kom macOS-kompileringen videre, men stoppet i `TextileLibraryView` me
 
 ## 186. Stoppunkt for roadmap-punkt 4 – Ufullstendige registreringer
 
-**✅ STOPPUNKT**
+**✅ FULLFØRT**
 
 Roadmap-punkt 4 kan markeres ferdig når alle disse er eksplisitt bekreftet:
 
@@ -3338,4 +3338,61 @@ Roadmap-punkt 4 kan markeres ferdig når alle disse er eksplisitt bekreftet:
 - statusen oppdateres etter komplettering uten app-omstart
 - eksisterende Textile-, bilde-, Piece-, reservasjons- og prosjektsøkfunksjon er ikke brutt
 
-**Ikke gå videre til roadmap-punkt 5 – iCloud-/CloudKit-robusthet før punkt 186 er validert.**
+**Roadmap-punkt 4 er validert og avsluttet. Arbeidet fortsetter sekvensielt med punkt 187 og roadmap-punkt 5 – iCloud-/CloudKit-robusthet.**
+
+## 187. Legg inn devpatch 0069 – første iCloud-/CloudKit-robusthetsblokk
+
+**✅ AKSJON – DU**
+
+Roadmap-punkt 4 er nå validert på iPhone, iPad og Mac og avsluttes. Devpatch 0069 starter roadmap-punkt 5 med den første, avgrensede robusthetsblokken for lasting av selve tekstilbiblioteket.
+
+Denne patchen skal ikke endre Textile-data, søk, filtre, bilder, Piece eller CloudKit-schema. Den gjør bare tre ting i bibliotekets første last:
+
+- oversetter vanlige CloudKit-feil til forståelige brukerbeskjeder
+- beholder **Prøv igjen** ved faktisk lastefeil
+- erstatter en langvarig, uforklart spinner med **Venter på iCloud** dersom første lasting fortsatt pågår etter omtrent åtte sekunder
+
+1. Legg inn `Tekstilig-devpatch-0069.zip` med vanlig dry-run og rsync.
+2. Åpne prosjektet i Xcode 27.
+3. Velg fysisk test-iPhone med iOS 27 som kjøredestinasjon.
+4. Bygg prosjektet.
+5. Kjør appen med vanlig fungerende nettverk og iCloud-oppsett.
+6. Kontroller at biblioteket åpnes normalt og at eksisterende tekstiler fortsatt vises.
+7. Åpne minst ett eksisterende tekstil og gå tilbake til biblioteket.
+8. Kontroller at søk og filter fortsatt kan aktiveres normalt.
+
+**Stopp på punkt 187 dersom prosjektet ikke bygger eller normal biblioteklast er endret/broken. Ikke gå videre til punkt 188 før punkt 187 er validert.**
+
+## 188. Valider forståelig tilstand uten nettverk
+
+**✅ AKSJON – DU**
+
+Denne testen skal utføres på test-iPhone, ikke på Mac-en som inneholder prosjektfilene.
+
+1. Avslutt Tekstilig helt på test-iPhone.
+2. Slå av Wi-Fi og mobildata på test-iPhone slik at enheten ikke har nettverk.
+3. Start Tekstilig på nytt.
+4. Observer første lasting av tekstilbiblioteket.
+5. Dersom CloudKit returnerer nettverksfeilen raskt, kontroller at appen viser en forståelig iCloud-/nettverksmelding i stedet for rå `CloudKit-feil <nummer>`.
+6. Dersom CloudKit ikke har returnert feil etter omtrent åtte sekunder, kontroller at **Henter tekstiler …** erstattes av **Venter på iCloud** med forklaring om nettverk/iCloud/iCloud Drive.
+7. Kontroller at appen ikke blir stående med bare en uforklart spinner.
+8. Slå på Wi-Fi eller mobildata igjen.
+9. Hvis **Prøv igjen** vises, trykk den.
+10. Kontroller at tekstilbiblioteket lastes normalt når nettverket er tilbake.
+
+**Stopp på punkt 188 dersom appen fortsatt bare viser en uforklart spinner, viser en rå teknisk CloudKit-feil som hovedbeskjed, eller ikke kan hente biblioteket igjen etter at nettverket er tilbake.**
+
+## 189. Regresjonstest etter gjenopprettet iCloud-tilgang
+
+**✅ AKSJON – DU**
+
+1. Sørg for at test-iPhone igjen har normalt nettverk.
+2. Avslutt og start Tekstilig på nytt.
+3. Kontroller at biblioteket lastes uten at feiltilstanden fra punkt 188 blir hengende igjen.
+4. Åpne **Vis alle tekstiler**.
+5. Kontroller at **Kan kompletteres** fortsatt vises korrekt.
+6. Aktiver og nullstill filteret **Kan kompletteres**.
+7. Åpne et eksisterende tekstil og kontroller at detaljvisningen fortsatt laster som før.
+8. Gå tilbake til biblioteket og kontroller at normal navigasjon fungerer.
+
+Når punkt 187–189 er validert, er første robusthetsblokk for biblioteklast godkjent. Neste blokk skal eksplisitt teste og håndtere iCloud/iCloud Drive-tilgjengelighet og deretter spre samme forståelige feilpresentasjon til bilde-, attributt- og Piece-last uten å endre datamodellen.

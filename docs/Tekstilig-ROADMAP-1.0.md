@@ -101,8 +101,9 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |1. Plattform- og UX-strategi|✅ Fullført. Native iPhone, iPad og macOS 27 fra samme SwiftUI-kodebase er låst retning.|
 |2. Visuell retning|✅ Fullført. Liquid Glass/native SwiftUI, konteksttilpassede bilder, rolig iPhone-hovedside og stor-skjerm split-view er låst retning.|
 |3. Rask registrering|✅ Fullført og validert etter devpatch 0063 på autoritativ kilde 0035. Hurtigregistrering, hovedbilde og kamera på eksisterende tekstil er validert OK.|
-|4. Ufullstendige registreringer|❗️ Pågår. Punkt 178 er besluttet: «Kan kompletteres» betyr at hovedbilde, materiale, kategori eller lagringssted mangler. Første implementasjon er devpatch 0064.|
-|5–12|❗️ Ikke startet.|
+|4. Ufullstendige registreringer|✅ Fullført og validert på iPhone, iPad og native macOS etter devpatch 0068. «Kan kompletteres», filter og detaljforklaring fungerer på alle tre plattformer.|
+|5. iCloud-/CloudKit-robusthet|❗️ Pågår. Første blokk fra punkt 187 forbedrer bibliotekets lasting, forståelige CloudKit-feil og langvarig ventetilstand.|
+|6–12|❗️ Ikke startet.|
 
 ### Statusnotat – roadmap punkt 3
 
@@ -149,3 +150,17 @@ Legg til eller rediger manglende hovedbilde, materiale, kategori og/eller lagrin
 **Observasjon – iOS/iPadOS 27 statusbar-API**
 
 Xcode kan logge `-[UIApplication setStatusBarHidden:animationParameters:] API has been deprecated and is a no-op on 27.0 and later.` Det finnes ikke noe direkte kall til dette deprecated API-et i Tekstilig-koden. Ingen funksjonell feil er observert, og det gjøres derfor ingen spekulativ kodeendring nå. Revurderes dersom meldingen kan knyttes til en faktisk UI-feil.
+
+
+### Roadmap punkt 5 – iCloud-/CloudKit-robusthet
+
+Første implementeringsblokk avgrenses til selve tekstilbibliotekets første last. Målet er at appen ikke skal bli stående med en uforklart lasteindikator når CloudKit bruker lang tid eller returnerer en kjent tilgjengelighetsfeil.
+
+Devpatch 0069:
+
+- gir forståelige meldinger for manglende iCloud-pålogging, nettverksfeil, midlertidig CloudKit-feil, full iCloud-lagring og tilgangsfeil
+- beholder eksplisitt **Prøv igjen** ved faktisk lastefeil
+- viser **Venter på iCloud** med konkret veiledning dersom første biblioteklast varer mer enn omtrent åtte sekunder
+- endrer ikke CloudKit-schema, Textile-data eller eksisterende funksjonslogikk
+
+Etter validering av denne blokken skal neste blokk eksplisitt dekke iCloud/iCloud Drive-tilgjengelighet og deretter gjenbruke samme feilpresentasjon for øvrige CloudKit-avhengige deler av appen.

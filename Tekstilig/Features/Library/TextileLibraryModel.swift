@@ -8,6 +8,7 @@ final class TextileLibraryModel {
     private(set) var textiles: [Textile] = []
     private(set) var isLoading = false
     private(set) var hasLoaded = false
+    private(set) var errorTitle: String?
     var errorMessage: String?
 
     private let repository: any TextileRepository
@@ -29,13 +30,19 @@ final class TextileLibraryModel {
         guard !isLoading else { return }
 
         isLoading = true
+        errorTitle = nil
         errorMessage = nil
 
         do {
             textiles = try await repository.fetchTextiles()
             hasLoaded = true
         } catch {
-            errorMessage = Self.description(for: error)
+            let presentation = CloudKitUserFacingError.describe(
+                error,
+                fallbackTitle: "Kunne ikke hente tekstiler"
+            )
+            errorTitle = presentation.title
+            errorMessage = presentation.message
         }
 
         isLoading = false
@@ -83,30 +90,7 @@ final class TextileLibraryModel {
         }
     }
 
-    private static func description(for error: Error) -> String {
-        guard let cloudKitError = error as? CKError else {
-            return error.localizedDescription
-        }
 
-        var details = [
-            "CloudKit-feil \(cloudKitError.code.rawValue): \(cloudKitError.localizedDescription)"
-        ]
-
-        if let retryAfterSeconds = cloudKitError.retryAfterSeconds {
-            details.append("Prøv igjen om ca. \(Int(retryAfterSeconds.rounded(.up))) sekunder.")
-        }
-
-        if let partialErrors = cloudKitError.partialErrorsByItemID, !partialErrors.isEmpty {
-            let summaries = partialErrors.values.prefix(3).map { $0.localizedDescription }
-            details.append("Del-feil: \(summaries.joined(separator: " | "))")
-        }
-
-        if let underlying = (cloudKitError as NSError).userInfo[NSUnderlyingErrorKey] as? NSError {
-            details.append("Underliggende feil: \(underlying.domain) \(underlying.code): \(underlying.localizedDescription)")
-        }
-
-        return details.joined(separator: "\n")
-    }
 }
 
 private enum TextileLibraryError: LocalizedError {
