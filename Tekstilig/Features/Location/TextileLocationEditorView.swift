@@ -22,13 +22,19 @@ struct TextileLocationEditorView: View {
             Form {
                 Section("Plassering") {
                     TextField("Område / rom", text: $draft.locationArea)
+                        #if os(iOS)
                         .textInputAutocapitalization(.sentences)
+                        #endif
 
                     TextField("Hylle", text: $draft.locationShelf)
+                        #if os(iOS)
                         .textInputAutocapitalization(.sentences)
+                        #endif
 
                     TextField("Beholder / kasse", text: $draft.locationContainer)
+                        #if os(iOS)
                         .textInputAutocapitalization(.sentences)
+                        #endif
                 }
 
                 Section {

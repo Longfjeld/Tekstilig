@@ -48,7 +48,9 @@ struct ProjectReservationView: View {
                 Section {
                     LabeledContent("Reservert lengde") {
                         TextField("cm", value: $reservedLengthCm, format: .number)
+                            #if os(iOS)
                             .keyboardType(.numberPad)
+                            #endif
                             .multilineTextAlignment(.trailing)
                             .focused($focusedField, equals: .length)
                     }
@@ -61,9 +63,13 @@ struct ProjectReservationView: View {
                     Text("Denne første versjonen lagrer én reservasjon per stoffstykke. En eksisterende reservasjon redigeres i stedet for å opprette en ny parallell reservasjon.")
                 }
             }
+            #if os(iOS)
             .scrollDismissesKeyboard(.interactively)
+            #endif
             .navigationTitle(piece.isReserved ? "Endre reservasjon" : "Reserver stykke")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Avbryt") { dismiss() }

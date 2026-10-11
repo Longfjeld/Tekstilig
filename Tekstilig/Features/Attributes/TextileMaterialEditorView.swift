@@ -57,7 +57,9 @@ struct TextileMaterialEditorView: View {
                     LabeledContent("Andel") {
                         HStack(spacing: 4) {
                             TextField("Valgfritt", text: $percentText)
+                                #if os(iOS)
                                 .keyboardType(.numberPad)
+                                #endif
                                 .multilineTextAlignment(.trailing)
                             Text("%")
                                 .foregroundStyle(.secondary)

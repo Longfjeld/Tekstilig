@@ -31,7 +31,9 @@ struct TextileColorEditorView: View {
 
                     TextField("Beskrivende navn (valgfritt)", text: $draft.name)
                     TextField("Hex, f.eks. #273448 (valgfritt)", text: $draft.hex)
+                        #if os(iOS)
                         .textInputAutocapitalization(.characters)
+                        #endif
                         .autocorrectionDisabled()
                 }
 

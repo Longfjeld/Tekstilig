@@ -1,5 +1,8 @@
 import SwiftUI
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 struct PieceEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -29,7 +32,7 @@ struct PieceEditorView: View {
                 Section("Størrelse") {
                     LabeledContent("Lengde") {
                         TextField("cm", value: $draft.lengthCm, format: .number)
-                            .keyboardType(.numberPad)
+                            .tekstiligNumberPad()
                             .multilineTextAlignment(.trailing)
                             .focused($focusedField, equals: .length)
                     }
@@ -38,7 +41,7 @@ struct PieceEditorView: View {
 
                     LabeledContent("Bredde") {
                         TextField("cm", value: $draft.widthCm, format: .number)
-                            .keyboardType(.numberPad)
+                            .tekstiligNumberPad()
                             .multilineTextAlignment(.trailing)
                             .focused($focusedField, equals: .width)
                     }
@@ -55,7 +58,7 @@ struct PieceEditorView: View {
                             value: $draft.reservedLengthCm,
                             format: .number
                         )
-                        .keyboardType(.numberPad)
+                        .tekstiligNumberPad()
                         .focused($focusedField, equals: .reservedLength)
 
                         TextField("Prosjekt", text: $draft.project)
@@ -72,7 +75,7 @@ struct PieceEditorView: View {
                     }
                 }
             }
-            .scrollDismissesKeyboard(.interactively)
+            .tekstiligScrollDismissesKeyboardInteractively()
             .navigationTitle(draft.cloudRecordName == nil ? "Nytt stoffstykke" : "Rediger stoffstykke")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -89,12 +92,14 @@ struct PieceEditorView: View {
                     .disabled(!canSave)
                 }
 
+                #if canImport(UIKit)
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Ferdig") {
                         focusedField = nil
                     }
                 }
+                #endif
             }
             .interactiveDismissDisabled(isSaving)
             .onChange(of: focusedField) { _, newValue in
@@ -140,6 +145,7 @@ struct PieceEditorView: View {
     }
 
     private func moveFocusedTextFieldCursorToEnd() {
+        #if canImport(UIKit)
         DispatchQueue.main.async {
             for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
                 for window in scene.windows {
@@ -150,6 +156,7 @@ struct PieceEditorView: View {
                 }
             }
         }
+        #endif
     }
 
     private func save() {
@@ -185,6 +192,7 @@ private enum PieceEditorField: Hashable {
 }
 
 
+#if canImport(UIKit)
 private extension UIView {
     var tekstiligFirstResponderTextField: UITextField? {
         if isFirstResponder {
@@ -198,5 +206,26 @@ private extension UIView {
         }
 
         return nil
+    }
+}
+#endif
+
+private extension View {
+    @ViewBuilder
+    func tekstiligNumberPad() -> some View {
+        #if canImport(UIKit)
+        self.keyboardType(.numberPad)
+        #else
+        self
+        #endif
+    }
+
+    @ViewBuilder
+    func tekstiligScrollDismissesKeyboardInteractively() -> some View {
+        #if canImport(UIKit)
+        self.scrollDismissesKeyboard(.interactively)
+        #else
+        self
+        #endif
     }
 }

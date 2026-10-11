@@ -30,7 +30,9 @@ struct TextilePhysicalPropertiesEditorView: View {
             Form {
                 Section {
                     TextField("g/m²", text: $weightText)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                 } header: {
                     Text("Vekt")
                 } footer: {
@@ -56,15 +58,21 @@ struct TextilePhysicalPropertiesEditorView: View {
                         }
 
                         TextField("Prosent, valgfritt", text: $stretchPercentText)
+                            #if os(iOS)
                             .keyboardType(.numberPad)
+                            #endif
                     }
                 }
 
                 Section("Krymp") {
                     TextField("Lengde i prosent", text: $shrinkLengthText)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                     TextField("Bredde i prosent", text: $shrinkWidthText)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                     TextField(
                         "Merknad, for eksempel etter vask på 40 °C",
                         text: $draft.shrinkage.note,

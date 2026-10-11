@@ -5,7 +5,7 @@
 > **Fast arbeidsmetodikk:** Les `ARBEIDSMETODIKK.md` før nye kodeendringer. `SWIFTUI-IMPLEMENTERING.md` er hovedsporet. Nye/ikke-validerte punkter markeres ❗️ og endres først til ✅ etter brukerens validering. Ved konkrete feil kan hovedsporet midlertidig erstattes av målrettet ad-hoc feilisolering; når feilen er løst fortsetter arbeidet fra neste ufullførte nummererte punkt.
 **Miljø:** Development · Xcode 27 · iOS/iPadOS 27
 
-> **Aktuell status 2026-10-10:** Roadmap-punkt 3 **Rask registrering** er lukket ✅ etter devpatch 0063. Devpatch 0064 er implementert og test 179–183 er validert ✅. Arbeidet fortsetter nå strengt sekvensielt fra **punkt 184**. Se også `LEVERANSE-OG-TESTMETODIKK.md` for fast leveranse-, rsync-, test-, Git- og snapshot-arbeidsflyt.
+> **Aktuell status 2026-10-11:** Roadmap-punkt 3 **Rask registrering** er lukket ✅. Devpatch 0064 og test 179–183 er validert ✅, og punkt 184 er validert på iPad ✅. Første native macOS-build er fortsatt blokkert i **punkt 185**. Devpatch 0066 fjernet første UIKit-blokkering i `PieceEditorView`; neste build avdekket flere iOS-spesifikke SwiftUI-modifikatorer. Devpatch 0067 retter denne plattformkompatibiliteten uten å endre forretningslogikk. Arbeidet fortsetter strengt sekvensielt fra **punkt 185**. Se også `LEVERANSE-OG-TESTMETODIKK.md` for fast leveranse-, rsync-, test-, Git- og snapshot-arbeidsflyt.
 
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
 
@@ -3280,27 +3280,51 @@ Roadmap-punkt 4 skal fungere godt også på større skjerm. Test den allerede im
 
 ## 185. Valider «Kan kompletteres» på Mac
 
-**❗️ AKSJON – DU**
+**✅ RETEST ETTER DEVPATCH 0068 – første native macOS-build**
 
-Utfør først dette punktet når punkt 184 er validert.
+Punkt 184 er validert på iPad. Punkt 185 er første gang den native macOS-appen bygges som del av 1.0-løpet. Første buildforsøk stoppet i `PieceEditorView.swift` på ubetinget UIKit-avhengighet. Devpatch 0066 gjorde denne Piece-editor-hjelpekoden plattformbetinget.
 
-1. Åpne samme prosjekt i Xcode 27.
-2. Velg macOS-appen som kjøredestinasjon på Apple Silicon Mac.
-3. Bygg og kjør appen.
-4. Åpne komplett tekstilliste.
-5. Kontroller at **Kan kompletteres** vises uten å forstyrre den eksisterende Mac-/split-view-layouten.
-6. Aktiver filteret **Kan kompletteres**.
-7. Kontroller at bare ufullstendige tekstiler vises.
-8. Åpne et ufullstendig tekstil.
-9. Kontroller at **Registrering** viser de manglende feltene tydelig.
-10. Kompletter minst ett manglende felt og lagre.
-11. Kontroller at detaljvisning og bibliotekstatus oppdateres uten app-omstart.
+Neste build kom lenger, men stoppet på fem macOS-inkompatible SwiftUI-modifikatorer:
 
-**Stopp på punkt 185 dersom build, layout, navigasjon eller statusoppdatering feiler. Ikke gå videre til punkt 186 før punkt 185 er validert.**
+```text
+TextileLibraryView:
+- 'NavigationBarDrawer(displayMode:)' is unavailable in macOS
+- 'topBarLeading' is unavailable in macOS
+- TextField has no member 'textInputAutocapitalization'
+
+TextileLocationEditorView:
+- TextField has no member 'textInputAutocapitalization'
+
+TextilePhysicalPropertiesEditorView:
+- TextField has no member 'keyboardType'
+```
+
+Devpatch 0067 gjør disse og øvrige forekomster av samme type iOS-spesifikke tekst-/tastaturmodifikatorer plattformbetinget. iPhone/iPad beholder eksisterende oppførsel; på macOS brukes standard macOS-søkefelt, toolbarplassering og tastatur-/tekstfeltoppførsel. Ingen Textile-, Piece-, reservasjons-, søke- eller CloudKit-logikk endres.
+
+Etter 0067 kom macOS-kompileringen videre, men stoppet i `TextileLibraryView` med `Branches have mismatching types`. Feilen ligger i den beregnede `libraryListContent`, som kan returnere enten `ContentUnavailableView` eller `List`. Devpatch 0068 markerer denne egenskapen eksplisitt med `@ViewBuilder`, slik at SwiftUI kan bygge de alternative view-grenene korrekt på macOS. Ingen søke-, filter-, Textile-, Piece- eller CloudKit-logikk endres.
+
+1. Legg inn `Tekstilig-devpatch-0068.zip` i prosjektet med samme relative plassering.
+2. Åpne prosjektet i Xcode 27.
+3. Velg macOS-appen som kjøredestinasjon på Apple Silicon Mac.
+4. Bygg prosjektet.
+5. Kontroller at build ikke lenger stopper på de fem feilene listet over.
+6. Dersom build fortsatt feiler, stopp her og rapporter **første reelle byggfeil**. Ikke fortsett med funksjonstestene nedenfor.
+7. Når build lykkes, kjør appen.
+8. Åpne komplett tekstilliste.
+9. Kontroller at **Kan kompletteres** vises uten å forstyrre den eksisterende Mac-/split-view-layouten.
+10. Aktiver filteret **Kan kompletteres**.
+11. Kontroller at bare ufullstendige tekstiler vises.
+12. Åpne et ufullstendig tekstil.
+13. Kontroller at **Registrering** viser de manglende feltene tydelig.
+14. Kompletter minst ett manglende felt og lagre.
+15. Kontroller at detaljvisning og bibliotekstatus oppdateres uten app-omstart.
+16. Åpne et eksisterende stoffstykke dersom Mac-UI-et tillater dette, og kontroller at Piece-editoren åpnes uten at eksisterende Piece-data endres utilsiktet.
+
+**Stopp på punkt 185 dersom build, layout, navigasjon eller statusoppdatering feiler. Ikke gå videre til punkt 186 før punkt 185 er eksplisitt validert.**
 
 ## 186. Stoppunkt for roadmap-punkt 4 – Ufullstendige registreringer
 
-**❗️ STOPPUNKT**
+**✅ STOPPUNKT**
 
 Roadmap-punkt 4 kan markeres ferdig når alle disse er eksplisitt bekreftet:
 

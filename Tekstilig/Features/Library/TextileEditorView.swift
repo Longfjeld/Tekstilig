@@ -46,17 +46,25 @@ struct TextileEditorView: View {
 
                     Section("Grunnopplysninger") {
                         TextField("Navn", text: $draft.name)
+                            #if os(iOS)
                             .textInputAutocapitalization(.sentences)
+                            #endif
                     }
 
                     Section {
                         DisclosureGroup("Plassering (valgfritt)", isExpanded: $showLocation) {
                             TextField("Område / rom", text: $draft.locationArea)
+                                #if os(iOS)
                                 .textInputAutocapitalization(.sentences)
+                                #endif
                             TextField("Hylle", text: $draft.locationShelf)
+                                #if os(iOS)
                                 .textInputAutocapitalization(.sentences)
+                                #endif
                             TextField("Beholder / kasse", text: $draft.locationContainer)
+                                #if os(iOS)
                                 .textInputAutocapitalization(.sentences)
+                                #endif
                         }
                     } footer: {
                         Text("Du kan komplettere materiale, farge, stoffstykker og andre opplysninger senere.")

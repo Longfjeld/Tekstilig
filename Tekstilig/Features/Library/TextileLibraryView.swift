@@ -171,34 +171,28 @@ struct TextileLibraryView: View {
                 }
             }
             .navigationTitle("Tekstiler")
+            #if os(macOS)
+            .searchable(
+                text: $searchText,
+                prompt: "Søk i navn, materiale, farge og plassering"
+            )
+            #else
             .searchable(
                 text: $searchText,
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Søk i navn, materiale, farge og plassering"
             )
+            #endif
             .toolbar {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    Button {
-                        showFilters = true
-                    } label: {
-                        Label(
-                            "Filtre",
-                            systemImage: hasActiveFilter
-                                ? "line.3.horizontal.decrease.circle.fill"
-                                : "line.3.horizontal.decrease.circle"
-                        )
-                    }
-                    .accessibilityLabel(hasActiveFilter ? "Filtre, aktive filtre" : "Filtre")
-
-                    if showAllTextiles && !hasActiveSearch && !hasActiveFilter {
-                        Button {
-                            showAllTextiles = false
-                        } label: {
-                            Label("Oversikt", systemImage: "house")
-                        }
-                        .accessibilityLabel("Tilbake til oversikten")
-                    }
+                #if os(macOS)
+                ToolbarItemGroup {
+                    libraryLeadingToolbarButtons
                 }
+                #else
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    libraryLeadingToolbarButtons
+                }
+                #endif
 
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -232,6 +226,30 @@ struct TextileLibraryView: View {
                 await attributeIndex.loadIfNeeded()
                 await imageIndex.loadIfNeeded()
             }
+        }
+    }
+
+    @ViewBuilder
+    private var libraryLeadingToolbarButtons: some View {
+        Button {
+            showFilters = true
+        } label: {
+            Label(
+                "Filtre",
+                systemImage: hasActiveFilter
+                    ? "line.3.horizontal.decrease.circle.fill"
+                    : "line.3.horizontal.decrease.circle"
+            )
+        }
+        .accessibilityLabel(hasActiveFilter ? "Filtre, aktive filtre" : "Filtre")
+
+        if showAllTextiles && !hasActiveSearch && !hasActiveFilter {
+            Button {
+                showAllTextiles = false
+            } label: {
+                Label("Oversikt", systemImage: "house")
+            }
+            .accessibilityLabel("Tilbake til oversikten")
         }
     }
 
@@ -438,16 +456,22 @@ private struct TextileLibraryFilterView: View {
 
                 Section("Plassering") {
                     TextField("Område", text: $filters.locationArea)
+                        #if os(iOS)
                         .textInputAutocapitalization(.never)
+                        #endif
                         .autocorrectionDisabled()
                 }
 
                 Section {
                     TextField("Minimum g/m²", value: $filters.minimumWeight, format: .number)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
 
                     TextField("Maksimum g/m²", value: $filters.maximumWeight, format: .number)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                 } header: {
                     Text("Vekt")
                 } footer: {
@@ -466,7 +490,9 @@ private struct TextileLibraryFilterView: View {
 
             }
             .navigationTitle("Filtre")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Nullstill") {

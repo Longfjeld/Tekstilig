@@ -111,7 +111,9 @@ struct ProjectSearchView: View {
                         criteriaSection
                         resultSection
                     }
+                    #if os(iOS)
                     .scrollDismissesKeyboard(.interactively)
+                    #endif
                     .refreshable {
                         await reloadAll()
                         if hasSearched {
@@ -169,11 +171,15 @@ struct ProjectSearchView: View {
     private var criteriaSection: some View {
         Section {
             TextField("Lengde minst (cm)", text: $requiredLengthText)
+                #if os(iOS)
                 .keyboardType(.numberPad)
+                #endif
                 .focused($focusedNumberField, equals: .length)
 
             TextField("Bredde minst (cm)", text: $minimumWidthText)
+                #if os(iOS)
                 .keyboardType(.numberPad)
+                #endif
                 .focused($focusedNumberField, equals: .width)
 
             Picker("Kategori", selection: $category) {
@@ -201,12 +207,16 @@ struct ProjectSearchView: View {
 
             HStack {
                 TextField("Min g/m²", text: $minimumWeightText)
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
                     .focused($focusedNumberField, equals: .minimumWeight)
                 Text("–")
                     .foregroundStyle(.secondary)
                 TextField("Maks g/m²", text: $maximumWeightText)
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
                     .focused($focusedNumberField, equals: .maximumWeight)
             }
 
@@ -232,7 +242,9 @@ struct ProjectSearchView: View {
             .disabled(stretchLevel == "none")
 
             TextField("Maks krymp (%)", text: $maximumShrinkageText)
+                #if os(iOS)
                 .keyboardType(.numberPad)
+                #endif
                 .focused($focusedNumberField, equals: .maximumShrinkage)
 
             Picker("Vaskbarhet", selection: $washRequirement) {
