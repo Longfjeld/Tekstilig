@@ -3451,7 +3451,7 @@ De tre modellene gjenbruker nå samme `CloudKitUserFacingError` som biblioteket.
 
 ## 192. Valider detaljfeil uten nettverk
 
-**❗️ RETEST ETTER DEVPATCH 0077**
+**✅ RETEST ETTER DEVPATCH 0077**
 
 Første gjennomføring av punkt 192 viste tre forhold som skal korrigeres før punkt 193:
 
@@ -3550,7 +3550,7 @@ Devpatch 0074 løste ikke førstegangsfeilen for **Materialer og farger**. Andre
 
 ## 193. Valider gjenoppretting av detaljdata
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Slå på Wi-Fi eller mobildata igjen.
 2. I hver detaljseksjon som viser feil, trykk **Prøv igjen** én gang.
