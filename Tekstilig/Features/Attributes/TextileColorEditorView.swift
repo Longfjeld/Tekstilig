@@ -103,7 +103,10 @@ struct TextileColorEditorView: View {
                 _ = try await onSave(candidate)
                 dismiss()
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = CloudKitUserFacingError.describe(
+                    error,
+                    fallbackTitle: "Kunne ikke lagre farge"
+                ).message
                 isSaving = false
             }
         }

@@ -69,6 +69,9 @@ struct TextileDetailView: View {
             .task(id: textile.textileID) {
                 await pieceModel.loadIfNeeded(for: textile.textileID)
             }
+            .task(id: textile.textileID) {
+                await attributesModel.loadIfNeeded(for: textile.textileID)
+            }
     }
 
     private func editorPresentations<Content: View>(

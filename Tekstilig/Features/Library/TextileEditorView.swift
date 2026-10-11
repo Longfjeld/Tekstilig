@@ -243,7 +243,10 @@ struct TextileEditorView: View {
 
                 dismiss()
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = CloudKitUserFacingError.describe(
+                    error,
+                    fallbackTitle: "Kunne ikke lagre tekstilet"
+                ).message
                 isSaving = false
             }
         }

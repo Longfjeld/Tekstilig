@@ -30,10 +30,10 @@ final class PieceInventoryModel {
 
         isLoading = true
         errorMessage = nil
+        loadedTextileID = textileID
 
         do {
             pieces = try await repository.fetchPieces(textileID: textileID)
-            loadedTextileID = textileID
         } catch {
             errorMessage = Self.description(for: error)
         }
@@ -87,11 +87,10 @@ final class PieceInventoryModel {
     }
 
     private static func description(for error: Error) -> String {
-        if let cloudKitError = error as? CKError {
-            return "CloudKit-feil \(cloudKitError.code.rawValue): \(cloudKitError.localizedDescription)"
-        }
-
-        return error.localizedDescription
+        CloudKitUserFacingError.describe(
+            error,
+            fallbackTitle: "Kunne ikke hente stoffstykker"
+        ).message
     }
 }
 

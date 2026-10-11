@@ -102,7 +102,7 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |2. Visuell retning|✅ Fullført. Liquid Glass/native SwiftUI, konteksttilpassede bilder, rolig iPhone-hovedside og stor-skjerm split-view er låst retning.|
 |3. Rask registrering|✅ Fullført og validert etter devpatch 0063 på autoritativ kilde 0035. Hurtigregistrering, hovedbilde og kamera på eksisterende tekstil er validert OK.|
 |4. Ufullstendige registreringer|✅ Fullført og validert på iPhone, iPad og native macOS etter devpatch 0068. «Kan kompletteres», filter og detaljforklaring fungerer på alle tre plattformer.|
-|5. iCloud-/CloudKit-robusthet|❗️ Pågår. Punkt 187–189 er validert. Neste blokk (punkt 190/devpatch 0070) sikrer at «Kan kompletteres»-metadata lastes på nytt sammen med biblioteket etter «Prøv igjen».|
+|5. iCloud-/CloudKit-robusthet|❗️ Pågår. Punkt 187–190 er validert. Devpatch 0071/punkt 191–193 gjenbruker den forståelige CloudKit-feilpresentasjonen for hovedbilde, materiale/farge og stoffstykker før eksplisitt test av iCloud-konto/iCloud Drive.|
 |6–12|❗️ Ikke startet.|
 
 ### Statusnotat – roadmap punkt 3

@@ -12,87 +12,113 @@ struct TextileAttributesSection: View {
 
     var body: some View {
         Group {
-            Section {
-                if model.isLoading && model.materials.isEmpty && model.colors.isEmpty {
+            if hasSharedLoadingState {
+                Section {
                     ProgressView("Henter materiale og farge …")
-                } else if let errorMessage = model.loadErrorMessage,
-                          model.materials.isEmpty && model.colors.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("Kunne ikke hente materiale og farge", systemImage: "icloud.slash")
-                            .font(.headline)
-                        Text(errorMessage)
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                        Button("Prøv igjen") {
+                } header: {
+                    Text("Materialer og farger")
+                }
+            } else if hasSharedLoadFailure {
+                Section {
+                    loadErrorView(
+                        title: "Kunne ikke hente materiale og farge",
+                        message: model.materialLoadErrorMessage ?? model.colorLoadErrorMessage ?? "Ukjent feil",
+                        retry: {
                             Task {
                                 await model.load(for: textile.textileID)
                             }
                         }
-                    }
-                    .padding(.vertical, 4)
-                } else {
-                    if model.materials.isEmpty {
-                        Text("Ingen materialer registrert")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(model.materials) { material in
-                            Button {
-                                onEditMaterial(material)
-                            } label: {
-                                TextileMaterialRow(material: material)
+                    )
+                } header: {
+                    Text("Materialer og farger")
+                }
+            } else {
+                Section {
+                    if model.isLoading && model.materials.isEmpty && model.materialLoadErrorMessage == nil {
+                        ProgressView("Henter materialer …")
+                    } else if let errorMessage = model.materialLoadErrorMessage, model.materials.isEmpty {
+                        loadErrorView(
+                            title: "Kunne ikke hente materialer",
+                            message: errorMessage,
+                            retry: {
+                                Task {
+                                    await model.retryMaterials(for: textile.textileID)
+                                }
                             }
-                            .buttonStyle(.plain)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button("Slett", role: .destructive) {
-                                    deletionTarget = .material(material)
+                        )
+                    } else {
+                        if model.materials.isEmpty {
+                            Text("Ingen materialer registrert")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(model.materials) { material in
+                                Button {
+                                    onEditMaterial(material)
+                                } label: {
+                                    TextileMaterialRow(material: material)
+                                }
+                                .buttonStyle(.plain)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button("Slett", role: .destructive) {
+                                        deletionTarget = .material(material)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Button {
-                        onAddMaterial()
-                    } label: {
-                        Label("Legg til materiale", systemImage: "plus")
+                        Button {
+                            onAddMaterial()
+                        } label: {
+                            Label("Legg til materiale", systemImage: "plus")
+                        }
                     }
+                } header: {
+                    Text("Materialer")
                 }
-            } header: {
-                Text("Materialer")
-            }
 
-            Section {
-                if !model.isLoading || !model.materials.isEmpty || !model.colors.isEmpty {
-                    if model.colors.isEmpty {
-                        Text("Ingen farger registrert")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(model.colors) { color in
-                            Button {
-                                onEditColor(color)
-                            } label: {
-                                TextileColorRow(color: color)
+                Section {
+                    if model.isLoading && model.colors.isEmpty && model.colorLoadErrorMessage == nil {
+                        ProgressView("Henter farger …")
+                    } else if let errorMessage = model.colorLoadErrorMessage, model.colors.isEmpty {
+                        loadErrorView(
+                            title: "Kunne ikke hente farger",
+                            message: errorMessage,
+                            retry: {
+                                Task {
+                                    await model.retryColors(for: textile.textileID)
+                                }
                             }
-                            .buttonStyle(.plain)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button("Slett", role: .destructive) {
-                                    deletionTarget = .color(color)
+                        )
+                    } else {
+                        if model.colors.isEmpty {
+                            Text("Ingen farger registrert")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(model.colors) { color in
+                                Button {
+                                    onEditColor(color)
+                                } label: {
+                                    TextileColorRow(color: color)
+                                }
+                                .buttonStyle(.plain)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button("Slett", role: .destructive) {
+                                        deletionTarget = .color(color)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Button {
-                        onAddColor()
-                    } label: {
-                        Label("Legg til farge", systemImage: "plus")
+                        Button {
+                            onAddColor()
+                        } label: {
+                            Label("Legg til farge", systemImage: "plus")
+                        }
                     }
+                } header: {
+                    Text("Farger")
                 }
-            } header: {
-                Text("Farger")
             }
-        }
-        .task(id: textile.textileID) {
-            await model.loadIfNeeded(for: textile.textileID)
         }
         .confirmationDialog(
             "Slett registrering?",
@@ -124,6 +150,38 @@ struct TextileAttributesSection: View {
         }
     }
 
+    private var hasSharedLoadingState: Bool {
+        model.isLoading &&
+        model.materials.isEmpty &&
+        model.colors.isEmpty &&
+        model.materialLoadErrorMessage == nil &&
+        model.colorLoadErrorMessage == nil
+    }
+
+    private var hasSharedLoadFailure: Bool {
+        model.materialLoadErrorMessage != nil &&
+        model.colorLoadErrorMessage != nil &&
+        model.materials.isEmpty &&
+        model.colors.isEmpty
+    }
+
+    @ViewBuilder
+    private func loadErrorView(
+        title: String,
+        message: String,
+        retry: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: "icloud.slash")
+                .font(.headline)
+            Text(message)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Button("Prøv igjen", action: retry)
+        }
+        .padding(.vertical, 4)
+    }
+
     private func deleteSelectedAttribute() {
         guard let deletionTarget else { return }
 
@@ -137,7 +195,7 @@ struct TextileAttributesSection: View {
                 }
                 self.deletionTarget = nil
             } catch {
-                model.mutationErrorMessage = error.localizedDescription
+                model.mutationErrorMessage = TextileAttributesModel.description(for: error)
                 self.deletionTarget = nil
             }
         }

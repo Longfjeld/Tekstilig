@@ -81,7 +81,10 @@ struct TextileLocationEditorView: View {
                 _ = try await onSave(draft)
                 dismiss()
             } catch {
-                errorMessage = error.localizedDescription
+                errorMessage = CloudKitUserFacingError.describe(
+                    error,
+                    fallbackTitle: "Kunne ikke lagre plassering"
+                ).message
                 isSaving = false
             }
         }

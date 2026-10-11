@@ -3403,7 +3403,7 @@ Når punkt 187–189 er validert, er første robusthetsblokk for biblioteklast g
 
 ## 190. Legg inn devpatch 0070 – last kompletteringsmetadata på nytt etter «Prøv igjen»
 
-**✅ AKSJON – DU**
+**✅ VALIDERT**
 
 Devpatch 0070 bygger på `Tekstilig-SwiftUIActualApp0038.zip` og retter bare gjenopprettingen etter en bibliotekfeil. Når **Prøv igjen** brukes, skal appen nå hente både Textile-listen og de eksisterende materiale-/farge- og bildemetadataene som brukes av **Kan kompletteres**.
 
@@ -3425,4 +3425,203 @@ Devpatch 0070 bygger på `Tekstilig-SwiftUIActualApp0038.zip` og retter bare gje
 16. Nullstill filteret og kontroller at vanlig liste gjenopprettes.
 
 **Stopp på punkt 190 dersom manuell refresh fortsatt er nødvendig for å få tilbake «Kan kompletteres»-status eller filteret etter «Prøv igjen». Ikke gå videre til neste robusthetsblokk før punkt 190 er validert.**
+
+## 191. Legg inn devpatch 0071 – forståelige feil i detaljdata
+
+**✅ VALIDERT**
+
+Devpatch 0071 bygger på `Tekstilig-SwiftUIActualApp0039.zip`. Punkt 190 er validert. Denne blokken endrer bare presentasjonen av CloudKit-feil ved lasting av tre eksisterende detaljdatasett:
+
+- hovedbilde
+- materiale og farge
+- stoffstykker
+
+De tre modellene gjenbruker nå samme `CloudKitUserFacingError` som biblioteket. Ingen repository-, lagrings-, Textile-, Piece-, bilde- eller CloudKit-schema-logikk endres.
+
+1. Legg inn `Tekstilig-devpatch-0071.zip` med vanlig dry-run og rsync.
+2. Åpne prosjektet i Xcode 27.
+3. Velg fysisk test-iPhone med iOS 27 som kjøredestinasjon.
+4. Bygg prosjektet.
+5. Kjør appen med normalt nettverk og fungerende iCloud.
+6. Åpne et eksisterende tekstil som har hovedbilde, minst ett materiale og minst ett stoffstykke.
+7. Kontroller at hovedbilde, materiale/farge og stoffstykker lastes som før.
+8. Gå tilbake til biblioteket.
+
+**Stopp på punkt 191 dersom prosjektet ikke bygger eller noen av de tre detaljseksjonene ikke lenger laster normalt. Ikke gå videre til punkt 192 før punkt 191 er validert.**
+
+## 192. Valider detaljfeil uten nettverk
+
+**❗️ RETEST ETTER DEVPATCH 0077**
+
+Første gjennomføring av punkt 192 viste tre forhold som skal korrigeres før punkt 193:
+
+- redigering/lagring av selve Textile kunne vise rå `CKErrorDomain error 3` uten nettverk
+- **Materialer** viste en forståelig feil, mens **Farger** ikke viste tilsvarende overordnet lastefeil; lagring av farge kunne også vise rå CloudKit-feil
+- ved scrolling fra bunnen og oppover i tekstildetaljen kunne visningen hoppe og bli stående i en scroll-loop rundt **Fysiske egenskaper**
+
+Devpatch 0072 gjør målrettet følgende:
+
+- bruker samme forståelige `CloudKitUserFacingError` ved lagring av Textile og farge
+- viser eksplisitt feiltilstand også i Farger-seksjonen
+- markerer automatiske detaljlastinger for hovedbilde, materiale/farge og stoffstykker som forsøkt også når de feiler, slik at scrolling/rebygging av List-seksjoner ikke starter samme mislykkede CloudKit-last om igjen
+- **Prøv igjen** starter fortsatt en eksplisitt ny last når brukeren velger det
+
+Ingen datamodell, repository- eller CloudKit-schema-logikk endres.
+
+1. Legg inn `Tekstilig-devpatch-0072.zip` med vanlig dry-run og rsync.
+2. Åpne prosjektet i Xcode 27, velg fysisk test-iPhone og bygg/kjør appen.
+3. Med normalt nettverk: åpne et eksisterende tekstil, scroll helt til bunnen og deretter helt til toppen. Kontroller at scrolling er normal før offline-testen starter.
+4. Gå tilbake til biblioteket og sørg for at det er ferdig lastet med normalt nettverk.
+5. Slå av Wi-Fi og mobildata på test-iPhone. Ikke avslutt appen.
+6. Åpne et eksisterende tekstil fra den allerede innlastede listen.
+7. Vent på lasting av **Hovedbilde**, **Materialer/Farger** og **Stoffstykker**.
+8. Kontroller at en eventuell feil i hovedbildeseksjonen er formulert som forståelig nettverk/iCloud-feil og ikke som rå CloudKit-feil.
+9. Kontroller at både **Materialer** og **Farger** gir en forståelig feiltilstand når den felles attributtlasten feiler.
+10. Kontroller det samme for **Stoffstykker** dersom denne lasten feiler.
+11. Mens nettverket fortsatt er av: scroll helt til bunnen av tekstildetaljen og deretter oppover forbi **Fysiske egenskaper** minst to ganger. Kontroller at visningen ikke hopper tilbake eller kommer i en scroll-loop.
+12. Trykk **Rediger** på tekstilet, endre kategori og forsøk **Lagre**. Kontroller at feilen beskriver iCloud/nettverk forståelig og ikke viser `CKErrorDomain error 3`. Avbryt editoren etter kontrollen.
+13. Åpne eller legg til en farge og forsøk **Lagre**. Kontroller at også denne feilen er forståelig og ikke viser rå CloudKit-feil. Avbryt editoren etter kontrollen.
+14. Kontroller til slutt at selve tekstildetaljen fortsatt er lesbar og navigerbar selv om CloudKit-delene har feil.
+
+CloudKit kan i enkelte tilfeller levere cachede data selv uten nettverk. Det er tilstrekkelig at kallene som faktisk feiler bruker den forståelige feilpresentasjonen.
+
+**Stopp på punkt 192 dersom en av de observerte rå feilene fortsatt vises, Farger mangler feiltilstand, scrolling fortsatt går i loop, eller detaljvisningen blir ubrukelig. Ikke slå på nettverket og gå videre til punkt 193 før punkt 192 er eksplisitt validert.**
+
+### Resultat etter devpatch 0072
+
+Build og scrolling er validert. Scroll-loopen rundt **Fysiske egenskaper** er løst, og redigering av selve Textile viser forståelig offline-feil. Retesten avdekket to resterende forhold:
+
+- **Materialer/Farger** brukte én felles lastestatus. Når begge kall feilet offline ble samme nettverksproblem kommunisert både under Materialer og Farger. Etter at nettverket kom tilbake kunne materiallasten lykkes mens fargelasten fortsatt stod med egen feiltilstand.
+- **Rediger plassering** brukte fortsatt `localizedDescription` direkte og kunne derfor vise rå `CKErrorDomain` ved lagring offline.
+
+Devpatch 0073 skiller lastefeil for materialer og farger. Dersom begge feiler samtidig og ingen data er lastet, vises én felles feiltilstand i stedet for dobbeltkommunikasjon. Dersom bare ett datasett feiler, vises feilen bare i riktig seksjon, og **Prøv igjen** laster bare det aktuelle datasettet. Plasseringseditoren bruker samme brukerrettede CloudKit-feiloversettelse som de øvrige editorene.
+
+Retest punkt 192 slik:
+
+1. Legg inn `Tekstilig-devpatch-0073.zip` med vanlig dry-run og rsync.
+2. Bygg og kjør med normalt nettverk.
+3. Åpne et tekstil med registrert materiale. Kontroller at Materialer og Farger ikke viser feil ved normal last.
+4. Slå av Wi-Fi og mobildata uten å avslutte appen, og åpne et annet allerede innlastet tekstil.
+5. Hvis både materiale- og fargelast feiler, kontroller at nettverksproblemet vises **én gang** som en felles feiltilstand, ikke som to nesten like feilmeldinger.
+6. Slå nettverket på igjen og bruk **Prøv igjen**. Kontroller at materialer og farger lastes tilbake og at gammel feiltilstand forsvinner.
+7. Slå nettverket av igjen. Åpne **Rediger plassering**, gjør en ufarlig endring og trykk **Lagre**. Kontroller at feilen er forståelig og ikke viser `CKErrorDomain`. Avbryt editoren etter kontrollen.
+8. Scroll tekstildetaljen helt ned og opp forbi **Fysiske egenskaper** og kontroller at scroll-loopen fortsatt er borte.
+
+**Stopp fortsatt på punkt 192 dersom én av disse kontrollene feiler. Punkt 193 skal ikke kjøres før denne retesten er eksplisitt validert.**
+
+### Resultat etter devpatch 0073
+
+Dobbeltkommunikasjonen for Materialer/Farger er samlet til én felles feiltilstand når begge kall feiler. Retesten avdekket likevel at første attributtlast etter appoppstart i enkelte tilfeller kan få en kortvarig CloudKit nettverks-/servicefeil selv om testtelefonen allerede har nettverk. Da blir Materialer/Farger stående i feiltilstand til brukeren velger **Prøv igjen**.
+
+Devpatch 0074 endrer bare den automatiske førstegangs-lastingen av materiale og farge: ved en CloudKit-feil som eksplisitt er klassifisert som midlertidig (`networkUnavailable`, `networkFailure`, `serviceUnavailable`, `zoneBusy` eller `requestRateLimited`) venter modellen kort og gjør **ett** automatisk nytt forsøk før feiltilstanden vises. Andre feil retries ikke automatisk. Manuell **Prøv igjen** beholdes uendret dersom også andre forsøk feiler.
+
+Retest punkt 192 slik:
+
+1. Legg inn `Tekstilig-devpatch-0074.zip` med vanlig dry-run og rsync.
+2. Sørg for at test-iPhone har normalt fungerende nettverk og iCloud.
+3. Avslutt Tekstilig helt og start appen på nytt.
+4. Åpne et eksisterende tekstil med registrert materiale.
+5. Kontroller at **Materialer og farger** lastes uten at en kortvarig første CloudKit-feil blir stående som permanent feiltilstand.
+6. Gjenta full avslutning/start og åpning av tekstildetaljen minst én gang til.
+7. Slå av Wi-Fi og mobildata uten å avslutte appen, og åpne et annet allerede innlastet tekstil.
+8. Kontroller at en reell offline-feil fortsatt ender i den forståelige felles feiltilstanden etter det ene automatiske forsøket, og at appen ikke står i en retry-loop.
+9. Slå nettverket på igjen og trykk **Prøv igjen**. Kontroller at Materialer/Farger lastes og at feiltilstanden forsvinner.
+10. Slå nettverket av igjen, åpne **Rediger plassering**, gjør en ufarlig endring og trykk **Lagre**. Kontroller at feilen er brukerrettet og ikke viser `CKErrorDomain`.
+11. Scroll helt ned og opp forbi **Fysiske egenskaper** og kontroller at scroll-loopen fortsatt er borte.
+
+**Stopp på punkt 192 dersom normal førstegangs-last fortsatt blir stående i feil, offline-testen går i automatisk retry-loop, Rediger plassering viser rå CloudKit-feil, eller scroll-problemet kommer tilbake. Punkt 193 er fortsatt sperret til punkt 192 er eksplisitt validert.**
+
+### Diagnostisk retest etter devpatch 0075
+
+Devpatch 0074 løste ikke førstegangsfeilen for **Materialer og farger**. Andre CloudKit-data lastes normalt med nettverk tilgjengelig, så flere automatiske retries skal ikke legges inn før den faktiske feilen er identifisert. Devpatch 0075 er derfor kun diagnostikk for attributtlasten. Brukergrensesnitt og lagringslogikk endres ikke.
+
+1. Legg inn `Tekstilig-devpatch-0075.zip` med vanlig dry-run og rsync.
+2. Åpne prosjektet i Xcode 27 og velg fysisk test-iPhone.
+3. Vis Xcode-konsollen.
+4. Sørg for at telefonen har normalt nettverk og fungerende iCloud.
+5. Avslutt Tekstilig helt og start appen på nytt fra Xcode.
+6. Åpne ett eksisterende tekstil som reproduserer feilen **Kunne ikke hente materiale og farge**.
+7. Vent til feilen vises.
+8. Finn konsollinjene som starter med `[Tekstilig][Attributes]`.
+9. Kopier hele denne sammenhengende diagnostikkblokken tilbake til utviklingsloggen/chatten. Ta med `NSError domain/code`, `CKError code/name`, eventuell `partialErrors` og eventuell `underlying`-linje.
+10. Stopp testen her. Ikke gå videre til punkt 193 før årsaken er analysert og punkt 192 er validert.
+
+**Devpatch 0075 skal ikke regnes som en funksjonell retting. Den skal bare gjøre den underliggende CloudKit-feilen synlig i Xcode-konsollen uten å vise teknisk diagnostikk til sluttbrukeren.**
+
+## 193. Valider gjenoppretting av detaljdata
+
+**❗️ AKSJON – DU**
+
+1. Slå på Wi-Fi eller mobildata igjen.
+2. I hver detaljseksjon som viser feil, trykk **Prøv igjen** én gang.
+3. Kontroller at hovedbildet lastes tilbake dersom hovedbildeseksjonen feilet.
+4. Kontroller at materiale/farge lastes tilbake dersom attributtseksjonen feilet.
+5. Kontroller at stoffstykkene lastes tilbake dersom Piece-seksjonen feilet.
+6. Kontroller at ingen duplikate bilder, materialer, farger eller stoffstykker blir opprettet av gjenlastingen.
+7. Gå tilbake til biblioteket og kontroller at vanlig navigasjon fortsatt fungerer.
+
+**Når punkt 191–193 er validert, er den felles feilpresentasjonen for bibliotekets og detaljvisningens viktigste lesekall godkjent. Neste blokk skal eksplisitt teste iCloud-konto/iCloud Drive-utilgjengelighet før roadmap-punkt 5 vurderes avsluttet.**
+
+
+### Diagnoseresultat etter devpatch 0075 og retest med devpatch 0076
+
+Diagnostikken viste at normal førstegangs-last med fungerende nettverk ikke feilet med en nettverksfeil. Begge kallene ble kansellert av CloudKit:
+
+```text
+CKErrorDomain code=20
+Operation ... was cancelled
+```
+
+`CKError` kode 20 er `operationCancelled`. Dette passer med at attributtlasten kjøres fra en SwiftUI `.task` på en del av detaljvisningen som kan bli kansellert når `List`/seksjoner bygges på nytt. Modellen behandlet tidligere denne kanselleringen som en vanlig CloudKit-feil og satte samtidig `loadedTextileID` før lastingen var ferdig. Dermed kunne den kansellerte lasten bli stående som permanent feiltilstand og automatisk ny last ble sperret.
+
+Devpatch 0076 retter bare denne cancellation-håndteringen:
+
+- `operationCancelled` og Swift `CancellationError` vises ikke som nettverk/iCloud-feil
+- en kansellert automatisk last markerer ikke tekstilet som ferdig lastet
+- `loadedTextileID` settes først når den automatiske attributtlasten har nådd en stabil slutt
+- kansellering under den korte transient-retry-ventingen svelges ikke
+- reelle CloudKit-feil bruker fortsatt eksisterende brukerrettede feilpresentasjon
+
+#### Retest punkt 192 etter devpatch 0076
+
+1. Legg inn `Tekstilig-devpatch-0076.zip` med vanlig dry-run og rsync.
+2. Sørg for at test-iPhone har normalt nettverk og fungerende iCloud.
+3. Åpne prosjektet i Xcode 27, bygg og kjør på fysisk test-iPhone.
+4. Avslutt Tekstilig helt og start appen på nytt fra Xcode.
+5. Åpne et eksisterende tekstil med registrert materiale og/eller farge.
+6. Kontroller at **Materialer/Farger** lastes normalt og at `operationCancelled` ikke blir stående som brukerrettet feiltilstand.
+7. Gjenta full avslutning/start og åpning av samme eller et annet tekstil minst én gang.
+8. Slå deretter av Wi-Fi og mobildata uten å avslutte appen, og åpne et annet allerede innlastet tekstil.
+9. Kontroller at en faktisk offline-feil fortsatt vises som forståelig iCloud-/nettverksfeil.
+10. Kontroller at Materialer/Farger ikke viser dobbeltkommunikasjon når begge kall feiler.
+11. Åpne **Rediger plassering**, gjør en ufarlig endring og trykk **Lagre**. Kontroller at feilen fortsatt er brukerrettet og ikke viser rå `CKErrorDomain`.
+12. Scroll helt ned og opp forbi **Fysiske egenskaper** og kontroller at scroll-loopen fortsatt er borte.
+13. Slå nettverket på igjen og bruk **Prøv igjen** dersom en feiltilstand vises. Kontroller at dataene lastes og at gammel feiltilstand forsvinner.
+
+**Stopp fortsatt på punkt 192 dersom Materialer/Farger får permanent feil ved normal førstegangs-last, en reell offline-feil presenteres rått, Rediger plassering viser `CKErrorDomain`, eller scroll-problemet kommer tilbake. Punkt 193 er sperret til punkt 192 er eksplisitt validert.**
+
+### Rotårsaksretting etter devpatch 0076 – devpatch 0077
+
+Retesten etter devpatch 0076 viste at **Materialer og farger** kunne bli stående permanent på `Henter materiale og farge …`. En samlet gjennomgang av `TextileDetailView`, `TextileAttributesSection` og `TextileAttributesModel` viste at problemet ikke lå i CloudKit-repositoryene.
+
+Attributtlasten var eid av en `.task` på `TextileAttributesSection`. Samtidig bytter denne seksjonen selve SwiftUI-strukturen mellom én felles loading/error-seksjon og to separate Materialer/Farger-seksjoner når `isLoading` endrer verdi. Denne ombyggingen kunne få SwiftUI til å kansellere tasken som selv startet state-endringen. CloudKit rapporterte dette som `CKErrorDomain code=20` (`operationCancelled`).
+
+Devpatch 0077 flytter derfor eierskapet til den automatiske attributtlasten opp til det stabile skjermnivået i `TextileDetailView`, ved siden av den eksisterende Piece-lastingen. `TextileAttributesSection` viser nå bare state og starter ikke sin egen livssyklusstyrte last. Ingen repository-, datamodell-, CloudKit-schema- eller lagringslogikk endres. Cancellation-håndteringen fra 0076 beholdes.
+
+#### Retest punkt 192 etter devpatch 0077
+
+1. Legg inn `Tekstilig-devpatch-0077.zip` med vanlig dry-run og rsync.
+2. Sørg for at test-iPhone har normalt nettverk og fungerende iCloud.
+3. Åpne prosjektet i Xcode 27, bygg og kjør på fysisk test-iPhone.
+4. Avslutt Tekstilig helt og start appen på nytt fra Xcode.
+5. Åpne et eksisterende tekstil med registrert materiale og/eller farge.
+6. Kontroller at **Materialer/Farger** går fra eventuell kort lasting til faktisk innhold, og ikke blir stående permanent på `Henter materiale og farge …`.
+7. Gjenta full avslutning/start og åpning av samme eller et annet tekstil minst én gang.
+8. Kontroller at scrolling helt ned og opp forbi **Fysiske egenskaper** fortsatt fungerer uten hopp eller loop.
+9. Slå av Wi-Fi og mobildata uten å avslutte appen, og åpne et annet allerede innlastet tekstil.
+10. Kontroller at en faktisk offline-feil i Materialer/Farger vises som forståelig iCloud-/nettverksfeil, uten dobbeltkommunikasjon og uten rå `CKErrorDomain`.
+11. Åpne **Rediger plassering**, gjør en ufarlig endring og trykk **Lagre**. Kontroller at feilen fortsatt er brukerrettet.
+12. Slå nettverket på igjen og bruk **Prøv igjen** dersom feiltilstand vises. Kontroller at dataene lastes tilbake og at gammel feiltilstand forsvinner.
+
+**Stopp fortsatt på punkt 192 dersom Materialer/Farger blir stående på permanent loading, får permanent feil med normalt nettverk, reell offline-feil presenteres rått, Rediger plassering viser `CKErrorDomain`, eller scroll-problemet kommer tilbake. Punkt 193 er sperret til punkt 192 er eksplisitt validert.**
 

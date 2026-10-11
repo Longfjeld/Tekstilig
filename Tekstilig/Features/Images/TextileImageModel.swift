@@ -31,10 +31,10 @@ final class TextileImageModel {
 
         isLoading = true
         errorMessage = nil
+        loadedTextileID = textileID
 
         do {
             primaryImage = try await repository.fetchPrimaryImage(textileID: textileID)
-            loadedTextileID = textileID
         } catch {
             errorMessage = Self.description(for: error)
         }
@@ -73,10 +73,9 @@ final class TextileImageModel {
     }
 
     private static func description(for error: Error) -> String {
-        if let cloudKitError = error as? CKError {
-            return "CloudKit-feil \(cloudKitError.code.rawValue): \(cloudKitError.localizedDescription)"
-        }
-
-        return error.localizedDescription
+        CloudKitUserFacingError.describe(
+            error,
+            fallbackTitle: "Kunne ikke hente hovedbilde"
+        ).message
     }
 }
