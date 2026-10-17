@@ -102,8 +102,9 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |2. Visuell retning|✅ Fullført. Liquid Glass/native SwiftUI, konteksttilpassede bilder, rolig iPhone-hovedside og stor-skjerm split-view er låst retning.|
 |3. Rask registrering|✅ Fullført og validert etter devpatch 0063 på autoritativ kilde 0035. Hurtigregistrering, hovedbilde og kamera på eksisterende tekstil er validert OK.|
 |4. Ufullstendige registreringer|✅ Fullført og validert på iPhone, iPad og native macOS etter devpatch 0068. «Kan kompletteres», filter og detaljforklaring fungerer på alle tre plattformer.|
-|5. iCloud-/CloudKit-robusthet|❗️ Pågår. Punkt 187–194 er validert. Punkt 194 avklarte at avslått iCloud Drive-synkronisering alene ikke blokkerer CloudKit; tidligere gjenopprettingstest 195 utgår. Neste aktive validering er manglende iCloud-konto i punkt 196.|
-|6–12|❗️ Ikke startet.|
+|5. iCloud-/CloudKit-robusthet|✅ Fullført. Punkt 187–197 er validert. Nettverksfeil, manglende iCloud-konto, detaljlasting og gjenoppretting har forståelige tilstander; avslått iCloud Drive-synk alene blokkerer ikke CloudKit.|
+|6. Eksport og backup|❗️ Pågår. Punkt 198 fastsetter et versjonert, menneskelesbart ZIP + JSON + bilder-format før eksportkode implementeres.|
+|7–12|❗️ Ikke startet.|
 
 ### Statusnotat – roadmap punkt 3
 
@@ -166,3 +167,8 @@ Devpatch 0069:
 Etter validering av denne blokken skal neste blokk eksplisitt dekke reell iCloud-/CloudKit-tilgjengelighet og deretter gjenbruke samme feilpresentasjon for øvrige CloudKit-avhengige deler av appen. Punkt 194 viste senere at iCloud Drive-filsynkronisering kan være slått av uten at privat CloudKit-database blir utilgjengelig; dette skal derfor ikke behandles som en feiltilstand i seg selv.
 
 **Observasjon etter test 189:** Selve biblioteket kom tilbake etter gjenopprettet tilgang, men materiale-/farge- og bildemetadata for **Kan kompletteres** krevde manuell refresh. Devpatch 0070 gjør derfor **Prøv igjen** til en samlet gjenlasting av bibliotek og kompletteringsmetadata før neste robusthetsblokk.
+
+
+### Roadmap punkt 6 – Eksport og backup
+
+Punkt 198 starter med å fastsette backupkontrakten før kode implementeres. Foreslått v1-format er én komplett snapshot-ZIP med `backup.json` og en `images/`-mappe. JSON-filen er versjonert og inneholder Textile med alle tilhørende Piece-, Material-, Color- og Image-metadata. Bilder lagres som egne filer. Tekstilig-ID-er brukes som applikasjonens restore-identitet; CloudKit record names skal ikke være nødvendig for gjenoppretting. Beslutningen må godkjennes før eksportimplementasjonen starter.

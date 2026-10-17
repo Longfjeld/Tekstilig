@@ -13,6 +13,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var diagnostic = CloudKitAssetDiagnosticModel()
     @State private var pieceDiagnostic = CloudKitPieceDiagnosticModel()
+    @State private var backupDiagnostic = BackupDiagnosticModel()
 
     var body: some View {
         NavigationStack {
@@ -150,6 +151,52 @@ struct DeveloperDiagnosticsView: View {
                             .foregroundStyle(.green)
                     } footer: {
                         Text("Native PoC er fullført: Textile, TextileImage/CKAsset, separat klientinstans og Piece er validert.")
+                    }
+                }
+
+                Section {
+                    Button {
+                        Task {
+                            await backupDiagnostic.run()
+                        }
+                    } label: {
+                        if backupDiagnostic.isRunning {
+                            HStack {
+                                ProgressView()
+                                Text("Bygger backupmodell …")
+                            }
+                        } else {
+                            Label("Test backupmodell", systemImage: "archivebox")
+                        }
+                    }
+                    .disabled(backupDiagnostic.isRunning)
+                } header: {
+                    Text("Roadmap 6: backupmodell")
+                } footer: {
+                    Text("Bygger backupen i minnet, serialiserer backup.json og leser JSON-en tilbake. Ingen filer skrives og ingen CloudKit-data endres.")
+                }
+
+                if backupDiagnostic.completedSuccessfully {
+                    Section("Backupmodell validert") {
+                        Label("JSON round-trip OK", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.green)
+                        LabeledContent("Tekstiler", value: "\(backupDiagnostic.textileCount)")
+                        LabeledContent("Materialer", value: "\(backupDiagnostic.materialCount)")
+                        LabeledContent("Farger", value: "\(backupDiagnostic.colorCount)")
+                        LabeledContent("Stoffstykker", value: "\(backupDiagnostic.pieceCount)")
+                        LabeledContent("Bilder", value: "\(backupDiagnostic.imageCount)")
+                        LabeledContent("JSON-størrelse", value: byteCount(backupDiagnostic.jsonByteCount))
+                        LabeledContent("Bildedata", value: byteCount(backupDiagnostic.imageByteCount))
+                    }
+                } else if let errorMessage = backupDiagnostic.errorMessage {
+                    Section("Backupmodell – feil") {
+                        Label {
+                            Text(errorMessage)
+                                .font(.callout)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                        }
                     }
                 }
             }

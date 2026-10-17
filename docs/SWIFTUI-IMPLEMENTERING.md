@@ -3684,3 +3684,185 @@ Roadmap-punkt 5 kan avsluttes når følgende er eksplisitt validert:
 - manglende iCloud-konto gir forståelig tilstand uten krasj eller permanent spinner
 
 **Ikke start roadmap-punkt 6 – Eksport og backup – før punkt 196 er validert og dette stoppunktet kan markeres ✅.**
+
+## 198. Fastsett backupformat for roadmap-punkt 6 – Eksport og backup
+
+**✅ BESLUTTET**
+
+Roadmap-punkt 5 er fullført og validert. Punkt 6 starter med å låse et versjonert backupformat før eksportkode implementeres. Formatet skal være menneskelesbart, bevare alle data som finnes i dagens domenemodell og samtidig være egnet som kontrakt for roadmap-punkt 7 – Import og restore.
+
+### Foreslått format for Tekstilig backup v1
+
+En eksport leveres som én vanlig ZIP-fil med navn etter mønsteret:
+
+```text
+Tekstilig-backup-YYYY-MM-DD-HHmmss.zip
+```
+
+ZIP-filen inneholder:
+
+```text
+Tekstilig-backup-YYYY-MM-DD-HHmmss/
+├── backup.json
+└── images/
+    ├── IMG-....jpg
+    ├── IMG-....png
+    └── ...
+```
+
+`backup.json` er UTF-8 JSON med et eksplisitt formatversjonsfelt. Data organiseres per tekstil slik at et tekstil og alle tilhørende underobjekter kan forstås og senere gjenopprettes samlet.
+
+Foreslått toppnivå:
+
+```json
+{
+  "format": "tekstilig-backup",
+  "formatVersion": 1,
+  "exportedAt": "2026-10-11T20:00:00Z",
+  "textiles": []
+}
+```
+
+Hvert tekstilobjekt skal inneholde alle verdier som finnes i dagens modell:
+
+- `textileID`
+- `name`
+- `category`
+- `createdAt`
+- `updatedAt`
+- `schemaVersion`
+- plassering: `locationArea`, `locationShelf`, `locationContainer`
+- `notes`
+- vedlikehold: vask tillatt, temperatur, program, bleking, tørketrommel, tørking, stryking, rens og vedlikeholdsnotat
+- `weightGsm`
+- elastisitet: nivå, retning og prosent
+- krymp: lengdeprosent, breddeprosent og notat
+- tilhørende `materials`
+- tilhørende `colors`
+- tilhørende `pieces`
+- tilhørende `images`-metadata
+
+Tilhørende objekter beholder sine permanente Tekstilig-ID-er:
+
+- `Piece.pieceID`
+- `TextileMaterial.materialID`
+- `TextileColor.colorID`
+- `TextileImage.imageID`
+
+CloudKit `recordName` er lagringsidentitet i dagens database, men skal **ikke** være nødvendig som gjenopprettingsidentitet. Backupformatet skal derfor bygge restore-logikken på Tekstilig-ID-ene. CloudKit record names kan eventuelt tas med som diagnostisk kildeinformasjon senere, men restore skal ikke være avhengig av dem.
+
+For hvert bilde inneholder `backup.json` metadataene:
+
+- `imageID`
+- `type`
+- `isPrimary`
+- `fileName`
+- `contentType`
+- relativ `backupPath`, for eksempel `images/IMG-....jpg`
+
+Selve bildebytene lagres i `images/` og skal ikke base64-kodes inn i JSON. Dette holder JSON-filen lesbar og unngår unødvendig oppblåsing av backupen.
+
+### Dataprinsipper
+
+1. Backupen skal inneholde alle Textile-records som appen behandler som ordinære brukerdata.
+2. Alle tilhørende Piece-, Material-, Color- og TextileImage-data skal eksporteres.
+3. Diagnostikk-/PoC-records skal ikke eksporteres som brukerdata.
+4. Tomme/valgfrie verdier skal representeres eksplisitt og forutsigbart slik at senere import kan skille mellom manglende og faktiske verdier.
+5. Datoer skal lagres som ISO 8601 i UTC.
+6. Eksporten skal ikke endre data i CloudKit.
+7. En backup skal være selvstendig: JSON + bilder skal være nok til å bygge senere restore uten tilgang til den opprinnelige CloudKit-databasen.
+8. Første versjon trenger ikke støtte inkrementell backup. Hver eksport er en komplett snapshot-backup.
+9. Første versjon trenger ikke kryptere ZIP-filen. Brukeren velger selv hvor filen lagres/deles via systemets fil-/share-grensesnitt. Eventuell kryptert backup vurderes separat senere dersom behovet oppstår.
+
+### Plattformflyt
+
+Samme eksportfunksjon skal brukes på iPhone, iPad og Mac. Brukeren starter eksport fra en tydelig administrativ handling, appen bygger backupen i en midlertidig katalog, pakker den som ZIP og presenterer systemets vanlige lagre/dele-grensesnitt. Ingen plattform skal ha et eget backupformat.
+
+### Hvorfor dette formatet anbefales
+
+- ZIP er et åpent og lett tilgjengelig containerformat.
+- JSON er menneskelesbart og enkelt å versjonere.
+- Bilder beholdes som vanlige bildefiler i stedet for å gjemmes i binære databasefiler.
+- `formatVersion` gjør senere schemaendringer håndterbare.
+- Tekstilig-ID-ene gir en applikasjonseid identitet som kan brukes av senere import/restore uten å være bundet til CloudKit record names.
+- Samme format kan brukes som testkontrakt i roadmap-punkt 7.
+
+### Ikke implementert i punkt 198
+
+Dette punktet endrer ingen Swift-kode og oppretter ingen backupfil. Først etter eksplisitt godkjenning implementeres eksporten i små, sekvensielle steg.
+
+**Punkt 198 er eksplisitt godkjent. Backupformat v1 er låst som kontrakt for videre eksport og senere import/restore.**
+
+## 199. Legg inn devpatch 0081 – backupmodell og in-memory snapshot
+
+**❗️ AKSJON – DU**
+
+Devpatch 0081 er første kodeblokk i roadmap-punkt 6. Den skriver ikke ZIP eller andre filer. Målet er å validere at alle dagens brukerdata kan samles i den versjonerte backupmodellen fra punkt 198, serialiseres til JSON og leses tilbake uten tap.
+
+Patchen introduserer:
+
+- `TekstiligBackupDocument` og underobjekter for Textile, vedlikehold, fysiske egenskaper, materialer, farger, Piece og bildemetadata
+- `TekstiligBackupBuilder`, som leser ordinære brukerdata via eksisterende repositories
+- innsamling av primærbilder i minnet med separat `backupPath` for senere ZIP-skriving
+- en Debug-diagnostikk som serialiserer `backup.json` i minnet og dekoder den tilbake igjen
+
+Ingen CloudKit-data lagres, endres eller slettes i dette steget. Ingen backupfil skrives til disk.
+
+1. Legg inn `Tekstilig-devpatch-0081.zip` med vanlig dry-run og rsync.
+2. Åpne prosjektet i Xcode 27.
+3. Velg fysisk test-iPhone som kjøredestinasjon.
+4. Bygg prosjektet.
+5. Kontroller at build fullføres uten nye feil eller warnings fra backupfilene.
+6. Kjør appen.
+7. Kontroller kort at fanene **Tekstiler** og **Finn til prosjekt** fortsatt åpnes normalt.
+
+**Stopp på punkt 199 dersom prosjektet ikke bygger eller eksisterende hovedflyt er påvirket. Ikke gå videre til punkt 200 før punkt 199 er validert.**
+
+## 200. Valider backupmodellen i Debug-diagnostikk
+
+**❗️ AKSJON – DU**
+
+1. Åpne fanen **Utvikling**.
+2. Finn seksjonen **Roadmap 6: backupmodell**.
+3. Trykk **Test backupmodell** én gang.
+4. Vent til testen er ferdig.
+5. Kontroller at resultatet viser **JSON round-trip OK**.
+6. Kontroller at antall **Tekstiler** er større enn 0 og virker rimelig sammenlignet med biblioteket.
+7. Kontroller at tellerne for Materialer, Farger, Stoffstykker og Bilder er ikke-negative og virker plausible ut fra testdataene.
+8. Kontroller at **JSON-størrelse** er større enn 0 B.
+9. Dersom minst ett tekstil har hovedbilde, kontroller at **Bilder** er større enn 0 og at **Bildedata** er større enn 0 B.
+10. Kontroller at appen ikke viser noen backupfeil.
+
+Denne testen validerer at JSON-kontrakten kan rundtrippes og at bildebytes kan samles separat i minnet. Den validerer ennå ikke ZIP-fil eller deling/lagring.
+
+**Stopp på punkt 200 dersom JSON round-trip feiler, tellingene er åpenbart feil, eller eksisterende CloudKit-data ikke kan samles. Ikke gå videre til punkt 201 før punkt 200 er validert.**
+
+## 201. Regresjon etter in-memory backupdiagnostikk
+
+**❗️ AKSJON – DU**
+
+1. Gå tilbake til fanen **Tekstiler**.
+2. Åpne et eksisterende tekstil med materiale, farge, Piece og hovedbilde dersom tilgjengelig.
+3. Kontroller at disse dataene fortsatt lastes normalt.
+4. Gå tilbake til biblioteket og kontroller at søk/filter fortsatt fungerer.
+5. Åpne **Finn til prosjekt** og utfør ett kjent søk.
+6. Kontroller at backupdiagnostikken ikke har endret eller opprettet brukerdata.
+
+Når punkt 199–201 er validert kan neste blokk skrive den allerede validerte snapshotmodellen til en midlertidig backupmappe (`backup.json` + `images/`) før ZIP-pakking implementeres.
+
+
+
+### Devpatch 0082 – byggretting for punkt 199
+
+**❗️ Retest av 199 (200–201 er fortsatt sperret).** Xcode 27 rapporterte seks actor-isolation-feil: fem standardargumenter som opprettet `@MainActor`-isolerte CloudKit-repositories fra en ikke-isolert default-argument-kontekst, og ett tilsvarende standardargument for `TekstiligBackupBuilder` i diagnostikkmodellen.
+
+0082 flytter kun disse opprettelsene til eksplisitte `@MainActor`-isolerte `convenience init()`-metoder. Dependency injection med fem repositories / én builder beholdes. Ingen eksportlogikk, dataflyt eller CloudKit-operasjoner endres.
+
+1. Legg inn `Tekstilig-devpatch-0082.zip` med vanlig dry-run og rsync.
+2. Åpne Xcode 27 og velg fysisk test-iPhone.
+3. Velg **Product → Build**.
+4. Kontroller at de seks actor-isolation-feilene er borte og at build lykkes.
+5. Kjør appen og kontroller at **Tekstiler** og **Finn til prosjekt** åpnes normalt.
+6. Bekreft **199 OK** før du går videre til punkt 200.
+
+**Stopp ved enhver byggfeil; ikke gå videre til 200 før 199 er eksplisitt validert.**
