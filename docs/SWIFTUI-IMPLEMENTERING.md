@@ -3795,7 +3795,7 @@ Dette punktet endrer ingen Swift-kode og oppretter ingen backupfil. Først etter
 
 ## 199. Legg inn devpatch 0081 – backupmodell og in-memory snapshot
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 Devpatch 0081 er første kodeblokk i roadmap-punkt 6. Den skriver ikke ZIP eller andre filer. Målet er å validere at alle dagens brukerdata kan samles i den versjonerte backupmodellen fra punkt 198, serialiseres til JSON og leses tilbake uten tap.
 
@@ -3820,7 +3820,7 @@ Ingen CloudKit-data lagres, endres eller slettes i dette steget. Ingen backupfil
 
 ## 200. Valider backupmodellen i Debug-diagnostikk
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Åpne fanen **Utvikling**.
 2. Finn seksjonen **Roadmap 6: backupmodell**.
@@ -3839,7 +3839,7 @@ Denne testen validerer at JSON-kontrakten kan rundtrippes og at bildebytes kan s
 
 ## 201. Regresjon etter in-memory backupdiagnostikk
 
-**❗️ AKSJON – DU**
+**✅ AKSJON – DU**
 
 1. Gå tilbake til fanen **Tekstiler**.
 2. Åpne et eksisterende tekstil med materiale, farge, Piece og hovedbilde dersom tilgjengelig.
@@ -3854,7 +3854,7 @@ Når punkt 199–201 er validert kan neste blokk skrive den allerede validerte s
 
 ### Devpatch 0082 – byggretting for punkt 199
 
-**❗️ Retest av 199 (200–201 er fortsatt sperret).** Xcode 27 rapporterte seks actor-isolation-feil: fem standardargumenter som opprettet `@MainActor`-isolerte CloudKit-repositories fra en ikke-isolert default-argument-kontekst, og ett tilsvarende standardargument for `TekstiligBackupBuilder` i diagnostikkmodellen.
+**✅ Retest av 199 (200–201 er fortsatt sperret).** Xcode 27 rapporterte seks actor-isolation-feil: fem standardargumenter som opprettet `@MainActor`-isolerte CloudKit-repositories fra en ikke-isolert default-argument-kontekst, og ett tilsvarende standardargument for `TekstiligBackupBuilder` i diagnostikkmodellen.
 
 0082 flytter kun disse opprettelsene til eksplisitte `@MainActor`-isolerte `convenience init()`-metoder. Dependency injection med fem repositories / én builder beholdes. Ingen eksportlogikk, dataflyt eller CloudKit-operasjoner endres.
 
@@ -3866,3 +3866,37 @@ Når punkt 199–201 er validert kan neste blokk skrive den allerede validerte s
 6. Bekreft **199 OK** før du går videre til punkt 200.
 
 **Stopp ved enhver byggfeil; ikke gå videre til 200 før 199 er eksplisitt validert.**
+
+
+### Devpatch 0083 – JSON round-trip i punkt 200
+
+**199 ✅ godkjent av bruker. 200 ✅ retest. 201 ❗️ avventer.**
+
+Første kjøring av 200 kunne serialisere og dekode JSON, men `decoded == snapshot.document` feilet. `Date` fra CloudKit kan inneholde sub-millisekundpresisjon, mens godkjent ISO 8601-format serialiserer millisekunder. Direkte likhet mellom opprinnelig `Date` og dekodet `Date` er derfor ikke en korrekt test av backupfilens tapsfrihet.
+
+0083 endrer **bare diagnostikkens sammenligning**: `encode(original) → decode → encode(decoded)`, og krever byte-identisk, deterministisk JSON etter round-trip. Dette kontrollerer at den **lagrede backuprepresentasjonen** kan leses og skrives uten endring. Hvis den feiler, rapporteres første avvik med byteposisjon og korte tekstutdrag. Ingen datoer i CloudKit endres, ingen produksjonsdata normaliseres, og ingen eksportfiler skrives.
+
+1. Legg inn `Tekstilig-devpatch-0083.zip` med vanlig dry-run og rsync.
+2. Åpne Xcode 27, velg test-iPhone og kjør **Product → Build**.
+3. Start appen og åpne **Utvikling → Roadmap 6: backupmodell**.
+4. Trykk **Test backupmodell** én gang og vent på resultatet.
+5. Kontroller at **JSON round-trip OK** vises, og at tellinger/JSON-størrelse oppfyller kravene i punkt 200.
+6. Hvis testen feiler, noter hele den nye feilmeldingen og stopp på 200.
+7. Når **200** er eksplisitt validert, gå videre til **201** etter eksisterende testinstruks.
+
+**Ikke marker 200 eller 201 som godkjent før brukeren bekrefter.**
+
+
+### Devpatch 0084 – kompilatorretting i punkt 200
+
+**199 ✅. 200 ✅ fortsatt blokkert. 201 ❗️ avventer.**
+
+0083 introduserte en byggefeil i `BackupDiagnosticModel.firstDifference`: `zip(left, right)` gir en `Zip2Sequence` uten `firstIndex`. 0084 bytter bare posisjonsoppslaget til `enumerated().first(where:)?.offset`, og beholder eksisterende JSON-sammenligning, feilrapportering og backupformat uendret.
+
+1. Legg inn `Tekstilig-devpatch-0084.zip` med vanlig dry-run og rsync.
+2. Åpne Xcode 27, velg test-iPhone og kjør **Product → Build**.
+3. Kontroller at byggfeilen i `BackupDiagnosticModel` er borte. Hvis build feiler, stopp på 200.
+4. Kjør appen og åpne **Utvikling → Roadmap 6: backupmodell**.
+5. Trykk **Test backupmodell** og kontroller **JSON round-trip OK** og øvrige krav i punkt 200.
+6. Hvis testen feiler, send hele feilmeldingen og stopp på 200.
+7. Bare etter eksplisitt godkjenning av 200 kan punkt 201 utføres.

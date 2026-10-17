@@ -38,8 +38,13 @@ final class BackupDiagnosticModel {
             let data = try builder.encodeDocument(snapshot.document)
             let decoded = try builder.decodeDocument(data)
 
-            guard decoded == snapshot.document else {
-                throw BackupDiagnosticError.roundTripMismatch
+            // Compare the canonical, serialized representation rather than raw Date values.
+            // ISO 8601 JSON uses millisecond precision; CloudKit Date can be finer.
+            let reencoded = try builder.encodeDocument(decoded)
+            guard reencoded == data else {
+                throw BackupDiagnosticError.roundTripMismatch(
+                    Self.firstDifference(original: data, roundTripped: reencoded)
+                )
             }
 
             textileCount = decoded.textiles.count
@@ -54,12 +59,30 @@ final class BackupDiagnosticModel {
             errorMessage = CloudKitUserFacingError.describe(error, fallbackTitle: "Kunne ikke bygge backup").message
         }
     }
+
+    private static func firstDifference(original: Data, roundTripped: Data) -> String {
+        // JSON is UTF-8 and both encoders use sorted keys and pretty printing.
+        let left = Array(original)
+        let right = Array(roundTripped)
+        let offset = zip(left, right).enumerated().first { _, pair in
+            pair.0 != pair.1
+        }?.offset ?? min(left.count, right.count)
+        let start = max(0, offset - 45)
+        let leftEnd = min(left.count, offset + 85)
+        let rightEnd = min(right.count, offset + 85)
+        let before = String(decoding: left[start..<leftEnd], as: UTF8.self)
+        let after = String(decoding: right[start..<rightEnd], as: UTF8.self)
+        return "Avvik ved byte \(offset) (før: \(left.count) B, etter: \(right.count) B). Før: \(before). Etter: \(after)."
+    }
 }
 
 private enum BackupDiagnosticError: LocalizedError {
-    case roundTripMismatch
+    case roundTripMismatch(String)
 
     var errorDescription: String? {
-        "Backup-JSON kunne ikke leses tilbake identisk etter serialisering."
+        switch self {
+        case .roundTripMismatch(let detail):
+            return "Backup-JSON endret seg etter decode/encode. \(detail)"
+        }
     }
 }
