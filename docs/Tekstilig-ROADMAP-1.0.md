@@ -172,3 +172,8 @@ Etter validering av denne blokken skal neste blokk eksplisitt dekke reell iCloud
 ### Roadmap punkt 6 – Eksport og backup
 
 Punkt 198 starter med å fastsette backupkontrakten før kode implementeres. Foreslått v1-format er én komplett snapshot-ZIP med `backup.json` og en `images/`-mappe. JSON-filen er versjonert og inneholder Textile med alle tilhørende Piece-, Material-, Color- og Image-metadata. Bilder lagres som egne filer. Tekstilig-ID-er brukes som applikasjonens restore-identitet; CloudKit record names skal ikke være nødvendig for gjenoppretting. Beslutningen må godkjennes før eksportimplementasjonen starter.
+
+
+### Eksport og backup – devpatch 0085
+
+198–201 er validert. 202 ❗️ tester kun midlertidig filskriving og verifisering av `backup.json` og bilder. ZIP og brukerinitiert eksport kommer i neste blokk etter validering.

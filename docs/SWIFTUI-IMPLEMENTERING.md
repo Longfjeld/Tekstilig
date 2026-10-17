@@ -3900,3 +3900,35 @@ Første kjøring av 200 kunne serialisere og dekode JSON, men `decoded == snapsh
 5. Trykk **Test backupmodell** og kontroller **JSON round-trip OK** og øvrige krav i punkt 200.
 6. Hvis testen feiler, send hele feilmeldingen og stopp på 200.
 7. Bare etter eksplisitt godkjenning av 200 kan punkt 201 utføres.
+
+
+## 202. Devpatch 0085 – midlertidig filstruktur for backup
+
+**198–201 ✅ validert av bruker. 202 ❗️ ikke validert.**
+
+Dette er en avgrenset første eksportblokk: snapshotet skrives til en privat midlertidig mappe som `backup.json` og `images/`. Diagnostikken leser filene tilbake, kontrollerer byte-likhet og sletter mappen. **ZIP-pakking, deling og varig backup er ikke implementert i 0085.**
+
+1. Legg inn `Tekstilig-devpatch-0085.zip` med vanlig dry-run og rsync.
+2. Åpne prosjektet i Xcode 27 og velg test-iPhone.
+3. Velg **Product → Build** og kontroller at build lykkes. Stopp ved byggfeil.
+4. Kjør appen og åpne **Utvikling → Roadmap 6: backupmodell**.
+5. Trykk **Test backupmodell** og vent til kjøringen er ferdig.
+6. Kontroller både **JSON round-trip OK** og **backup.json og bilder skrevet og kontrollert**.
+7. Kontroller at antall tekstiler og bilder fortsatt er korrekt.
+8. Gå tilbake til biblioteket og kontroller at et kjent tekstil åpnes normalt.
+
+**Stopp på 202 ved feil. Ikke gå videre til ZIP-/eksportblokken før 202 er eksplisitt godkjent.**
+
+
+### Devpatch 0086 – retting av duplisert bildesti i punkt 202
+
+**198–201 ✅. 202 ❗️ avventer retest.** Bygg av 0085 var vellykket, men staging av backup stoppet med «Duplisert bildesti i backup: images/». Den opprinnelige filstien var avledet bare fra `imageID`; dette er ikke tilstrekkelig til å garantere unik filsti mellom ulike tekstiler. 0086 avleder filstien fra både `textileID` og `imageID` med filnavnsikker UTF-8-hex-koding. Opprinnelige ID-er og metadata beholdes uendret i JSON. Eksisterende kontroll mot reelle duplikater er beholdt. Ingen CloudKit-skriving eller ZIP-eksport.
+
+1. Legg inn `Tekstilig-devpatch-0086.zip` med vanlig dry-run og rsync.
+2. Åpne Xcode 27 og bygg prosjektet. Stopp dersom build feiler.
+3. Start appen og åpne **Utvikling → Roadmap 6: backupmodell**.
+4. Trykk **Test backupmodell** og vent til testen er ferdig.
+5. Kontroller at både **JSON round-trip OK** og **backup.json og bilder skrevet og kontrollert** vises, og at tellingene stemmer.
+6. Åpne et kjent tekstil med hovedbilde i biblioteket og kontroller at visningen fortsatt fungerer.
+
+**Stopp på 202 dersom samme eller en ny feil oppstår. Ikke fortsett til ZIP-/eksportblokken før 202 er eksplisitt validert.**

@@ -47,7 +47,7 @@ final class TekstiligBackupBuilder {
 
         for textile in textiles.sorted(by: Self.textileSort) {
             let imageContent = try await imageRepository.fetchPrimaryImage(textileID: textile.textileID)
-            let image = imageContent.map(Self.backupImage)
+            let image = imageContent.map { Self.backupImage($0, textileID: textile.textileID) }
 
             if let imageContent, let image {
                 imageFiles.append(
@@ -179,7 +179,7 @@ final class TekstiligBackupBuilder {
         )
     }
 
-    private static func backupImage(_ content: TextileImageContent) -> TekstiligBackupImage {
+    private static func backupImage(_ content: TextileImageContent, textileID: String) -> TekstiligBackupImage {
         let image = content.image
         return TekstiligBackupImage(
             imageID: image.imageID,
@@ -187,15 +187,19 @@ final class TekstiligBackupBuilder {
             isPrimary: image.isPrimary,
             fileName: image.fileName,
             contentType: image.contentType,
-            backupPath: backupPath(for: image)
+            backupPath: backupPath(for: image, textileID: textileID)
         )
     }
 
-    private static func backupPath(for image: TextileImage) -> String {
+    private static func backupPath(for image: TextileImage, textileID: String) -> String {
         let originalExtension = URL(fileURLWithPath: image.fileName).pathExtension
         let safeExtension = originalExtension.isEmpty ? fallbackExtension(for: image.contentType) : originalExtension
         let suffix = safeExtension.isEmpty ? "" : ".\(safeExtension.lowercased())"
-        return "images/\(image.imageID)\(suffix)"
+        // Image IDs alone are not guaranteed globally unique across textiles.
+        // Hex-encoding keeps the filename safe and reversible without altering IDs.
+        let textileKey = textileID.utf8.map { String(format: "%02x", $0) }.joined()
+        let imageKey = image.imageID.utf8.map { String(format: "%02x", $0) }.joined()
+        return "images/\(textileKey)-\(imageKey)\(suffix)"
     }
 
     private static func fallbackExtension(for contentType: String) -> String {

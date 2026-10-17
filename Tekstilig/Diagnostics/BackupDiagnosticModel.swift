@@ -14,6 +14,7 @@ final class BackupDiagnosticModel {
     var imageCount = 0
     var imageByteCount = 0
     var jsonByteCount = 0
+    var stagedSuccessfully = false
 
     private let builder: TekstiligBackupBuilder
 
@@ -31,6 +32,7 @@ final class BackupDiagnosticModel {
         isRunning = true
         errorMessage = nil
         completedSuccessfully = false
+        stagedSuccessfully = false
         defer { isRunning = false }
 
         do {
@@ -54,6 +56,16 @@ final class BackupDiagnosticModel {
             imageCount = decoded.textiles.reduce(0) { $0 + $1.images.count }
             imageByteCount = snapshot.imageFiles.reduce(0) { $0 + $1.data.count }
             jsonByteCount = data.count
+            // Stage and verify actual files; do not retain temporary backup data.
+            let staged = try TekstiligBackupStager(builder: builder).stage(snapshot)
+            defer { try? FileManager.default.removeItem(at: staged) }
+            let diskJSON = try Data(contentsOf: staged.appendingPathComponent("backup.json"))
+            guard diskJSON == data else { throw BackupStagingDiagnosticError.jsonMismatch }
+            for image in snapshot.imageFiles {
+                let diskImage = try Data(contentsOf: staged.appendingPathComponent(image.backupPath))
+                guard diskImage == image.data else { throw BackupStagingDiagnosticError.imageMismatch(image.backupPath) }
+            }
+            stagedSuccessfully = true
             completedSuccessfully = true
         } catch {
             errorMessage = CloudKitUserFacingError.describe(error, fallbackTitle: "Kunne ikke bygge backup").message
@@ -83,6 +95,17 @@ private enum BackupDiagnosticError: LocalizedError {
         switch self {
         case .roundTripMismatch(let detail):
             return "Backup-JSON endret seg etter decode/encode. \(detail)"
+        }
+    }
+}
+
+private enum BackupStagingDiagnosticError: LocalizedError {
+    case jsonMismatch
+    case imageMismatch(String)
+    var errorDescription: String? {
+        switch self {
+        case .jsonMismatch: return "backup.json er ulik etter skriving til disk."
+        case .imageMismatch(let path): return "Bildefilen er ulik etter skriving: \(path)"
         }
     }
 }

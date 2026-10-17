@@ -173,13 +173,17 @@ struct DeveloperDiagnosticsView: View {
                 } header: {
                     Text("Roadmap 6: backupmodell")
                 } footer: {
-                    Text("Bygger backupen i minnet, serialiserer backup.json og leser JSON-en tilbake. Ingen filer skrives og ingen CloudKit-data endres.")
+                    Text("Bygger backup i minnet, kontrollerer JSON og skriver deretter backup.json og bilder til en midlertidig mappe. Kontrollerer filene og sletter mappen etter testen. Ingen CloudKit-data endres.")
                 }
 
                 if backupDiagnostic.completedSuccessfully {
                     Section("Backupmodell validert") {
                         Label("JSON round-trip OK", systemImage: "checkmark.seal.fill")
                             .foregroundStyle(.green)
+                        if backupDiagnostic.stagedSuccessfully {
+                            Label("backup.json og bilder skrevet og kontrollert", systemImage: "checkmark.seal.fill")
+                                .foregroundStyle(.green)
+                        }
                         LabeledContent("Tekstiler", value: "\(backupDiagnostic.textileCount)")
                         LabeledContent("Materialer", value: "\(backupDiagnostic.materialCount)")
                         LabeledContent("Farger", value: "\(backupDiagnostic.colorCount)")
