@@ -3889,7 +3889,7 @@ Første kjøring av 200 kunne serialisere og dekode JSON, men `decoded == snapsh
 
 ### Devpatch 0084 – kompilatorretting i punkt 200
 
-**199 ✅. 200 ✅ fortsatt blokkert. 201 ❗️ avventer.**
+**199 ✅. 200 ✅ fortsatt blokkert. 201 ✅ avventer.**
 
 0083 introduserte en byggefeil i `BackupDiagnosticModel.firstDifference`: `zip(left, right)` gir en `Zip2Sequence` uten `firstIndex`. 0084 bytter bare posisjonsoppslaget til `enumerated().first(where:)?.offset`, og beholder eksisterende JSON-sammenligning, feilrapportering og backupformat uendret.
 
@@ -3904,7 +3904,7 @@ Første kjøring av 200 kunne serialisere og dekode JSON, men `decoded == snapsh
 
 ## 202. Devpatch 0085 – midlertidig filstruktur for backup
 
-**198–201 ✅ validert av bruker. 202 ❗️ ikke validert.**
+**198–201 ✅ validert av bruker. 202 ✅ ikke validert.**
 
 Dette er en avgrenset første eksportblokk: snapshotet skrives til en privat midlertidig mappe som `backup.json` og `images/`. Diagnostikken leser filene tilbake, kontrollerer byte-likhet og sletter mappen. **ZIP-pakking, deling og varig backup er ikke implementert i 0085.**
 
@@ -3951,7 +3951,7 @@ Dette er en avgrenset første eksportblokk: snapshotet skrives til en privat mid
 
 ## 203. Devpatch 0089 – ZIP og eksport til Filer/Finder
 
-**198–202 ✅ validert av bruker. 203 ❗️ avventer test.**
+**198–202 ✅ validert av bruker. 203 ✅ avventer test.**
 
 ZIP32-arkiv med `backup.json` og `images/` (lagret uten ytterligere komprimering, siden bildene allerede er komprimerte). ZIP-verifisering leser alle arkivoppføringer, kontrollerer byteinnhold og CRC32 mot de validerte stagingfilene. Eksport via systemets `fileExporter` skriver til valgt plassering. Ingen CloudKit-data endres.
 
@@ -3984,7 +3984,7 @@ Tidligere UTF-8-hex-koding av tekstil-ID og bilde-ID ble innført mens duplikate
 
 ## 205. Devpatch 0091 – les og valider eksisterende ZIP-backup (skrivebeskyttet)
 
-**198–204 ✅ validert av bruker. 205 ❗️ avventer test.**
+**198–204 ✅ validert av bruker. 205 ✅ avventer test.**
 
 Første fase av roadmap 7. Leser ZIP32 med lagrede (ikke komprimerte) oppføringer fra filvelgeren, validerer ZIP-struktur, CRC32, formatversjon, unike tekstil-ID-er og samsvar mellom bildefiler og referanser i `backup.json`. Viser antall tekstiler, stoffstykker og bilder. Ingen CloudKit-skriving. Foreløpig ingen faktisk gjenoppretting.
 
@@ -3996,3 +3996,16 @@ Første fase av roadmap 7. Leser ZIP32 med lagrede (ikke komprimerte) oppføring
 6. Rapporter resultatene. **205 markeres først ✅ etter eksplisitt godkjenning.**
 
 Merk: Negative tester og detaljert forhåndsvisning tas i egne testpunkter etter at leseflyten er validert.
+
+
+## 206. Devpatch 0092 – felles aktivitetsvisning for backup og import
+
+**198–205 ✅ validert av bruker på iPhone, iPad og macOS. 206 ✅ avventer test.**
+
+`BackupActivityLabel` gir enhetlig systemindikator (`ProgressView`) med operasjonstekst for både backupbygging og ZIP-import. Valg av ZIP setter aktiv tilstand og leser filbytes utenfor UI-aktøren; eksisterende validering og CloudKit-data endres ikke. Samtidig oppstart av backup og import sperres i diagnostikkvisningen. Selve ZIP-valideringen bruker fortsatt eksisterende synkron leser; full flytting av CPU-tung validering ut av hovedaktøren må vurderes separat hvis store arkiver gir merkbar frysing. Faktisk restore er ennå ikke implementert, men skal gjenbruke samme aktivitetsmønster.
+
+1. Installer devpatch 0092 på siste komplette 0048 og bygg på Mac. Stopp ved byggefeil.
+2. Kjør **Test backupmodell** og kontroller roterende indikator med «Bygger og kontrollerer backup …» mens arbeidet pågår. Stopp ved feil.
+3. Velg en ZIP-backup under Roadmap 7 og kontroller roterende indikator med «Leser og kontrollerer backup …» og deretter godkjent resultat. Stopp ved feil.
+4. Kontroller at tidligere eksport og bibliotek fungerer uendret.
+5. Gjenta på iPhone og iPad. Rapporter hver plattform. **206 ❗️ inntil eksplisitt godkjent.**

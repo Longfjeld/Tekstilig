@@ -16,6 +16,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var backupDiagnostic = BackupDiagnosticModel()
     @State private var showBackupExporter = false
     @State private var showBackupImporter = false
+    @State private var isReadingBackup = false
     @State private var importResult: TekstiligBackupReader.Result?
     @State private var importError: String?
     @State private var backupExportMessage: String?
@@ -166,15 +167,12 @@ struct DeveloperDiagnosticsView: View {
                         }
                     } label: {
                         if backupDiagnostic.isRunning {
-                            HStack {
-                                ProgressView()
-                                Text("Bygger backupmodell …")
-                            }
+                            BackupActivityLabel("Bygger og kontrollerer backup …")
                         } else {
                             Label("Test backupmodell", systemImage: "archivebox")
                         }
                     }
-                    .disabled(backupDiagnostic.isRunning)
+                    .disabled(backupDiagnostic.isRunning || isReadingBackup)
                 } header: {
                     Text("Roadmap 6: backupmodell")
                 } footer: {
@@ -187,12 +185,17 @@ struct DeveloperDiagnosticsView: View {
                             .foregroundStyle(.green)
                         LabeledContent("ZIP-størrelse", value: byteCount(backupDiagnostic.zipByteCount))
                         Button("Lagre backup som ZIP …") { showBackupExporter = true }
+                            .disabled(isReadingBackup || backupDiagnostic.isRunning)
                         if let backupExportMessage { Text(backupExportMessage) }
                     }
                 }
 
                 Section("Roadmap 7: les backup (kun kontroll)") {
                     Button("Velg ZIP-backup …") { showBackupImporter = true }
+                        .disabled(isReadingBackup || backupDiagnostic.isRunning)
+                    if isReadingBackup {
+                        BackupActivityLabel("Leser og kontrollerer backup …")
+                    }
                     if let importResult {
                         Label("Backup lest og validert – ingen data importert", systemImage: "checkmark.seal.fill")
                             .foregroundStyle(.green)
@@ -244,16 +247,32 @@ struct DeveloperDiagnosticsView: View {
                 }
             }
             .fileImporter(isPresented: $showBackupImporter, allowedContentTypes: [.zip]) { result in
+                guard !isReadingBackup else { return }
                 importResult = nil
                 importError = nil
-                do {
-                    let url = try result.get()
-                    let accessed = url.startAccessingSecurityScopedResource()
-                    defer { if accessed { url.stopAccessingSecurityScopedResource() } }
-                    let data = try Data(contentsOf: url)
-                    importResult = try TekstiligBackupReader().read(data)
-                } catch {
-                    importError = "Kunne ikke lese backup: \(error.localizedDescription)"
+                switch result {
+                case .failure(let error):
+                    // Cancel is not a failed import; do not start an activity indicator.
+                    if (error as NSError).code != NSUserCancelledError {
+                        importError = "Kunne ikke velge backup: \(error.localizedDescription)"
+                    }
+                case .success(let url):
+                    isReadingBackup = true
+                    Task {
+                        do {
+                            // Copy bytes off the UI actor while the security scope is active.
+                            let data = try await Task.detached(priority: .userInitiated) {
+                                let accessed = url.startAccessingSecurityScopedResource()
+                                defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+                                return try Data(contentsOf: url)
+                            }.value
+                            // Validation remains in the existing canonical reader.
+                            importResult = try TekstiligBackupReader().read(data)
+                        } catch {
+                            importError = "Kunne ikke lese backup: \(error.localizedDescription)"
+                        }
+                        isReadingBackup = false
+                    }
                 }
             }
             .onChange(of: selectedPhotoItem) { _, newItem in
@@ -341,4 +360,22 @@ private enum PhotoSelectionError: LocalizedError {
 
 #Preview {
     DeveloperDiagnosticsView()
+}
+
+/// Shared activity presentation for backup and restore/import operations.
+/// Uses the platform-native indeterminate spinner; no timer-based simulation.
+private struct BackupActivityLabel: View {
+    let title: String
+
+    init(_ title: String) { self.title = title }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .controlSize(.small)
+            Text(title)
+                .foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .combine)
+    }
 }
