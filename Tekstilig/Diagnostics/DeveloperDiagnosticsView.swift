@@ -352,13 +352,31 @@ struct DeveloperDiagnosticsView: View {
             let existingIDs = Set(current.map(\.textileID))
             let incomingIDs = Set(result.document.textiles.map(\.textileID))
             let duplicates = incomingIDs.intersection(existingIDs).count
-            let newCount = incomingIDs.subtracting(existingIDs).count
+            let newTextiles = result.document.textiles.filter { !existingIDs.contains($0.textileID) }
+            let overlappingTextiles = result.document.textiles.filter { existingIDs.contains($0.textileID) }
+
+            // Count children from the validated backup, not from CloudKit. These are
+            // prospective operations only; no child records or assets are fetched/written.
+            func childCounts(_ textiles: [TekstiligBackupTextile]) -> String {
+                let pieces = textiles.reduce(0) { $0 + $1.pieces.count }
+                let images = textiles.reduce(0) { $0 + $1.images.count }
+                let materials = textiles.reduce(0) { $0 + $1.materials.count }
+                let colors = textiles.reduce(0) { $0 + $1.colors.count }
+                return "\(textiles.count) tekstiler, \(pieces) stoffstykker, \(images) bilder, \(materials) materialer, \(colors) farger"
+            }
+
             importPlan = "Importplan (ingen endringer utført):\n" +
                 "Eksisterende tekstiler i iCloud: \(current.count)\n" +
-                "Tekstiler i backup: \(incomingIDs.count)\n" +
-                "Importer bare nye: \(newCount) nye, \(duplicates) hoppes over (samme tekstil-ID).\n" +
-                "Erstatt hele biblioteket: \(incomingIDs.count) fra backup, \(current.count) eksisterende må håndteres.\n" +
-                "Dette er kun en ID-basert forhåndsberegning. Ingen data er importert eller slettet."
+                "Tekstiler i backup: \(incomingIDs.count)\n\n" +
+                "Importer bare nye:\n" +
+                "  Ville importert: \(childCounts(newTextiles))\n" +
+                "  Ville hoppet over: \(childCounts(overlappingTextiles)) (samme tekstil-ID)\n\n" +
+                "Erstatt hele biblioteket:\n" +
+                "  Backupinnhold: \(childCounts(result.document.textiles))\n" +
+                "  Eksisterende tekstiler som må håndteres: \(current.count)\n\n" +
+                "Viktig: Eksisterende stoffstykker, bilder og andre underposter i iCloud er ikke lest eller sammenlignet. " +
+                "Dette er kun en ID-basert forhåndsberegning, ikke en trygg utførelsesplan. " +
+                "Ingen data er importert eller slettet."
         } catch {
             importPlan = "Kunne ikke beregne importplan: \(error.localizedDescription). Ingen data er endret."
         }

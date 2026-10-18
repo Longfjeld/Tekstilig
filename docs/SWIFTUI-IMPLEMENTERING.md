@@ -4081,7 +4081,7 @@ Ingen Xcode-bygging kreves for denne dokumentasjonspatchen. Neste funksjonelle T
 
 ## 210. Devpatch 0098 – skrivebeskyttet importplan mot iCloud
 
-**210 ❗️ – avventer validering på macOS, iPhone og iPad.**
+**210 ✅ – validert av bruker på macOS, iPhone og iPad.**
 
 Etter vellykket ZIP-lesing kan brukeren trykke **Beregn importplan (kun kontroll)**. Appen henter eksisterende tekstil-ID-er fra privat CloudKit og beregner antall nye og overlappende tekstiler for «Importer bare nye», samt størrelsen på biblioteket som må håndteres ved «Erstatt hele biblioteket». Ingen CloudKit-skriving, sletting eller gjenoppretting utføres. Sammenligningen er et øyeblikksbilde og gir ikke transaksjonsgaranti.
 
@@ -4092,3 +4092,18 @@ Etter vellykket ZIP-lesing kan brukeren trykke **Beregn importplan (kun kontroll
 5. Gjenta på iPhone og iPad. **210 markeres først ✅ etter eksplisitt godkjenning.**
 
 Neste fase: konkret sikker importstrategi, konfliktregler for tilhørende records/bilder og vurdering av CloudKit-grenser før skriveoperasjoner.
+
+
+## 211. Devpatch 0099 – oversikt over tilhørende backupdata i importplan (kun kontroll)
+
+**211 ❗️ – avventer validering på macOS, iPhone og iPad.**
+
+Utvider eksisterende importplan med antall stoffstykker, bilder, materialer og farger fra den allerede validerte backupen. For «Importer bare nye» vises disse tallene separat for tekstiler som ville blitt importert, og tekstiler som ville blitt hoppet over på grunn av overlappende tekstil-ID. For «Erstatt hele biblioteket» vises tilsvarende totalsummer fra backupen. Eksisterende underposter i CloudKit er **ikke** lest; planen er fortsatt et skrivebeskyttet øyeblikksbilde og **ikke** en transaksjonssikker restore-plan. Ingen CloudKit-skriving.
+
+1. Installer devpatch 0099 over komplett versjon 0056 via `project-workflow`. Bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Velg en gyldig ZIP under **Utvikling → Diagnostikk → Roadmap 7** og trykk **Beregn importplan (kun kontroll)**. Kontroller at importplanen nå viser tekstiler, stoffstykker, bilder, materialer og farger for både nye og overlappende tekstiler. **Stopp ved feil.**
+3. Bruk gjerne backup fra samme bibliotek: «Ville importert» skal da normalt vise 0 tekstiler og 0 tilhørende poster, mens «Ville hoppet over» skal vise innholdet i backupen. **Stopp ved feil.**
+4. Kontroller at advarselen om at eksisterende underposter i CloudKit ikke er sammenlignet vises, og at biblioteket er uendret. **Stopp ved feil.**
+5. Gjenta på iPhone og iPad. **211 markeres først ✅ etter eksplisitt godkjenning.**
+
+Neste steg: kartlegg entydig CloudKit-recordidentitet og feil-/rollbackstrategi før noen skriveoperasjon aktiveres.
