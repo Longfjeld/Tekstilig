@@ -22,6 +22,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var negativeJSONTestResult: String?
     @State private var importResult: TekstiligBackupReader.Result?
     @State private var importError: String?
+    @State private var importPlan: String?
+    @State private var isPlanningImport = false
     @State private var backupExportMessage: String?
 
     var body: some View {
@@ -206,6 +208,18 @@ struct DeveloperDiagnosticsView: View {
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
+                    if importResult != nil {
+                        Button("Beregn importplan (kun kontroll)") {
+                            Task { await calculateImportPlan() }
+                        }
+                        .disabled(isReadingBackup || isPlanningImport || backupDiagnostic.isRunning)
+                        if isPlanningImport {
+                            BackupActivityLabel("Sammenligner med iCloud-biblioteket …")
+                        }
+                        if let importPlan {
+                            Text(importPlan).font(.callout)
+                        }
+                    }
                     if let importError {
                         Text(importError).foregroundStyle(.orange)
                     }
@@ -285,6 +299,7 @@ struct DeveloperDiagnosticsView: View {
             .fileImporter(isPresented: $showBackupImporter, allowedContentTypes: [.zip]) { result in
                 guard !isReadingBackup else { return }
                 importResult = nil
+                importPlan = nil
                 validatedZIPData = nil
                 negativeZIPTestResult = nil
                 negativeJSONTestResult = nil
@@ -322,6 +337,30 @@ struct DeveloperDiagnosticsView: View {
                     await loadSelectedPhoto(newItem)
                 }
             }
+        }
+    }
+
+    // Read-only comparison against the current private CloudKit library. No writes.
+    @MainActor
+    private func calculateImportPlan() async {
+        guard let result = importResult, !isPlanningImport else { return }
+        isPlanningImport = true
+        importPlan = nil
+        defer { isPlanningImport = false }
+        do {
+            let current = try await CloudKitTextileRepository().fetchTextiles()
+            let existingIDs = Set(current.map(\.textileID))
+            let incomingIDs = Set(result.document.textiles.map(\.textileID))
+            let duplicates = incomingIDs.intersection(existingIDs).count
+            let newCount = incomingIDs.subtracting(existingIDs).count
+            importPlan = "Importplan (ingen endringer utført):\n" +
+                "Eksisterende tekstiler i iCloud: \(current.count)\n" +
+                "Tekstiler i backup: \(incomingIDs.count)\n" +
+                "Importer bare nye: \(newCount) nye, \(duplicates) hoppes over (samme tekstil-ID).\n" +
+                "Erstatt hele biblioteket: \(incomingIDs.count) fra backup, \(current.count) eksisterende må håndteres.\n" +
+                "Dette er kun en ID-basert forhåndsberegning. Ingen data er importert eller slettet."
+        } catch {
+            importPlan = "Kunne ikke beregne importplan: \(error.localizedDescription). Ingen data er endret."
         }
     }
 

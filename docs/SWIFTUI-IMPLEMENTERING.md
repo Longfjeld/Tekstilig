@@ -4077,3 +4077,18 @@ Neste steg: analysere CloudKit-transaksjonsgrenser og importstrategi før skrive
 4. Last opp `Tekstilig-SwiftUIActualApp0055.zip`. Kontroller ZIP-innhold og at ingen feilplassert `Tekstilig-devpatch-0097/`-mappe finnes. Arbeidsflyt-testen markeres først ✅ etter godkjent resultat.
 
 Ingen Xcode-bygging kreves for denne dokumentasjonspatchen. Neste funksjonelle Tekstilig-test blir 210.
+
+
+## 210. Devpatch 0098 – skrivebeskyttet importplan mot iCloud
+
+**210 ❗️ – avventer validering på macOS, iPhone og iPad.**
+
+Etter vellykket ZIP-lesing kan brukeren trykke **Beregn importplan (kun kontroll)**. Appen henter eksisterende tekstil-ID-er fra privat CloudKit og beregner antall nye og overlappende tekstiler for «Importer bare nye», samt størrelsen på biblioteket som må håndteres ved «Erstatt hele biblioteket». Ingen CloudKit-skriving, sletting eller gjenoppretting utføres. Sammenligningen er et øyeblikksbilde og gir ikke transaksjonsgaranti.
+
+1. Installer devpatch 0098 over komplett versjon 0055 med `project-workflow`, og bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, og velg en gyldig backup. Kontroller at forhåndsvisningen vises. **Stopp ved feil.**
+3. Trykk **Beregn importplan (kun kontroll)**. Kontroller at aktivitetsindikatoren vises, og at antall eksisterende tekstiler, nye ID-er og overlappende ID-er virker riktig. Ved backup av samme bibliotek forventes normalt 0 nye tekstiler. **Stopp ved feil.**
+4. Kontroller at biblioteket er uendret; ingen import eller sletting skal ha skjedd. **Stopp ved feil.**
+5. Gjenta på iPhone og iPad. **210 markeres først ✅ etter eksplisitt godkjenning.**
+
+Neste fase: konkret sikker importstrategi, konfliktregler for tilhørende records/bilder og vurdering av CloudKit-grenser før skriveoperasjoner.
