@@ -4159,10 +4159,21 @@ Identitetskartleggingen leser metadata fra alle `TextileImage`-poster (unntatt k
 
 ## 215. Devpatch 0103 – konfliktregler for «Importer bare nye» (kun kontroll)
 
-**215 ❗️ – avventer eksplisitt validering. 214 ✅ godkjent av bruker.**
+**215 ✅ – validert OK av bruker. 214 ✅ godkjent av bruker.**
 
 Ny knapp **Kontroller importkonflikter (kun kontroll)**. Leser eksisterende tekstiler og vurderer logiske ID-er i den validerte backupen. Avviser foreløpig importplan ved dupliserte tekstil-ID-er i CloudKit/backup, tomme tekstil-ID-er, dupliserte underpost-ID-er på tvers av backupen eller tomme underpost-ID-er. Eksisterende tekstiler hoppes over sammen med alle sine underposter. Resultatet **FORELØPIG OK** betyr ikke at import er trygg: kontroll av eksisterende underpost-ID-er i CloudKit, samtidige endringer og håndtering av delvise feil gjenstår. Ingen CloudKit-skriving eller -sletting.
 
 1. Installer devpatch 0103 på komplett versjon 0060 med `project-workflow`, og bygg i Xcode 27. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig backup og trykk **Kontroller importkonflikter (kun kontroll)**. Kontroller at status, nye/overlappende tekstiler, dupliserte/tomme ID-er og begrensninger vises. **Stopp ved feil.**
-3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **215 forblir ❗️ til eksplisitt godkjenning.**
+3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **215 validert OK av bruker.**
+
+
+## 216. Devpatch 0104 – konfliktkontroll mot eksisterende CloudKit-underposter (kun kontroll)
+
+**216 ❗️ – avventer eksplisitt validering. 215 ✅ godkjent av bruker.**
+
+Konfliktkontrollen henter nå paginerte logiske ID-er fra alle eksisterende stoffstykker, bilder, materialer og farger. Bildeoppslaget henter kun `imageId`, aldri CKAsset-data, og utelater kjent diagnostikkpost. Sammenligningen mot live-ID-er gjelder bare underpostene til **nye** tekstiler som ville blitt importert; underposter til overlappende tekstiler hoppes over. Dupliserte eller tomme underpost-ID-er i live-biblioteket og kollisjoner mot nye backup-underposter gir **AVVIST**. Feil i et eneste CloudKit-oppslag avviser kontrollen. **FORELØPIG OK** er fortsatt ikke klarsignal til import: samtidige endringer og delvis feil er ikke løst. Ingen CloudKit-skriving eller -sletting.
+
+1. Installer devpatch 0104 på komplett versjon 0061 med `project-workflow` og bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup og trykk **Kontroller importkonflikter (kun kontroll)**. Kontroller at rapporten viser duplikater/tomme ID-er i iCloud og kollisjoner for stoffstykker, bilder, materialer og farger. **Stopp ved feil.**
+3. Kontroller at rapporten viser **Skriving til CloudKit: SPERRET**, at biblioteket er uendret, og gjenta på iPhone og iPad. **216 forblir ❗️ til eksplisitt godkjenning.**

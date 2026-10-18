@@ -445,8 +445,29 @@ struct DeveloperDiagnosticsView: View {
             let childDuplicateCounts = [duplicates(allPieceIDs), duplicates(allImageIDs), duplicates(allMaterialIDs), duplicates(allColorIDs)]
             let missingChildIDs = [allPieceIDs, allImageIDs, allMaterialIDs, allColorIDs]
                 .reduce(0) { count, ids in count + ids.filter { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count }
+            // Compare only children that would actually be imported. Children of
+            // skipped textiles must not cause false-positive live collisions.
+            let livePieces = try await CloudKitPieceRepository().fetchAllPieces().map(\.pieceID)
+            let liveMaterials = try await CloudKitTextileMaterialRepository().fetchAllMaterials().map(\.materialID)
+            let liveColors = try await CloudKitTextileColorRepository().fetchAllColors().map(\.colorID)
+            let liveImages = try await CloudKitTextileImageRepository().fetchAllImageIDsForConflictCheck()
+            let liveGroups = [livePieces, liveImages, liveMaterials, liveColors]
+            let incomingNewGroups: [[String]] = [
+                newTextiles.flatMap { $0.pieces.map(\.pieceID) },
+                newTextiles.flatMap { $0.images.map(\.imageID) },
+                newTextiles.flatMap { $0.materials.map(\.materialID) },
+                newTextiles.flatMap { $0.colors.map(\.colorID) }
+            ]
+            let liveChildDuplicates = liveGroups.map { duplicates($0) }
+            let liveMissingChildIDs = liveGroups.map { $0.filter { $0.isEmpty }.count }
+            let childCollisions = zip(incomingNewGroups, liveGroups).map { incoming, live in
+                incoming.filter { Set(live).contains($0) }.count
+            }
             let blocked = liveDuplicates > 0 || backupDuplicates > 0 || emptyTextileIDs > 0 ||
-                childDuplicateCounts.contains(where: { $0 > 0 }) || missingChildIDs > 0
+                childDuplicateCounts.contains(where: { $0 > 0 }) || missingChildIDs > 0 ||
+                liveChildDuplicates.contains(where: { $0 > 0 }) ||
+                liveMissingChildIDs.contains(where: { $0 > 0 }) ||
+                childCollisions.contains(where: { $0 > 0 })
             let status = blocked ? "AVVIST – identitetskonflikt" : "FORELØPIG OK – bare skrivebeskyttet vurdering"
             conflictReport = "Konfliktregler – Importer bare nye (kun kontroll):\n" +
                 "Status: \(status)\n" +
@@ -456,11 +477,14 @@ struct DeveloperDiagnosticsView: View {
                 "Tomme tekstil-ID-er i backup: \(emptyTextileIDs)\n" +
                 "Dupliserte underpost-ID-er i backup (stoffstykke/bilde/materiale/farge): \(childDuplicateCounts.map(String.init).joined(separator: "/"))\n" +
                 "Tomme underpost-ID-er i backup: \(missingChildIDs)\n" +
+                "Dupliserte underpost-ID-er i iCloud (stoffstykke/bilde/materiale/farge): \(liveChildDuplicates.map(String.init).joined(separator: "/"))\n" +
+                "Tomme underpost-ID-er i iCloud (stoffstykke/bilde/materiale/farge): \(liveMissingChildIDs.map(String.init).joined(separator: "/"))\n" +
+                "Kollisjoner: NYE backup-underposter mot iCloud (stoffstykke/bilde/materiale/farge): \(childCollisions.map(String.init).joined(separator: "/"))\n" +
                 "Overlappende tekstiler hoppes over med ALLE underposter.\n" +
                 "Skriving til CloudKit: SPERRET.\n" +
-                "Begrensning: Eksisterende underpost-ID-er og bildeposter i CloudKit er ikke sammenlignet her. " +
-                "En grønn vurdering er IKKE klarsignal til import. Før skriving må alle live underposter " +
-                "kontrolleres, og samtidige endringer og delvis feil håndteres.\n" +
+                "Alle eksisterende underpost-ID-er, også bildeposter, er sammenlignet uten å laste ned bildedata.\n" +
+                "En grønn vurdering er IKKE klarsignal til import: samtidige endringer, " +
+                "record-identitet og delvise feil må håndteres før skriving.\n" +
                 "Ingen data er endret."
         } catch {
             conflictReport = "Konfliktkontroll AVVIST: \(error.localizedDescription). Ingen data er endret."

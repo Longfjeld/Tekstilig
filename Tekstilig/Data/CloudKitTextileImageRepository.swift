@@ -147,6 +147,31 @@ final class CloudKitTextileImageRepository: TextileImageRepository {
         return textileIDs
     }
 
+    // Read only logical image IDs; never request CKAsset data. All pages are required.
+    func fetchAllImageIDsForConflictCheck() async throws -> [String] {
+        let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
+        var cursor: CKQueryOperation.Cursor?
+        var ids: [String] = []
+        repeat {
+            let response: (matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)], queryCursor: CKQueryOperation.Cursor?)
+            if let cursor {
+                response = try await database.records(continuingMatchFrom: cursor, desiredKeys: ["imageId"], resultsLimit: 100)
+            } else {
+                response = try await database.records(matching: query, inZoneWith: nil, desiredKeys: ["imageId"], resultsLimit: 100)
+            }
+            for (_, result) in response.matchResults {
+                switch result {
+                case .failure(let error): throw error
+                case .success(let record):
+                    if Self.diagnosticRecordNames.contains(record.recordID.recordName) { continue }
+                    ids.append((record["imageId"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+            }
+            cursor = response.queryCursor
+        } while cursor != nil
+        return ids
+    }
+
     // Read-only inventory of ALL TextileImage records; CKAsset bytes are not downloaded.
     // Excludes the known diagnostic PoC record, consistent with normal image queries.
     func auditAllImageRecords(knownTextileIDs: Set<String>) async throws -> String {
