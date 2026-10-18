@@ -19,6 +19,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var isReadingBackup = false
     @State private var validatedZIPData: Data?
     @State private var negativeZIPTestResult: String?
+    @State private var negativeJSONTestResult: String?
     @State private var importResult: TekstiligBackupReader.Result?
     @State private var importError: String?
     @State private var backupExportMessage: String?
@@ -214,6 +215,16 @@ struct DeveloperDiagnosticsView: View {
                         }
                         .disabled(isReadingBackup || backupDiagnostic.isRunning)
                     }
+                    if validatedZIPData != nil {
+                        Button("Test avvisning av ugyldig backupinnhold") {
+                            runNegativeJSONTests()
+                        }
+                        .disabled(isReadingBackup || backupDiagnostic.isRunning)
+                    }
+                    if let negativeJSONTestResult {
+                        Text(negativeJSONTestResult)
+                            .foregroundStyle(negativeJSONTestResult.hasPrefix("OK") ? .green : .orange)
+                    }
                     if let negativeZIPTestResult {
                         Text(negativeZIPTestResult)
                             .foregroundStyle(negativeZIPTestResult.hasPrefix("OK") ? .green : .orange)
@@ -276,6 +287,7 @@ struct DeveloperDiagnosticsView: View {
                 importResult = nil
                 validatedZIPData = nil
                 negativeZIPTestResult = nil
+                negativeJSONTestResult = nil
                 importError = nil
                 switch result {
                 case .failure(let error):
@@ -357,6 +369,64 @@ struct DeveloperDiagnosticsView: View {
         negativeZIPTestResult = failures.isEmpty
             ? "OK: 3/3 ugyldige ZIP-varianter ble avvist. Ingen data importert."
             : "FEIL: " + failures.joined(separator: "; ")
+    }
+
+    // Read-only semantic tests use the exact validator called by ZIP import.
+    @MainActor
+    private func runNegativeJSONTests() {
+        guard let original = importResult?.document else { return }
+        let reader = TekstiligBackupReader()
+        let paths = Set(original.textiles.flatMap(\.images).map(\.backupPath))
+        var cases: [(String, TekstiligBackupDocument, Set<String>)] = []
+
+        var wrongVersion = original
+        wrongVersion.formatVersion = TekstiligBackupDocument.currentFormatVersion + 1
+        cases.append(("Ukjent formatversjon", wrongVersion, paths))
+
+        var missingImage = original
+        // A missing referenced file is invalid even when the source backup has no images.
+        if let first = missingImage.textiles.indices.first {
+            let missingPath = "images/does-not-exist.jpeg"
+            if !missingImage.textiles[first].images.isEmpty {
+                missingImage.textiles[first].images[0].backupPath = missingPath
+            } else {
+                // With no image references, an unexpected image file is equally invalid.
+                cases.append(("Uventet bildefil", missingImage, paths.union([missingPath])))
+            }
+            if !missingImage.textiles[first].images.isEmpty {
+                cases.append(("Manglende bildefil", missingImage, paths))
+            }
+        } else {
+            cases.append(("Uventet bildefil", missingImage, paths.union(["images/does-not-exist.jpeg"])))
+        }
+
+        var duplicate = original
+        if let first = duplicate.textiles.first {
+            duplicate.textiles.append(first)
+            cases.append(("Duplisert tekstil-ID", duplicate, paths))
+        } else {
+            // No textiles to duplicate: test an invalid empty logical ID separately.
+            cases.append(("Duplisert tekstil-ID", duplicate, paths))
+        }
+
+        var emptyID = original
+        if !emptyID.textiles.isEmpty {
+            emptyID.textiles[0].textileID = ""
+            cases.append(("Tom tekstil-ID", emptyID, paths))
+        }
+
+        var failures: [String] = []
+        for (name, document, filePaths) in cases {
+            do {
+                try reader.validateDocument(document, filePaths: filePaths)
+                failures.append(name)
+            } catch {
+                // Expected: invalid semantic content is rejected.
+            }
+        }
+        negativeJSONTestResult = failures.isEmpty && cases.count >= 3
+            ? "OK: \(cases.count)/\(cases.count) ugyldige innholdsvarianter ble avvist. Ingen data importert."
+            : "FEIL: " + (failures.isEmpty ? "For få testtilfeller (opprett minst ett tekstil)." : failures.joined(separator: "; "))
     }
 
     @MainActor

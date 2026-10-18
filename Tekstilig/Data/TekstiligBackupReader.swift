@@ -93,15 +93,31 @@ struct TekstiligBackupReader {
               document.formatVersion == TekstiligBackupDocument.currentFormatVersion else {
             throw ImportError.invalid("Ukjent backupformat eller formatversjon")
         }
-        let ids = document.textiles.map(\.textileID)
-        guard Set(ids).count == ids.count else { throw ImportError.invalid("Dupliserte tekstil-ID-er") }
-        let imagePaths = document.textiles.flatMap(\.images).map(\.backupPath)
-        guard Set(imagePaths).count == imagePaths.count,
-              Set(imagePaths) == Set(files.keys.filter { $0 != "backup.json" }) else {
-            throw ImportError.invalid("Bildefilene samsvarer ikke med backup.json")
-        }
+        try validateDocument(document, filePaths: Set(files.keys.filter { $0 != "backup.json" }))
         return Result(document: document, imageCount: imagePaths.count,
                       pieceCount: document.textiles.reduce(0) { $0 + $1.pieces.count })
+    }
+
+    /// Shared semantic validation for ZIP reading and read-only diagnostic tests.
+    func validateDocument(_ document: TekstiligBackupDocument, filePaths: Set<String>) throws {
+        guard document.format == TekstiligBackupDocument.currentFormat,
+              document.formatVersion == TekstiligBackupDocument.currentFormatVersion else {
+            throw ImportError.invalid("Ukjent backupformat eller formatversjon")
+        }
+        let ids = document.textiles.map(\.textileID)
+        guard ids.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }),
+              Set(ids).count == ids.count else {
+            throw ImportError.invalid("Tomme eller dupliserte tekstil-ID-er")
+        }
+        let pieces = document.textiles.flatMap(\.pieces).map(\.pieceID)
+        guard pieces.allSatisfy({ !$0.isEmpty }), Set(pieces).count == pieces.count else {
+            throw ImportError.invalid("Tomme eller dupliserte stoffstykke-ID-er")
+        }
+        let imagePaths = document.textiles.flatMap(\.images).map(\.backupPath)
+        guard Set(imagePaths).count == imagePaths.count,
+              Set(imagePaths) == filePaths else {
+            throw ImportError.invalid("Bildefilene samsvarer ikke med backup.json")
+        }
     }
 
     private static func crc32(_ data: Data) -> UInt32 {

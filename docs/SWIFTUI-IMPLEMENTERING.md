@@ -4040,3 +4040,18 @@ Diagnostikkvisningen kan teste tre ugyldige varianter av en allerede godkjent ZI
 5. Gjenta på iPhone og iPad. Rapporter alle plattformer. **208 ❗️ til eksplisitt godkjenning.**
 
 Neste fase: kontroll av semantiske feil i JSON og analyse av sikker CloudKit-gjenoppretting før skriveoperasjoner.
+
+
+## 209. Devpatch 0095 – negativ semantisk validering av backupinnhold
+
+**198–208 ✅ validert av bruker på alle plattformer. 209 ❗️ avventer test.**
+
+Samme semantiske kontroll brukes av ZIP-leseren og en skrivebeskyttet diagnostikk for ugyldig formatversjon, feil i bildefilstier, duplisert tekstil-ID og tom tekstil-ID. Det kreves minst ett tekstil i valgt backup. Ingen CloudKit-skriving.
+
+1. Installer `Tekstilig-devpatch-0095.zip` over komplett kodeversjon 0051. Bygg macOS-appen i Xcode 27. Stopp ved feil.
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**. Velg en gyldig backup med minst ett tekstil. Kontroller forhåndsvisningen.
+3. Trykk **Test avvisning av ugyldig backupinnhold**. Kontroller meldingen **OK: 4/4 ugyldige innholdsvarianter ble avvist. Ingen data importert.** Stopp ved feil.
+4. Kontroller at gyldig forhåndsvisning fortsatt vises og biblioteket er uendret.
+5. Gjenta på iPhone og iPad. **209 ❗️ inntil eksplisitt godkjent.**
+
+Neste steg: analysere CloudKit-transaksjonsgrenser og importstrategi før skriveoperasjoner.
