@@ -14,6 +14,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var diagnostic = CloudKitAssetDiagnosticModel()
     @State private var pieceDiagnostic = CloudKitPieceDiagnosticModel()
     @State private var backupDiagnostic = BackupDiagnosticModel()
+    @State private var showBackupExporter = false
+    @State private var backupExportMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -176,6 +178,16 @@ struct DeveloperDiagnosticsView: View {
                     Text("Bygger backup i minnet, kontrollerer JSON og skriver deretter backup.json og bilder til en midlertidig mappe. Kontrollerer filene og sletter mappen etter testen. Ingen CloudKit-data endres.")
                 }
 
+                if backupDiagnostic.zipSuccessfully, backupDiagnostic.exportDocument != nil {
+                    Section("Eksporter backup") {
+                        Label("ZIP opprettet og innhold kontrollert", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.green)
+                        LabeledContent("ZIP-størrelse", value: byteCount(backupDiagnostic.zipByteCount))
+                        Button("Lagre backup som ZIP …") { showBackupExporter = true }
+                        if let backupExportMessage { Text(backupExportMessage) }
+                    }
+                }
+
                 if backupDiagnostic.completedSuccessfully {
                     Section("Backupmodell validert") {
                         Label("JSON round-trip OK", systemImage: "checkmark.seal.fill")
@@ -205,6 +217,15 @@ struct DeveloperDiagnosticsView: View {
                 }
             }
             .navigationTitle("Diagnostikk")
+            .fileExporter(isPresented: $showBackupExporter,
+                          document: backupDiagnostic.exportDocument,
+                          contentType: .zip,
+                          defaultFilename: "Tekstilig-backup") { result in
+                switch result {
+                case .success: backupExportMessage = "Backup lagret."
+                case .failure(let error): backupExportMessage = "Eksport feilet: \(error.localizedDescription)"
+                }
+            }
             .onChange(of: selectedPhotoItem) { _, newItem in
                 guard let newItem else { return }
 

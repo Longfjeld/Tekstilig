@@ -15,6 +15,9 @@ final class BackupDiagnosticModel {
     var imageByteCount = 0
     var jsonByteCount = 0
     var stagedSuccessfully = false
+    var zipSuccessfully = false
+    var zipByteCount = 0
+    var exportDocument: BackupExportDocument?
 
     private let builder: TekstiligBackupBuilder
 
@@ -33,6 +36,8 @@ final class BackupDiagnosticModel {
         errorMessage = nil
         completedSuccessfully = false
         stagedSuccessfully = false
+        zipSuccessfully = false
+        exportDocument = nil
         defer { isRunning = false }
 
         do {
@@ -66,6 +71,16 @@ final class BackupDiagnosticModel {
                 guard diskImage == image.data else { throw BackupStagingDiagnosticError.imageMismatch(image.backupPath) }
             }
             stagedSuccessfully = true
+            let zipURL = try TekstiligBackupZIP().create(from: staged)
+            defer { try? FileManager.default.removeItem(at: zipURL) }
+            let zipData = try Data(contentsOf: zipURL)
+            // Verify archive entries and their CRCs before presenting an export.
+            var expectedFiles = ["backup.json": data]
+            for image in snapshot.imageFiles { expectedFiles[image.backupPath] = image.data }
+            try BackupZIPVerifier.verify(zipData, expected: expectedFiles)
+            zipByteCount = zipData.count
+            zipSuccessfully = true
+            exportDocument = BackupExportDocument(data: zipData)
             completedSuccessfully = true
         } catch {
             errorMessage = CloudKitUserFacingError.describe(error, fallbackTitle: "Kunne ikke bygge backup").message

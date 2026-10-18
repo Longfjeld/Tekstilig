@@ -3947,3 +3947,22 @@ Dette er en avgrenset første eksportblokk: snapshotet skrives til en privat mid
 5. Stopp på **202 ✅**. Ikke slett eller slå sammen CloudKit-poster før recordidentitet og årsak er vurdert. ZIP-eksport avventer.
 
 **Fast feilrettingsprinsipp:** Identifiser først rotårsaken i eksisterende dataflyt og rett den på riktig nivå. Unngå kompenserende logikk, ekstra lag og ineffektiv duplisering som bare skjuler feilen.
+
+
+## 203. Devpatch 0089 – ZIP og eksport til Filer/Finder
+
+**198–202 ✅ validert av bruker. 203 ❗️ avventer test.**
+
+ZIP32-arkiv med `backup.json` og `images/` (lagret uten ytterligere komprimering, siden bildene allerede er komprimerte). ZIP-verifisering leser alle arkivoppføringer, kontrollerer byteinnhold og CRC32 mot de validerte stagingfilene. Eksport via systemets `fileExporter` skriver til valgt plassering. Ingen CloudKit-data endres.
+
+1. Legg inn `Tekstilig-devpatch-0089.zip` med vanlig dry-run og rsync.
+2. Åpne Xcode 27 og bygg prosjektet. **Stopp ved byggefeil.**
+3. Kjør appen på test-iPhone og åpne **Utvikling → Roadmap 6: backupmodell**.
+4. Trykk **Test backupmodell** og vent til resultatet vises.
+5. Kontroller **JSON round-trip OK**, **backup.json og bilder skrevet og kontrollert** og **ZIP opprettet og innhold kontrollert**. Stopp ved feil.
+6. Trykk **Lagre backup som ZIP …**, velg en mappe i **Filer**, og lagre.
+7. Åpne **Filer**, finn ZIP-filen og pakk den ut. Kontroller at den inneholder `backup.json` og `images/` med forventet antall bilder.
+8. Åpne biblioteket igjen og kontroller at et kjent tekstil med bilde fungerer.
+9. På iPad og Mac, når tilgjengelig: gjenta eksport og kontroller at lagringsdialogen og ZIP-filen fungerer. Rapporter plattformene separat.
+
+**203 skal bare markeres ✅ etter eksplisitt godkjenning.**
