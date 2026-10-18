@@ -17,6 +17,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var showBackupExporter = false
     @State private var showBackupImporter = false
     @State private var isReadingBackup = false
+    @State private var validatedZIPData: Data?
+    @State private var negativeZIPTestResult: String?
     @State private var importResult: TekstiligBackupReader.Result?
     @State private var importError: String?
     @State private var backupExportMessage: String?
@@ -206,6 +208,16 @@ struct DeveloperDiagnosticsView: View {
                     if let importError {
                         Text(importError).foregroundStyle(.orange)
                     }
+                    if validatedZIPData != nil {
+                        Button("Test avvisning av ugyldige ZIP-filer") {
+                            runNegativeZIPTests()
+                        }
+                        .disabled(isReadingBackup || backupDiagnostic.isRunning)
+                    }
+                    if let negativeZIPTestResult {
+                        Text(negativeZIPTestResult)
+                            .foregroundStyle(negativeZIPTestResult.hasPrefix("OK") ? .green : .orange)
+                    }
                 }
 
                 if let importResult {
@@ -262,6 +274,8 @@ struct DeveloperDiagnosticsView: View {
             .fileImporter(isPresented: $showBackupImporter, allowedContentTypes: [.zip]) { result in
                 guard !isReadingBackup else { return }
                 importResult = nil
+                validatedZIPData = nil
+                negativeZIPTestResult = nil
                 importError = nil
                 switch result {
                 case .failure(let error):
@@ -281,6 +295,7 @@ struct DeveloperDiagnosticsView: View {
                             }.value
                             // Validation remains in the existing canonical reader.
                             importResult = try TekstiligBackupReader().read(data)
+                            validatedZIPData = data
                         } catch {
                             importError = "Kunne ikke lese backup: \(error.localizedDescription)"
                         }
@@ -296,6 +311,52 @@ struct DeveloperDiagnosticsView: View {
                 }
             }
         }
+    }
+
+    // Negative tests modify an in-memory copy only. The original backup is never written.
+    @MainActor
+    private func runNegativeZIPTests() {
+        guard let original = validatedZIPData else { return }
+        var scenarios: [(String, Data)] = []
+        scenarios.append(("Avkortet ZIP", Data(original.dropLast(min(10, original.count)))))
+
+        var damagedSignature = original
+        if !damagedSignature.isEmpty {
+            damagedSignature[damagedSignature.startIndex] ^= 0x01
+            scenarios.append(("Ugyldig ZIP-header", damagedSignature))
+        }
+
+        // The exporter writes backup.json first, with a 30-byte local ZIP header.
+        // Mutating one payload byte must be detected by the existing CRC32 check.
+        let bytes = [UInt8](original)
+        if bytes.count >= 30,
+           bytes[0...3].elementsEqual([0x50, 0x4b, 0x03, 0x04]) {
+            let nameLength = Int(bytes[26]) | (Int(bytes[27]) << 8)
+            let extraLength = Int(bytes[28]) | (Int(bytes[29]) << 8)
+            let payloadOffset = 30 + nameLength + extraLength
+            if payloadOffset < bytes.count {
+                var damagedPayload = original
+                damagedPayload[payloadOffset] ^= 0x01
+                scenarios.append(("Endret filinnhold (CRC32)", damagedPayload))
+            }
+        }
+
+        guard scenarios.count == 3 else {
+            negativeZIPTestResult = "FEIL: Kunne ikke konstruere alle tre testtilfellene."
+            return
+        }
+        var failures: [String] = []
+        for (name, data) in scenarios {
+            do {
+                _ = try TekstiligBackupReader().read(data)
+                failures.append(name + " ble feilaktig godkjent")
+            } catch {
+                // Expected: the reader must reject invalid data.
+            }
+        }
+        negativeZIPTestResult = failures.isEmpty
+            ? "OK: 3/3 ugyldige ZIP-varianter ble avvist. Ingen data importert."
+            : "FEIL: " + failures.joined(separator: "; ")
     }
 
     @MainActor

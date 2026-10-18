@@ -4025,3 +4025,18 @@ Viser eksportdato, backupformat/-versjon, antall tekstiler, stoffstykker, bilder
 6. Gjenta på iPhone og iPad. **207 markeres først ✅ etter eksplisitt godkjenning.**
 
 Neste arbeid: negative valideringstester og analyse av CloudKit-importstrategi før skriveoperasjoner.
+
+
+## 208. Devpatch 0094 – negative ZIP-valideringstester (kun minne)
+
+**198–207 ✅ validert av bruker på iPhone, iPad og macOS. 208 ✅ avventer test.**
+
+Diagnostikkvisningen kan teste tre ugyldige varianter av en allerede godkjent ZIP: avkortet arkiv, endret ZIP-header og endret filinnhold (CRC32). Testene endrer bare kopier i minnet, og bruker den eksisterende `TekstiligBackupReader` uten CloudKit-skriving eller endringer av originalfilen.
+
+1. Installer `Tekstilig-devpatch-0094.zip` over komplett kodeversjon 0050. Bygg for macOS i Xcode 27. Stopp ved byggefeil.
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7** og velg en gyldig, nylig eksportert ZIP-backup. Kontroller at forhåndsvisningen vises. Stopp ved feil.
+3. Trykk **Test avvisning av ugyldige ZIP-filer**. Kontroller meldingen **OK: 3/3 ugyldige ZIP-varianter ble avvist. Ingen data importert.** Stopp ved feil.
+4. Kontroller at den gyldige forhåndsvisningen fortsatt vises og at biblioteket er uendret.
+5. Gjenta på iPhone og iPad. Rapporter alle plattformer. **208 ❗️ til eksplisitt godkjenning.**
+
+Neste fase: kontroll av semantiske feil i JSON og analyse av sikker CloudKit-gjenoppretting før skriveoperasjoner.
