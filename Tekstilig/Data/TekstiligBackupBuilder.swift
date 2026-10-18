@@ -34,6 +34,18 @@ final class TekstiligBackupBuilder {
 
     func buildSnapshot(exportedAt: Date = Date()) async throws -> TekstiligBackupSnapshot {
         let textiles = try await textileRepository.fetchTextiles()
+        // A backup must contain one logical Textile per textileID. Multiple
+        // CloudKit records with the same logical ID must be resolved at source,
+        // not silently collapsed or written repeatedly to the archive.
+        let grouped = Dictionary(grouping: textiles, by: \.textileID)
+        if let duplicate = grouped.first(where: { $0.value.count > 1 }) {
+            let recordNames = duplicate.value.map { $0.cloudRecordName ?? "(mangler recordName)" }.sorted()
+            throw BackupSourceError.duplicateTextileID(
+                textileID: duplicate.key,
+                recordNames: recordNames
+            )
+        }
+
         let pieces = try await pieceRepository.fetchAllPieces()
         let materials = try await materialRepository.fetchAllMaterials()
         let colors = try await colorRepository.fetchAllColors()
@@ -240,5 +252,18 @@ private enum TekstiligBackupDateCodec {
         formatter.formatOptions = [.withInternetDateTime]
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         return formatter.date(from: value)
+    }
+}
+
+private enum BackupSourceError: LocalizedError {
+    case duplicateTextileID(textileID: String, recordNames: [String])
+
+    var errorDescription: String? {
+        switch self {
+        case .duplicateTextileID(let textileID, let recordNames):
+            return "Flere CloudKit-tekstiler har samme textileID (\(textileID)). "
+                + "CloudKit recordName: " + recordNames.joined(separator: ", ")
+                + ". Backup stoppet uten å endre data."
+        }
     }
 }

@@ -3870,7 +3870,7 @@ Når punkt 199–201 er validert kan neste blokk skrive den allerede validerte s
 
 ### Devpatch 0083 – JSON round-trip i punkt 200
 
-**199 ✅ godkjent av bruker. 200 ✅ retest. 201 ❗️ avventer.**
+**199 ✅ godkjent av bruker. 200 ✅ retest. 201 ✅ avventer.**
 
 Første kjøring av 200 kunne serialisere og dekode JSON, men `decoded == snapshot.document` feilet. `Date` fra CloudKit kan inneholde sub-millisekundpresisjon, mens godkjent ISO 8601-format serialiserer millisekunder. Direkte likhet mellom opprinnelig `Date` og dekodet `Date` er derfor ikke en korrekt test av backupfilens tapsfrihet.
 
@@ -3922,7 +3922,7 @@ Dette er en avgrenset første eksportblokk: snapshotet skrives til en privat mid
 
 ### Devpatch 0086 – retting av duplisert bildesti i punkt 202
 
-**198–201 ✅. 202 ❗️ avventer retest.** Bygg av 0085 var vellykket, men staging av backup stoppet med «Duplisert bildesti i backup: images/». Den opprinnelige filstien var avledet bare fra `imageID`; dette er ikke tilstrekkelig til å garantere unik filsti mellom ulike tekstiler. 0086 avleder filstien fra både `textileID` og `imageID` med filnavnsikker UTF-8-hex-koding. Opprinnelige ID-er og metadata beholdes uendret i JSON. Eksisterende kontroll mot reelle duplikater er beholdt. Ingen CloudKit-skriving eller ZIP-eksport.
+**198–201 ✅. 202 ✅ avventer retest.** Bygg av 0085 var vellykket, men staging av backup stoppet med «Duplisert bildesti i backup: images/». Den opprinnelige filstien var avledet bare fra `imageID`; dette er ikke tilstrekkelig til å garantere unik filsti mellom ulike tekstiler. 0086 avleder filstien fra både `textileID` og `imageID` med filnavnsikker UTF-8-hex-koding. Opprinnelige ID-er og metadata beholdes uendret i JSON. Eksisterende kontroll mot reelle duplikater er beholdt. Ingen CloudKit-skriving eller ZIP-eksport.
 
 1. Legg inn `Tekstilig-devpatch-0086.zip` med vanlig dry-run og rsync.
 2. Åpne Xcode 27 og bygg prosjektet. Stopp dersom build feiler.
@@ -3932,3 +3932,18 @@ Dette er en avgrenset første eksportblokk: snapshotet skrives til en privat mid
 6. Åpne et kjent tekstil med hovedbilde i biblioteket og kontroller at visningen fortsatt fungerer.
 
 **Stopp på 202 dersom samme eller en ny feil oppstår. Ikke fortsett til ZIP-/eksportblokken før 202 er eksplisitt validert.**
+
+
+### Devpatch 0088 – kildeidentitet og rotårsaksanalyse for 202
+
+**198–201 ✅ · 202 ✅ blokkert.** Diagnostikk i 0087 viser at samme `textileID=T0001` og `imageID` opptrer flere ganger. `TekstiligBackupBuilder` går gjennom hver post fra `fetchTextiles()` og legger til bilde for hver forekomst; `TekstiligBackupStager` oppdager deretter duplisert sti. Filnavn er ikke rotårsaken. `CloudKitTextileRepository.fetchTextiles()` returnerer CloudKit-poster uten kontroll av dupliserte logiske `textileID`-verdier. Om det finnes flere CloudKit-records eller en annen kilde til gjentatte resultater, må fastslås fra recordName før vi korrigerer data eller lagringsflyt.
+
+0088 legger derfor en **fail-fast identitetskontroll ved inngangen til backupbyggingen**, og rapporterer alle CloudKit `recordName` for samme `textileID`. Den fjerner ikke duplikater, omskriver ikke CloudKit og legger ikke til kompenserende eksportlogikk. Dette er diagnostikk for å bekrefte rotårsaken, ikke en godkjent funksjonell rettelse.
+
+1. Legg inn `Tekstilig-devpatch-0088.zip` med vanlig dry-run og rsync.
+2. Bygg i Xcode 27. Stopp ved byggefeil.
+3. Åpne **Utvikling → Roadmap 6: backupmodell** og trykk **Test backupmodell**.
+4. Send hele feilmeldingen med `textileID` og CloudKit `recordName`-verdier.
+5. Stopp på **202 ✅**. Ikke slett eller slå sammen CloudKit-poster før recordidentitet og årsak er vurdert. ZIP-eksport avventer.
+
+**Fast feilrettingsprinsipp:** Identifiser først rotårsaken i eksisterende dataflyt og rett den på riktig nivå. Unngå kompenserende logikk, ekstra lag og ineffektiv duplisering som bare skjuler feilen.

@@ -18,6 +18,14 @@ final class TekstiligBackupStager {
         }
     }
 
+    private static func firstDuplicate(_ paths: [String]) -> String? {
+        var seen = Set<String>()
+        for path in paths {
+            if !seen.insert(path).inserted { return path }
+        }
+        return nil
+    }
+
     private let builder: TekstiligBackupBuilder
 
     init(builder: TekstiligBackupBuilder) { self.builder = builder }
@@ -31,8 +39,31 @@ final class TekstiligBackupStager {
             try fm.createDirectory(at: images, withIntermediateDirectories: true)
             let expected = snapshot.document.textiles.flatMap(\.images).map(\.backupPath)
             let provided = snapshot.imageFiles.map(\.backupPath)
-            guard Set(expected).count == expected.count, Set(provided).count == provided.count else {
-                throw StagingError.duplicateImagePath("images/")
+            // Report the real duplicate and its source rather than a placeholder path.
+            // Diagnostic only: never silently deduplicate or overwrite image data.
+            let entries = snapshot.document.textiles.flatMap { textile in
+                textile.images.map { image in
+                    (path: image.backupPath, textileID: textile.textileID, imageID: image.imageID)
+                }
+            }
+            if let duplicate = Self.firstDuplicate(expected) {
+                let sources = entries.filter { $0.path == duplicate }
+                    .map { "textileID=\($0.textileID), imageID=\($0.imageID)" }
+                    .joined(separator: " | ")
+                throw StagingError.duplicateImagePath(
+                    "\(duplicate) [backup.json; tekstiler=\(snapshot.document.textiles.count), " +
+                    "bildereferanser=\(expected.count), bildefiler=\(provided.count); \(sources)]"
+                )
+            }
+            if let duplicate = Self.firstDuplicate(provided) {
+                let sources = entries.filter { $0.path == duplicate }
+                    .map { "textileID=\($0.textileID), imageID=\($0.imageID)" }
+                    .joined(separator: " | ")
+                throw StagingError.duplicateImagePath(
+                    "\(duplicate) [imageFiles; tekstiler=\(snapshot.document.textiles.count), " +
+                    "bildereferanser=\(expected.count), bildefiler=\(provided.count); " +
+                    "referanser: \(sources.isEmpty ? "ingen" : sources)]"
+                )
             }
             for path in expected {
                 guard provided.contains(path) else { throw StagingError.imageMissing(path) }

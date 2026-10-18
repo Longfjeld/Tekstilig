@@ -165,3 +165,8 @@ Før en ny `Tekstilig-devpatch-00##.zip` leveres skal følgende være kontroller
 - [ ] handling kommer før kontroll/stoppbetingelse
 - [ ] stoppunktet peker tydelig på neste tillatte steg
 - [ ] patchen kan legges inn med brukerens faste rsync-kommando uten manuell omstrukturering
+
+
+## Rotårsaksprinsipp ved feil
+
+Ved feil skal vi først identifisere og dokumentere rotårsaken i eksisterende arkitektur, data og kontrollflyt. Rett årsaken på riktig nivå; ikke legg på kompenserende logikk eller ekstra abstraksjoner som skjuler feilen, øker kompleksiteten eller reduserer ytelsen. Diagnostikk skal være målrettet og ikke brukes som erstatning for en faktisk rettelse. Endringer skal være minimale, og testen som feilet forblir ❗️ til brukeren har validert løsningen.
