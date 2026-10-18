@@ -3970,7 +3970,7 @@ ZIP32-arkiv med `backup.json` og `images/` (lagret uten ytterligere komprimering
 
 ## 204. Devpatch 0090 – lesbare bildefilnavn i ZIP-backup
 
-**198–203 ✅ validert av bruker på iPhone, iPad og macOS. 204 ❗️ avventer test.**
+**198–204 ✅ validert av bruker på iPhone, iPad og macOS.**
 
 Tidligere UTF-8-hex-koding av tekstil-ID og bilde-ID ble innført mens duplikate CloudKit-testposter (`T0001`) ennå ikke var identifisert. Disse testpostene er nå fjernet, og årsaken til den opprinnelige feilen er avklart. `TextileImage.newPrimaryDraft` genererer bilde-ID som `IMG-<UUID>`, så eksporten bruker nå `images/<imageID>.<filtype>` uten unødvendig hex-koding. Eksisterende duplikatkontroll i staging, JSON-referanser og ZIP-verifisering beholdes. Ingen CloudKit-data endres.
 
@@ -3980,3 +3980,19 @@ Tidligere UTF-8-hex-koding av tekstil-ID og bilde-ID ble innført mens duplikate
 4. Eksporter ZIP til Finder, pakk ut og kontroller at bilder har lesbare navn av typen `IMG-<UUID>.jpeg` (eller tilsvarende filtype), at antall bilder stemmer og at `backup.json` peker til de faktiske filene. **Stopp ved feil.**
 5. Gjenta backupmodelltest og ZIP-eksport på iPhone og iPad; kontroller filnavn og åpne et kjent tekstil med bilde etterpå.
 6. Rapporter resultat for hver plattform. **204 markeres først ✅ etter eksplisitt godkjenning.**
+
+
+## 205. Devpatch 0091 – les og valider eksisterende ZIP-backup (skrivebeskyttet)
+
+**198–204 ✅ validert av bruker. 205 ❗️ avventer test.**
+
+Første fase av roadmap 7. Leser ZIP32 med lagrede (ikke komprimerte) oppføringer fra filvelgeren, validerer ZIP-struktur, CRC32, formatversjon, unike tekstil-ID-er og samsvar mellom bildefiler og referanser i `backup.json`. Viser antall tekstiler, stoffstykker og bilder. Ingen CloudKit-skriving. Foreløpig ingen faktisk gjenoppretting.
+
+1. Installer `Tekstilig-devpatch-0091.zip` over komplett kodeversjon 0047. Bygg i Xcode 27. **Stopp ved byggefeil.**
+2. På Mac: Åpne **Utvikling → Diagnostikk → Roadmap 7: les backup (kun kontroll)** og trykk **Velg ZIP-backup …**. Velg en ZIP eksportert fra Tekstilig.
+3. Kontroller at «Backup lest og validert – ingen data importert» vises og at antall tekstiler, stoffstykker og bilder stemmer. **Stopp ved feil.**
+4. Kontroller at biblioteket er uendret.
+5. Gjenta punkt 2–4 på iPhone og iPad med eksporterte ZIP-filer. **Stopp ved første feil.**
+6. Rapporter resultatene. **205 markeres først ✅ etter eksplisitt godkjenning.**
+
+Merk: Negative tester og detaljert forhåndsvisning tas i egne testpunkter etter at leseflyten er validert.

@@ -15,6 +15,9 @@ struct DeveloperDiagnosticsView: View {
     @State private var pieceDiagnostic = CloudKitPieceDiagnosticModel()
     @State private var backupDiagnostic = BackupDiagnosticModel()
     @State private var showBackupExporter = false
+    @State private var showBackupImporter = false
+    @State private var importResult: TekstiligBackupReader.Result?
+    @State private var importError: String?
     @State private var backupExportMessage: String?
 
     var body: some View {
@@ -188,6 +191,20 @@ struct DeveloperDiagnosticsView: View {
                     }
                 }
 
+                Section("Roadmap 7: les backup (kun kontroll)") {
+                    Button("Velg ZIP-backup …") { showBackupImporter = true }
+                    if let importResult {
+                        Label("Backup lest og validert – ingen data importert", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.green)
+                        LabeledContent("Tekstiler", value: "\(importResult.document.textiles.count)")
+                        LabeledContent("Stoffstykker", value: "\(importResult.pieceCount)")
+                        LabeledContent("Bilder", value: "\(importResult.imageCount)")
+                    }
+                    if let importError {
+                        Text(importError).foregroundStyle(.orange)
+                    }
+                }
+
                 if backupDiagnostic.completedSuccessfully {
                     Section("Backupmodell validert") {
                         Label("JSON round-trip OK", systemImage: "checkmark.seal.fill")
@@ -224,6 +241,19 @@ struct DeveloperDiagnosticsView: View {
                 switch result {
                 case .success: backupExportMessage = "Backup lagret."
                 case .failure(let error): backupExportMessage = "Eksport feilet: \(error.localizedDescription)"
+                }
+            }
+            .fileImporter(isPresented: $showBackupImporter, allowedContentTypes: [.zip]) { result in
+                importResult = nil
+                importError = nil
+                do {
+                    let url = try result.get()
+                    let accessed = url.startAccessingSecurityScopedResource()
+                    defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+                    let data = try Data(contentsOf: url)
+                    importResult = try TekstiligBackupReader().read(data)
+                } catch {
+                    importError = "Kunne ikke lese backup: \(error.localizedDescription)"
                 }
             }
             .onChange(of: selectedPhotoItem) { _, newItem in
