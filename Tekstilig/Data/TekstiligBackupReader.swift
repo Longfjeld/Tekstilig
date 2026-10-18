@@ -94,7 +94,7 @@ struct TekstiligBackupReader {
             throw ImportError.invalid("Ukjent backupformat eller formatversjon")
         }
         try validateDocument(document, filePaths: Set(files.keys.filter { $0 != "backup.json" }))
-        return Result(document: document, imageCount: imagePaths.count,
+        return Result(document: document, imageCount: files.count - 1,
                       pieceCount: document.textiles.reduce(0) { $0 + $1.pieces.count })
     }
 

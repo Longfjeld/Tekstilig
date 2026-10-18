@@ -4055,3 +4055,13 @@ Samme semantiske kontroll brukes av ZIP-leseren og en skrivebeskyttet diagnostik
 5. Gjenta på iPhone og iPad. **209 ❗️ inntil eksplisitt godkjent.**
 
 Neste steg: analysere CloudKit-transaksjonsgrenser og importstrategi før skriveoperasjoner.
+
+
+### Devpatch 0096 – rettelse av byggefeil i test 209
+
+**209 ❗️ – avventer ny validering.** Byggefeilen `Cannot find 'imagePaths' in scope` i `TekstiligBackupReader.read(_:)` kom av at `imagePaths` ble flyttet inn i `validateDocument` i devpatch 0095, mens resultatkonstruksjonen fortsatt refererte til den lokale variabelen. Etter vellykket validering består `files` av `backup.json` og nøyaktig de refererte bildefilene. Derfor brukes `files.count - 1` som bildeantall, uten ny validering eller duplisert opptelling. Ingen endringer i backupformat eller CloudKit.
+
+1. Installer devpatch 0096 over komplett kodeversjon 0052 (med devpatch 0095 inkludert), og bygg i Xcode 27 på Mac. Stopp ved byggefeil.
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7** og velg en gyldig backup med minst ett tekstil. Kontroller bildeantall i forhåndsvisningen. Stopp ved feil.
+3. Kjør **Test avvisning av ugyldig backupinnhold**. Kontroller meldingen **OK: 4/4 ugyldige innholdsvarianter ble avvist. Ingen data importert.** Stopp ved feil.
+4. Kontroller at biblioteket er uendret, og gjenta på iPhone og iPad. **209 forblir ❗️ til eksplisitt godkjenning.**
