@@ -4009,3 +4009,19 @@ Merk: Negative tester og detaljert forhåndsvisning tas i egne testpunkter etter
 3. Velg en ZIP-backup under Roadmap 7 og kontroller roterende indikator med «Leser og kontrollerer backup …» og deretter godkjent resultat. Stopp ved feil.
 4. Kontroller at tidligere eksport og bibliotek fungerer uendret.
 5. Gjenta på iPhone og iPad. Rapporter hver plattform. **206 ❗️ inntil eksplisitt godkjent.**
+
+
+## 207. Devpatch 0093 – forhåndsvisning av validert backup (skrivebeskyttet)
+
+**198–206 ✅ validert av bruker på iPhone, iPad og macOS. 207 ❗️ avventer test.**
+
+Viser eksportdato, backupformat/-versjon, antall tekstiler, stoffstykker, bilder, materialregistreringer og fargeregistreringer etter vellykket ZIP-validering. Bruker samme `TekstiligBackupReader.Result` som punkt 205 og samme aktivitetsindikator som punkt 206. Ingen ny ZIP-parser, ingen CloudKit-skriving og ingen restore-knapp.
+
+1. Installer devpatch 0093 over komplett kodeversjon 0049, og bygg for macOS i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en tidligere eksportert ZIP-backup, og vent på fullført validering.
+3. Kontroller at **Forhåndsvisning av backup** viser eksportdato, format `tekstilig-backup`, formatversjon `1`, og forventede antall tekstiler, stoffstykker og bilder. Kontroller også material- og fargeregistreringer. **Stopp ved feil.**
+4. Kontroller at ingen data er importert og at biblioteket er uendret.
+5. Velg en annen gyldig ZIP og kontroller at forhåndsvisningen oppdateres. **Stopp ved feil.**
+6. Gjenta på iPhone og iPad. **207 markeres først ✅ etter eksplisitt godkjenning.**
+
+Neste arbeid: negative valideringstester og analyse av CloudKit-importstrategi før skriveoperasjoner.

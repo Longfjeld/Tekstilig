@@ -196,15 +196,28 @@ struct DeveloperDiagnosticsView: View {
                     if isReadingBackup {
                         BackupActivityLabel("Leser og kontrollerer backup …")
                     }
-                    if let importResult {
+                    if importResult != nil {
                         Label("Backup lest og validert – ingen data importert", systemImage: "checkmark.seal.fill")
                             .foregroundStyle(.green)
-                        LabeledContent("Tekstiler", value: "\(importResult.document.textiles.count)")
-                        LabeledContent("Stoffstykker", value: "\(importResult.pieceCount)")
-                        LabeledContent("Bilder", value: "\(importResult.imageCount)")
+                        Text("Forhåndsvisningen er skrivebeskyttet. Ingen tekstiler, bilder eller stoffstykker er gjenopprettet.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
                     }
                     if let importError {
                         Text(importError).foregroundStyle(.orange)
+                    }
+                }
+
+                if let importResult {
+                    Section("Forhåndsvisning av backup") {
+                        LabeledContent("Eksportert", value: importResult.document.exportedAt.formatted(date: .abbreviated, time: .shortened))
+                        LabeledContent("Backupformat", value: importResult.document.format)
+                        LabeledContent("Formatversjon", value: String(importResult.document.formatVersion))
+                        LabeledContent("Tekstiler", value: String(importResult.document.textiles.count))
+                        LabeledContent("Stoffstykker", value: String(importResult.pieceCount))
+                        LabeledContent("Bilder", value: String(importResult.imageCount))
+                        LabeledContent("Materialregistreringer", value: String(importResult.document.textiles.reduce(0) { $0 + $1.materials.count }))
+                        LabeledContent("Fargeregistreringer", value: String(importResult.document.textiles.reduce(0) { $0 + $1.colors.count }))
                     }
                 }
 
