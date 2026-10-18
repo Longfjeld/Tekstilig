@@ -4096,7 +4096,7 @@ Neste fase: konkret sikker importstrategi, konfliktregler for tilhørende record
 
 ## 211. Devpatch 0099 – oversikt over tilhørende backupdata i importplan (kun kontroll)
 
-**211 ❗️ – avventer validering på macOS, iPhone og iPad.**
+**211 ✅ – validert av bruker på macOS, iPhone og iPad (bygg OK, ett ufarlig kompilatorvarsel).**
 
 Utvider eksisterende importplan med antall stoffstykker, bilder, materialer og farger fra den allerede validerte backupen. For «Importer bare nye» vises disse tallene separat for tekstiler som ville blitt importert, og tekstiler som ville blitt hoppet over på grunn av overlappende tekstil-ID. For «Erstatt hele biblioteket» vises tilsvarende totalsummer fra backupen. Eksisterende underposter i CloudKit er **ikke** lest; planen er fortsatt et skrivebeskyttet øyeblikksbilde og **ikke** en transaksjonssikker restore-plan. Ingen CloudKit-skriving.
 
@@ -4107,3 +4107,26 @@ Utvider eksisterende importplan med antall stoffstykker, bilder, materialer og f
 5. Gjenta på iPhone og iPad. **211 markeres først ✅ etter eksplisitt godkjenning.**
 
 Neste steg: kartlegg entydig CloudKit-recordidentitet og feil-/rollbackstrategi før noen skriveoperasjon aktiveres.
+
+
+## 212. Devpatch 0100 – sikkerhetsvurdering av import (kun kontroll)
+
+**212 ❗️ – avventer eksplisitt validering. 211 ✅ validert av bruker.**
+
+Utvider den eksisterende skrivebeskyttede importplanen med en tydelig sperre mot CloudKit-skriving og antall **logiske tekstil-ID-er som forekommer mer enn én gang** i eksisterende CloudKit-data. Dette er et relevant faresignal fordi `textileID` er et applikasjonsfelt, mens `CKRecord.ID.recordName` er en separat CloudKit-identitet. Beregningen bruker allerede innleste tekstiler og gjør ingen ekstra CloudKit-kall. Den ubrukte variabelen `duplicates` er fjernet fra diagnostikkvisningen (kompilatorvarsel fra 211).
+
+1. Installer devpatch 0100 på komplett versjon 0057 med `project-workflow`, og bygg i Xcode 27. Kontroller at advarselen om ubrukte `duplicates` er borte. **Stopp ved byggefeil.**
+2. Velg en gyldig backup i **Utvikling → Diagnostikk → Roadmap 7** og trykk **Beregn importplan (kun kontroll)**. Kontroller at **Sikkerhetsvurdering før eventuell import** vises med antall dupliserte tekstil-ID-er i iCloud og **Skriving til CloudKit: SPERRET (ikke implementert)**. **Stopp ved feil.**
+3. Kontroller at tidligere antall for begge importmetoder fortsatt vises, og at ingen data er endret. **Stopp ved feil.**
+4. Gjenta på iPhone og iPad. **212 forblir ❗️ til bruker eksplisitt godkjenner.**
+
+### Arkitekturgrunnlag før CloudKit-skriving (ikke implementert)
+
+- **Identitet:** `textileID`, `pieceID`, `materialID`, `colorID` og `imageID` er logiske felt i backupen. Eksisterende `save`-metoder oppretter nye `CKRecord`-navn når `cloudRecordName` mangler. De er derfor ikke alene tilstrekkelige for idempotent import eller rollback. En restore må bygge en eksplisitt logisk-ID → record-ID-oversikt, inkludert underposter.
+- **Importer bare nye:** Gjør ny lesing av eksisterende tekstiler og underposter før oppstart. Ikke skriv dersom logiske ID-er er tvetydige. Import av ett tekstil må inkludere tilhørende poster og bilder, med journal over nøyaktig hvilke CloudKit-records som ble opprettet. Ved delvis feil må journalen kunne brukes til kontrollert opprydding; opprydding kan selv feile og må rapporteres.
+- **Erstatt hele biblioteket:** Skal ikke implementeres som «slett alt, så importer». En sikker strategi krever fullstendig snapshot/tilbakeføringsmulighet, bekreftelse, kontroll av alle record-typer, og eksplisitt håndtering av delvis feil. CloudKit gir ikke én atomisk transaksjon på tvers av alle disse postene og CKAsset-filene.
+- **Samtidige endringer:** Importplanen er et øyeblikksbilde, ikke en lås. Før hver skrivefase må relevante konflikter vurderes på nytt. Eksakt «alt eller ingenting» kan ikke loves for et helt bibliotek med denne arkitekturen.
+- **Backupbilder:** Leseren verifiserer ZIP og refererte bildefiler, men `Result` eksponerer foreløpig ikke bildebytes til en importør. En egen kontrollert tilgang til verifiserte bildedata må bygges før bildeskriving.
+- **Gjeldende sikkerhetsgrense:** Ingen import-/restore-knapper som skriver eller sletter CloudKit-data er aktivert. Test 212 er bare diagnostikk.
+
+Neste steg etter 212: utvikle og teste en **skrivebeskyttet identitets-/avhengighetskartlegging** av alle CloudKit-record-typer og avklare en realistisk feil- og oppryddingsmodell før første skriveoperasjon.

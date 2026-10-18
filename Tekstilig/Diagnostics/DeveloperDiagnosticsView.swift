@@ -351,9 +351,12 @@ struct DeveloperDiagnosticsView: View {
             let current = try await CloudKitTextileRepository().fetchTextiles()
             let existingIDs = Set(current.map(\.textileID))
             let incomingIDs = Set(result.document.textiles.map(\.textileID))
-            let duplicates = incomingIDs.intersection(existingIDs).count
             let newTextiles = result.document.textiles.filter { !existingIDs.contains($0.textileID) }
             let overlappingTextiles = result.document.textiles.filter { existingIDs.contains($0.textileID) }
+            // A logical textileID is not the CloudKit recordName. Detect duplicate
+            // logical IDs in the live library before any future restore design.
+            let liveIDCounts = Dictionary(grouping: current, by: \.textileID)
+            let ambiguousIDs = liveIDCounts.filter { $0.value.count > 1 }.count
 
             // Count children from the validated backup, not from CloudKit. These are
             // prospective operations only; no child records or assets are fetched/written.
@@ -374,6 +377,12 @@ struct DeveloperDiagnosticsView: View {
                 "Erstatt hele biblioteket:\n" +
                 "  Backupinnhold: \(childCounts(result.document.textiles))\n" +
                 "  Eksisterende tekstiler som må håndteres: \(current.count)\n\n" +
+                "Sikkerhetsvurdering før eventuell import:\n" +
+                "  Dupliserte tekstil-ID-er i iCloud: \(ambiguousIDs)\n" +
+                "  Skriving til CloudKit: SPERRET (ikke implementert)\n" +
+                "  Identitet: tekstil-ID er ikke det samme som CloudKit recordName.\n" +
+                "  Import krever kontroll av underposter og bilder, ny kontroll rett før skriving, " +
+                "og gjenopprettingsstrategi ved delvis feil.\n\n" +
                 "Viktig: Eksisterende stoffstykker, bilder og andre underposter i iCloud er ikke lest eller sammenlignet. " +
                 "Dette er kun en ID-basert forhåndsberegning, ikke en trygg utførelsesplan. " +
                 "Ingen data er importert eller slettet."
