@@ -24,6 +24,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var importError: String?
     @State private var importPlan: String?
     @State private var isPlanningImport = false
+    @State private var conflictReport: String?
+    @State private var isCheckingConflicts = false
     @State private var identityAudit: String?
     @State private var isAuditingIdentities = false
     @State private var backupExportMessage: String?
@@ -221,6 +223,16 @@ struct DeveloperDiagnosticsView: View {
                         if let importPlan {
                             Text(importPlan).font(.callout)
                         }
+                        Button("Kontroller importkonflikter (kun kontroll)") {
+                            Task { await checkImportConflicts() }
+                        }
+                        .disabled(isReadingBackup || isPlanningImport || isCheckingConflicts || isAuditingIdentities || backupDiagnostic.isRunning)
+                        if isCheckingConflicts {
+                            BackupActivityLabel("Kontrollerer importkonflikter …")
+                        }
+                        if let conflictReport {
+                            Text(conflictReport).font(.callout)
+                        }
                         Button("Kartlegg CloudKit-identiteter (kun kontroll)") {
                             Task { await auditCloudKitIdentities() }
                         }
@@ -312,6 +324,8 @@ struct DeveloperDiagnosticsView: View {
                 guard !isReadingBackup else { return }
                 importResult = nil
                 importPlan = nil
+                conflictReport = nil
+                identityAudit = nil
                 validatedZIPData = nil
                 negativeZIPTestResult = nil
                 negativeJSONTestResult = nil
@@ -400,6 +414,56 @@ struct DeveloperDiagnosticsView: View {
                 "Ingen data er importert eller slettet."
         } catch {
             importPlan = "Kunne ikke beregne importplan: \(error.localizedDescription). Ingen data er endret."
+        }
+    }
+
+    // Preflight rules for "Importer bare nye". This is a read-only decision,
+    // not an authorization to write: the live library can change after this read.
+    @MainActor
+    private func checkImportConflicts() async {
+        guard let result = importResult, !isCheckingConflicts else { return }
+        isCheckingConflicts = true
+        conflictReport = nil
+        defer { isCheckingConflicts = false }
+        do {
+            let existing = try await CloudKitTextileRepository().fetchTextiles()
+            let incoming = result.document.textiles
+            let existingIDs = Set(existing.map(\.textileID))
+            let newTextiles = incoming.filter { !existingIDs.contains($0.textileID) }
+            let skipped = incoming.count - newTextiles.count
+
+            func duplicates(_ ids: [String]) -> Int {
+                Dictionary(grouping: ids, by: { $0 }).values.filter { $0.count > 1 }.count
+            }
+            let liveDuplicates = duplicates(existing.map(\.textileID))
+            let backupDuplicates = duplicates(incoming.map(\.textileID))
+            let emptyTextileIDs = incoming.filter { $0.textileID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count
+            let allPieceIDs = incoming.flatMap { $0.pieces.map(\.pieceID) }
+            let allImageIDs = incoming.flatMap { $0.images.map(\.imageID) }
+            let allMaterialIDs = incoming.flatMap { $0.materials.map(\.materialID) }
+            let allColorIDs = incoming.flatMap { $0.colors.map(\.colorID) }
+            let childDuplicateCounts = [duplicates(allPieceIDs), duplicates(allImageIDs), duplicates(allMaterialIDs), duplicates(allColorIDs)]
+            let missingChildIDs = [allPieceIDs, allImageIDs, allMaterialIDs, allColorIDs]
+                .reduce(0) { count, ids in count + ids.filter { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count }
+            let blocked = liveDuplicates > 0 || backupDuplicates > 0 || emptyTextileIDs > 0 ||
+                childDuplicateCounts.contains(where: { $0 > 0 }) || missingChildIDs > 0
+            let status = blocked ? "AVVIST – identitetskonflikt" : "FORELØPIG OK – bare skrivebeskyttet vurdering"
+            conflictReport = "Konfliktregler – Importer bare nye (kun kontroll):\n" +
+                "Status: \(status)\n" +
+                "Nye tekstiler: \(newTextiles.count), hoppes over: \(skipped)\n" +
+                "Dupliserte tekstil-ID-er i iCloud: \(liveDuplicates)\n" +
+                "Dupliserte tekstil-ID-er i backup: \(backupDuplicates)\n" +
+                "Tomme tekstil-ID-er i backup: \(emptyTextileIDs)\n" +
+                "Dupliserte underpost-ID-er i backup (stoffstykke/bilde/materiale/farge): \(childDuplicateCounts.map(String.init).joined(separator: "/"))\n" +
+                "Tomme underpost-ID-er i backup: \(missingChildIDs)\n" +
+                "Overlappende tekstiler hoppes over med ALLE underposter.\n" +
+                "Skriving til CloudKit: SPERRET.\n" +
+                "Begrensning: Eksisterende underpost-ID-er og bildeposter i CloudKit er ikke sammenlignet her. " +
+                "En grønn vurdering er IKKE klarsignal til import. Før skriving må alle live underposter " +
+                "kontrolleres, og samtidige endringer og delvis feil håndteres.\n" +
+                "Ingen data er endret."
+        } catch {
+            conflictReport = "Konfliktkontroll AVVIST: \(error.localizedDescription). Ingen data er endret."
         }
     }
 

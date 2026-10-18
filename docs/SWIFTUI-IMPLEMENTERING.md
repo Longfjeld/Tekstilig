@@ -4148,10 +4148,21 @@ Neste steg: fullstendig skrivebeskyttet bildeidentitetskartlegging og konkrete k
 
 ## 214. Devpatch 0102 – fullstendig skrivebeskyttet kartlegging av bildeposter
 
-**214 ❗️ – avventer eksplisitt validering. 213 ✅ godkjent av bruker.**
+**214 ✅ – validert OK av bruker. 213 ✅ godkjent av bruker.**
 
 Identitetskartleggingen leser metadata fra alle `TextileImage`-poster (unntatt kjent diagnostikkpost), uten å hente CKAsset-bytes. Rapporterer totalt antall, primærbilder, dupliserte logiske `imageID`, tekstiler med flere primærbilder, manglende `imageId`/`textileId`, foreldreløse poster og manglende `recordName`. Bruker paginering og avbryter rapporten ved CloudKit-feil. Dette er en skrivebeskyttet oversikt, ikke en importgaranti.
 
 1. Installer devpatch 0102 på komplett versjon 0059 med `project-workflow`; bygg i Xcode 27. **Stopp ved byggefeil.**
 2. Velg gyldig ZIP under **Utvikling → Diagnostikk → Roadmap 7**, og trykk **Kartlegg CloudKit-identiteter (kun kontroll)**. Kontroller at rapporten inneholder ny seksjon «Bildeposter (alle, unntatt diagnostikk)» med antall, primærbilder, duplikater og foreldreløse poster. **Stopp ved feil.**
-3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **214 forblir ❗️ til eksplisitt godkjenning.**
+3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **214 validert OK av bruker.**
+
+
+## 215. Devpatch 0103 – konfliktregler for «Importer bare nye» (kun kontroll)
+
+**215 ❗️ – avventer eksplisitt validering. 214 ✅ godkjent av bruker.**
+
+Ny knapp **Kontroller importkonflikter (kun kontroll)**. Leser eksisterende tekstiler og vurderer logiske ID-er i den validerte backupen. Avviser foreløpig importplan ved dupliserte tekstil-ID-er i CloudKit/backup, tomme tekstil-ID-er, dupliserte underpost-ID-er på tvers av backupen eller tomme underpost-ID-er. Eksisterende tekstiler hoppes over sammen med alle sine underposter. Resultatet **FORELØPIG OK** betyr ikke at import er trygg: kontroll av eksisterende underpost-ID-er i CloudKit, samtidige endringer og håndtering av delvise feil gjenstår. Ingen CloudKit-skriving eller -sletting.
+
+1. Installer devpatch 0103 på komplett versjon 0060 med `project-workflow`, og bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig backup og trykk **Kontroller importkonflikter (kun kontroll)**. Kontroller at status, nye/overlappende tekstiler, dupliserte/tomme ID-er og begrensninger vises. **Stopp ved feil.**
+3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **215 forblir ❗️ til eksplisitt godkjenning.**
