@@ -147,6 +147,81 @@ final class CloudKitTextileImageRepository: TextileImageRepository {
         return textileIDs
     }
 
+    // Read-only inventory of ALL TextileImage records; CKAsset bytes are not downloaded.
+    // Excludes the known diagnostic PoC record, consistent with normal image queries.
+    func auditAllImageRecords(knownTextileIDs: Set<String>) async throws -> String {
+        let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
+        var cursor: CKQueryOperation.Cursor?
+        var count = 0
+        var missingImageID = 0
+        var missingTextileID = 0
+        var missingRecordName = 0
+        var orphanCount = 0
+        var primaryCount = 0
+        var imageIDCounts: [String: Int] = [:]
+        var primaryCounts: [String: Int] = [:]
+
+        repeat {
+            let response: (
+                matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)],
+                queryCursor: CKQueryOperation.Cursor?
+            )
+            if let cursor {
+                response = try await database.records(
+                    continuingMatchFrom: cursor,
+                    desiredKeys: ["imageId", "textileId", "primary"],
+                    resultsLimit: 100
+                )
+            } else {
+                response = try await database.records(
+                    matching: query,
+                    inZoneWith: nil,
+                    desiredKeys: ["imageId", "textileId", "primary"],
+                    resultsLimit: 100
+                )
+            }
+            for (_, result) in response.matchResults {
+                switch result {
+                case .failure(let error): throw error
+                case .success(let record):
+                    if Self.diagnosticRecordNames.contains(record.recordID.recordName) { continue }
+                    count += 1
+                    if record.recordID.recordName.isEmpty { missingRecordName += 1 }
+                    let imageID = (record["imageId"] as? String ?? "")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    let textileID = (record["textileId"] as? String ?? "")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    if imageID.isEmpty {
+                        missingImageID += 1
+                    } else {
+                        imageIDCounts[imageID, default: 0] += 1
+                    }
+                    if textileID.isEmpty {
+                        missingTextileID += 1
+                    } else if !knownTextileIDs.contains(textileID) {
+                        orphanCount += 1
+                    }
+                    if (record["primary"] as? NSNumber)?.intValue == 1 {
+                        primaryCount += 1
+                        if !textileID.isEmpty { primaryCounts[textileID, default: 0] += 1 }
+                    }
+                }
+            }
+            cursor = response.queryCursor
+        } while cursor != nil
+
+        let duplicateIDs = imageIDCounts.values.filter { $0 > 1 }.count
+        let multiplePrimaries = primaryCounts.values.filter { $0 > 1 }.count
+        return "Bildeposter (alle, unntatt diagnostikk): \(count)\n" +
+            "Primærbildeposter: \(primaryCount)\n" +
+            "Dupliserte imageID-er: \(duplicateIDs)\n" +
+            "Tekstiler med flere primærbilder: \(multiplePrimaries)\n" +
+            "Bildeposter uten imageID: \(missingImageID)\n" +
+            "Bildeposter uten textileId: \(missingTextileID)\n" +
+            "Bildeposter uten forelder: \(orphanCount)\n" +
+            "Bildeposter uten recordName: \(missingRecordName)"
+    }
+
     func savePrimaryImage(
         textileID: String,
         data: Data,

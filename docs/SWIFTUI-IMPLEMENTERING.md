@@ -4134,7 +4134,7 @@ Neste steg etter 212: utvikle og teste en **skrivebeskyttet identitets-/avhengig
 
 ## 213. Devpatch 0101 – skrivebeskyttet kartlegging av CloudKit-identiteter
 
-**212 ✅ validert av bruker. 213 ❗️ avventer validering.**
+**212 ✅ og 213 ✅ validert av bruker.**
 
 Legger til «Kartlegg CloudKit-identiteter (kun kontroll)» under Roadmap 7. Leser Textile, Piece, TextileMaterial og TextileColor via eksisterende repositorier, samt mengden tekstil-ID-er med primærbilde. Viser antall poster, dupliserte logiske ID-er, manglende CloudKit recordName og foreldreløse underposter. Bildekartleggingen er eksplisitt ufullstendig: bilde-recordName, ikke-primære bilder og duplikate bilde-ID-er er ennå ikke kontrollert. Ingen skriving/sletting.
 
@@ -4144,3 +4144,14 @@ Legger til «Kartlegg CloudKit-identiteter (kun kontroll)» under Roadmap 7. Les
 4. Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad. **213 forblir ❗️ til eksplisitt godkjenning.**
 
 Neste steg: fullstendig skrivebeskyttet bildeidentitetskartlegging og konkrete konfliktregler før import.
+
+
+## 214. Devpatch 0102 – fullstendig skrivebeskyttet kartlegging av bildeposter
+
+**214 ❗️ – avventer eksplisitt validering. 213 ✅ godkjent av bruker.**
+
+Identitetskartleggingen leser metadata fra alle `TextileImage`-poster (unntatt kjent diagnostikkpost), uten å hente CKAsset-bytes. Rapporterer totalt antall, primærbilder, dupliserte logiske `imageID`, tekstiler med flere primærbilder, manglende `imageId`/`textileId`, foreldreløse poster og manglende `recordName`. Bruker paginering og avbryter rapporten ved CloudKit-feil. Dette er en skrivebeskyttet oversikt, ikke en importgaranti.
+
+1. Installer devpatch 0102 på komplett versjon 0059 med `project-workflow`; bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Velg gyldig ZIP under **Utvikling → Diagnostikk → Roadmap 7**, og trykk **Kartlegg CloudKit-identiteter (kun kontroll)**. Kontroller at rapporten inneholder ny seksjon «Bildeposter (alle, unntatt diagnostikk)» med antall, primærbilder, duplikater og foreldreløse poster. **Stopp ved feil.**
+3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **214 forblir ❗️ til eksplisitt godkjenning.**
