@@ -4044,7 +4044,7 @@ Neste fase: kontroll av semantiske feil i JSON og analyse av sikker CloudKit-gje
 
 ## 209. Devpatch 0095 – negativ semantisk validering av backupinnhold
 
-**198–208 ✅ validert av bruker på alle plattformer. 209 ❗️ avventer test.**
+**198–209 ✅ validert av bruker på alle plattformer.**
 
 Samme semantiske kontroll brukes av ZIP-leseren og en skrivebeskyttet diagnostikk for ugyldig formatversjon, feil i bildefilstier, duplisert tekstil-ID og tom tekstil-ID. Det kreves minst ett tekstil i valgt backup. Ingen CloudKit-skriving.
 
@@ -4059,9 +4059,21 @@ Neste steg: analysere CloudKit-transaksjonsgrenser og importstrategi før skrive
 
 ### Devpatch 0096 – rettelse av byggefeil i test 209
 
-**209 ❗️ – avventer ny validering.** Byggefeilen `Cannot find 'imagePaths' in scope` i `TekstiligBackupReader.read(_:)` kom av at `imagePaths` ble flyttet inn i `validateDocument` i devpatch 0095, mens resultatkonstruksjonen fortsatt refererte til den lokale variabelen. Etter vellykket validering består `files` av `backup.json` og nøyaktig de refererte bildefilene. Derfor brukes `files.count - 1` som bildeantall, uten ny validering eller duplisert opptelling. Ingen endringer i backupformat eller CloudKit.
+**209 ✅ – bygget og validert av bruker på alle plattformer etter rettelsen i 0096.** Byggefeilen `Cannot find 'imagePaths' in scope` i `TekstiligBackupReader.read(_:)` kom av at `imagePaths` ble flyttet inn i `validateDocument` i devpatch 0095, mens resultatkonstruksjonen fortsatt refererte til den lokale variabelen. Etter vellykket validering består `files` av `backup.json` og nøyaktig de refererte bildefilene. Derfor brukes `files.count - 1` som bildeantall, uten ny validering eller duplisert opptelling. Ingen endringer i backupformat eller CloudKit.
 
 1. Installer devpatch 0096 over komplett kodeversjon 0052 (med devpatch 0095 inkludert), og bygg i Xcode 27 på Mac. Stopp ved byggefeil.
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7** og velg en gyldig backup med minst ett tekstil. Kontroller bildeantall i forhåndsvisningen. Stopp ved feil.
 3. Kjør **Test avvisning av ugyldig backupinnhold**. Kontroller meldingen **OK: 4/4 ugyldige innholdsvarianter ble avvist. Ingen data importert.** Stopp ved feil.
 4. Kontroller at biblioteket er uendret, og gjenta på iPhone og iPad. **209 forblir ❗️ til eksplisitt godkjenning.**
+
+
+### Devpatch 0097 – integrasjonstest av automatisk patchinstallasjon
+
+**Arbeidsflyt ❗️ – avventer lokal validering.** Dette er en dokumentasjonsoppdatering, ikke en ny SwiftUI-funksjon. Test 209 er validert OK av bruker. Patchen er bevisst begrenset til denne dokumentasjonsfilen for å teste at `project-workflow` pakker ut, kopierer og SHA-256-verifiserer filen på korrekt prosjektsti.
+
+1. Kjør `./project-workflow.sh tekstilig --dry-run` fra `project-workflow`-mappen med devpatch 0097 i konfigurert innboks. Kontroller at målet er `docs/SWIFTUI-IMPLEMENTERING.md`, **ikke** `Tekstilig-devpatch-0097/docs/...`. Stopp ved feil.
+2. Kjør `./project-workflow.sh tekstilig` for installasjon, kontroll, commit, push og eksport. Stopp ved feil.
+3. Kjør `./project-workflow.sh tekstilig --status`. Forvent `last_successful_patch=0097`, `last_successful_export=0055`, `next_patch=0098`, `next_export=0056`, `pending=null`.
+4. Last opp `Tekstilig-SwiftUIActualApp0055.zip`. Kontroller ZIP-innhold og at ingen feilplassert `Tekstilig-devpatch-0097/`-mappe finnes. Arbeidsflyt-testen markeres først ✅ etter godkjent resultat.
+
+Ingen Xcode-bygging kreves for denne dokumentasjonspatchen. Neste funksjonelle Tekstilig-test blir 210.
