@@ -3966,3 +3966,17 @@ ZIP32-arkiv med `backup.json` og `images/` (lagret uten ytterligere komprimering
 9. På iPad og Mac, når tilgjengelig: gjenta eksport og kontroller at lagringsdialogen og ZIP-filen fungerer. Rapporter plattformene separat.
 
 **203 skal bare markeres ✅ etter eksplisitt godkjenning.**
+
+
+## 204. Devpatch 0090 – lesbare bildefilnavn i ZIP-backup
+
+**198–203 ✅ validert av bruker på iPhone, iPad og macOS. 204 ❗️ avventer test.**
+
+Tidligere UTF-8-hex-koding av tekstil-ID og bilde-ID ble innført mens duplikate CloudKit-testposter (`T0001`) ennå ikke var identifisert. Disse testpostene er nå fjernet, og årsaken til den opprinnelige feilen er avklart. `TextileImage.newPrimaryDraft` genererer bilde-ID som `IMG-<UUID>`, så eksporten bruker nå `images/<imageID>.<filtype>` uten unødvendig hex-koding. Eksisterende duplikatkontroll i staging, JSON-referanser og ZIP-verifisering beholdes. Ingen CloudKit-data endres.
+
+1. Installer `Tekstilig-devpatch-0090.zip` over gjeldende prosjekt (som allerede inneholder 0089), med vanlig dry-run og rsync.
+2. Bygg prosjektet i Xcode 27. **Stopp ved byggefeil.**
+3. På Mac: Kjør **Utvikling → Roadmap 6: backupmodell → Test backupmodell**. Kontroller at JSON round-trip, staging og ZIP-verifisering er OK. **Stopp ved feil.**
+4. Eksporter ZIP til Finder, pakk ut og kontroller at bilder har lesbare navn av typen `IMG-<UUID>.jpeg` (eller tilsvarende filtype), at antall bilder stemmer og at `backup.json` peker til de faktiske filene. **Stopp ved feil.**
+5. Gjenta backupmodelltest og ZIP-eksport på iPhone og iPad; kontroller filnavn og åpne et kjent tekstil med bilde etterpå.
+6. Rapporter resultat for hver plattform. **204 markeres først ✅ etter eksplisitt godkjenning.**

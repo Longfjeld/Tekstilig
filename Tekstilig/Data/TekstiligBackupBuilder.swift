@@ -207,11 +207,10 @@ final class TekstiligBackupBuilder {
         let originalExtension = URL(fileURLWithPath: image.fileName).pathExtension
         let safeExtension = originalExtension.isEmpty ? fallbackExtension(for: image.contentType) : originalExtension
         let suffix = safeExtension.isEmpty ? "" : ".\(safeExtension.lowercased())"
-        // Image IDs alone are not guaranteed globally unique across textiles.
-        // Hex-encoding keeps the filename safe and reversible without altering IDs.
-        let textileKey = textileID.utf8.map { String(format: "%02x", $0) }.joined()
-        let imageKey = image.imageID.utf8.map { String(format: "%02x", $0) }.joined()
-        return "images/\(textileKey)-\(imageKey)\(suffix)"
+        // Image IDs are generated as IMG-<UUID> by TextileImage.newPrimaryDraft.
+        // Use the readable logical ID directly; the staging step still rejects
+        // duplicate paths rather than overwriting any image.
+        return "images/\(image.imageID)\(suffix)"
     }
 
     private static func fallbackExtension(for contentType: String) -> String {
