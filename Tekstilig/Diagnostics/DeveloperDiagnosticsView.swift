@@ -24,6 +24,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var importError: String?
     @State private var importPlan: String?
     @State private var isPlanningImport = false
+    @State private var identityAudit: String?
+    @State private var isAuditingIdentities = false
     @State private var backupExportMessage: String?
 
     var body: some View {
@@ -219,6 +221,16 @@ struct DeveloperDiagnosticsView: View {
                         if let importPlan {
                             Text(importPlan).font(.callout)
                         }
+                        Button("Kartlegg CloudKit-identiteter (kun kontroll)") {
+                            Task { await auditCloudKitIdentities() }
+                        }
+                        .disabled(isReadingBackup || isPlanningImport || isAuditingIdentities || backupDiagnostic.isRunning)
+                        if isAuditingIdentities {
+                            BackupActivityLabel("Kartlegger CloudKit-poster …")
+                        }
+                        if let identityAudit {
+                            Text(identityAudit).font(.callout)
+                        }
                     }
                     if let importError {
                         Text(importError).foregroundStyle(.orange)
@@ -388,6 +400,46 @@ struct DeveloperDiagnosticsView: View {
                 "Ingen data er importert eller slettet."
         } catch {
             importPlan = "Kunne ikke beregne importplan: \(error.localizedDescription). Ingen data er endret."
+        }
+    }
+
+    // Read-only audit. Every returned record is mapped by logical ID and CKRecord name.
+    // Image repository currently exposes only the set of primary-image textile IDs;
+    // this is deliberately NOT presented as a complete image-record audit.
+    @MainActor
+    private func auditCloudKitIdentities() async {
+        guard importResult != nil, !isAuditingIdentities else { return }
+        isAuditingIdentities = true
+        identityAudit = nil
+        defer { isAuditingIdentities = false }
+        do {
+            let textiles = try await CloudKitTextileRepository().fetchTextiles()
+            let pieces = try await CloudKitPieceRepository().fetchAllPieces()
+            let materials = try await CloudKitTextileMaterialRepository().fetchAllMaterials()
+            let colors = try await CloudKitTextileColorRepository().fetchAllColors()
+            let primaryImageTextileIDs = try await CloudKitTextileImageRepository().fetchPrimaryImageTextileIDs()
+            let parentIDs = Set(textiles.map(\.textileID))
+
+            func duplicateCount(_ ids: [String]) -> Int {
+                Dictionary(grouping: ids, by: { $0 }).values.filter { $0.count > 1 }.count
+            }
+            func missingParents(_ ids: [String]) -> Int {
+                ids.filter { !parentIDs.contains($0) }.count
+            }
+            func missingRecordNames(_ names: [String?]) -> Int {
+                names.filter { $0 == nil || $0!.isEmpty }.count
+            }
+            let orphanImages = primaryImageTextileIDs.subtracting(parentIDs).count
+            identityAudit = "CloudKit-identitetskart (kun lesing):\n" +
+                "Tekstiler: \(textiles.count), dupliserte ID-er: \(duplicateCount(textiles.map(\.textileID))), uten recordName: \(missingRecordNames(textiles.map(\.cloudRecordName)))\n" +
+                "Stoffstykker: \(pieces.count), dupliserte ID-er: \(duplicateCount(pieces.map(\.pieceID))), uten forelder: \(missingParents(pieces.map(\.textileID))), uten recordName: \(missingRecordNames(pieces.map(\.cloudRecordName)))\n" +
+                "Materialer: \(materials.count), dupliserte ID-er: \(duplicateCount(materials.map(\.materialID))), uten forelder: \(missingParents(materials.map(\.textileID))), uten recordName: \(missingRecordNames(materials.map(\.cloudRecordName)))\n" +
+                "Farger: \(colors.count), dupliserte ID-er: \(duplicateCount(colors.map(\.colorID))), uten forelder: \(missingParents(colors.map(\.textileID))), uten recordName: \(missingRecordNames(colors.map(\.cloudRecordName)))\n" +
+                "Tekstiler med primærbilde: \(primaryImageTextileIDs.count), uten forelder: \(orphanImages)\n\n" +
+                "Begrensning: Bildeoversikten inneholder bare tekstil-ID-er med primærbilde, ikke alle bildeposter eller deres recordName. Fullstendig bildekartlegging gjenstår.\n" +
+                "Skriving til CloudKit: SPERRET. Ingen data endret."
+        } catch {
+            identityAudit = "Kartlegging avbrutt: \(error.localizedDescription). Ingen data endret."
         }
     }
 

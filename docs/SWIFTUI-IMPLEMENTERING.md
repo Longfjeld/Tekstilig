@@ -4130,3 +4130,17 @@ Utvider den eksisterende skrivebeskyttede importplanen med en tydelig sperre mot
 - **Gjeldende sikkerhetsgrense:** Ingen import-/restore-knapper som skriver eller sletter CloudKit-data er aktivert. Test 212 er bare diagnostikk.
 
 Neste steg etter 212: utvikle og teste en **skrivebeskyttet identitets-/avhengighetskartlegging** av alle CloudKit-record-typer og avklare en realistisk feil- og oppryddingsmodell før første skriveoperasjon.
+
+
+## 213. Devpatch 0101 – skrivebeskyttet kartlegging av CloudKit-identiteter
+
+**212 ✅ validert av bruker. 213 ❗️ avventer validering.**
+
+Legger til «Kartlegg CloudKit-identiteter (kun kontroll)» under Roadmap 7. Leser Textile, Piece, TextileMaterial og TextileColor via eksisterende repositorier, samt mengden tekstil-ID-er med primærbilde. Viser antall poster, dupliserte logiske ID-er, manglende CloudKit recordName og foreldreløse underposter. Bildekartleggingen er eksplisitt ufullstendig: bilde-recordName, ikke-primære bilder og duplikate bilde-ID-er er ennå ikke kontrollert. Ingen skriving/sletting.
+
+1. Installer devpatch 0101 via `project-workflow` på komplett versjon 0058. Bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig backup og trykk **Kartlegg CloudKit-identiteter (kun kontroll)**. Kontroller at aktivitetsindikator vises, og at antall for tekstiler, stoffstykker, materialer og farger virker rimelige. **Stopp ved feil.**
+3. Kontroller at rapporten viser duplikater, foreldreløse poster og manglende recordName, samt tydelig begrensning for bilder og **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
+4. Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad. **213 forblir ❗️ til eksplisitt godkjenning.**
+
+Neste steg: fullstendig skrivebeskyttet bildeidentitetskartlegging og konkrete konfliktregler før import.
