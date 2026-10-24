@@ -4226,11 +4226,23 @@ Ny knapp under Roadmap 7: **Simuler ukjent serversvar og trygg gjentakelse (kun 
 
 ## 221. Devpatch 0109 – stabile kandidat-ID-er og eierskapskonflikt (kun simulering)
 
-**221 ❗️ – avventer eksplisitt validering. 220 ✅ godkjent av bruker.**
+**221 ✅ – validert OK av bruker. 220 ✅ godkjent av bruker.**
 
 Ny knapp i Roadmap 7: **Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun i minnet)**. Testen bruker første tekstil i valgt, validert ZIP-backup, lager deterministiske *kandidatnavn* fra type og logisk ID, avviser tomme/dupliserte nøkler og simulerer to utfall ved tapt serversvar. Den kontrollerer også at en post med samme kandidatnavn, men en annen eier, **må avvises**. Navnene er **ikke** verifisert mot eksisterende CKRecord.ID-strategi i appen eller mot CloudKit; denne testen gir ingen tillatelse til import. Ingen CloudKit-skriving.
 
 1. Installer devpatch 0109 på komplett eksport 0066 via `project-workflow`. Bygg med ⌘B i Xcode 27. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup med minst ett tekstil. Trykk **Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun i minnet)**.
 3. Kontroller **Simulering av stabile kandidat-ID-er: OK**, **Kollisjon med annen eier avvist: OK** og **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
-4. Kontroller uendret bibliotek og gjenta på iPhone og iPad. **221 forblir ❗️ til bruker validerer.**
+4. Kontroller uendret bibliotek og gjenta på iPhone og iPad. **221 validert OK av bruker.**
+
+
+## 222. Devpatch 0110 – kartlegg eksisterende CKRecord.ID-strategi (kun kontroll)
+
+**222 ❗️ – avventer eksplisitt validering. 221 ✅ godkjent av bruker.**
+
+Ny knapp **Vis faktisk CKRecord.ID-strategi (kun kontroll)** i Roadmap 7. Rapporten dokumenterer funn ved inspeksjon av `save`-metodene i `CloudKitTextileRepository`, `CloudKitPieceRepository`, `CloudKitTextileMaterialRepository`, `CloudKitTextileColorRepository` og `CloudKitTextileImageRepository` fra komplett versjon 0067: eksisterende `cloudRecordName` gir oppslag og oppdatering med `CKRecord.ID(recordName:)`; manglende `cloudRecordName` gir ny `CKRecord(recordType:)` med servergenerert ID. Logiske ID-er lagres som felt. Derfor er test 221 sine kandidatnavn ikke en del av eksisterende persistensstrategi. Dette er en kildekodebasert rapport, ikke live serververifikasjon. Ingen CloudKit-lesing eller -skriving utføres av knappen.
+
+1. Installer devpatch 0110 på komplett versjon 0067 via `project-workflow`; bygg med ⌘B i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7** og trykk **Vis faktisk CKRecord.ID-strategi (kun kontroll)**. Ingen backup kreves.
+3. Kontroller at rapporten viser de fem repository-typene, forskjellen mellom eksisterende og ny post, og at logisk ID ikke er CKRecord.ID. Kontroller **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
+4. Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad. **222 forblir ❗️ til bruker validerer.**

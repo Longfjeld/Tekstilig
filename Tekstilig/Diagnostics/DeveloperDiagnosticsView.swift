@@ -30,6 +30,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var persistentJournalReport: String?
     @State private var retrySimulationReport: String?
     @State private var recordIdentitySimulationReport: String?
+    @State private var repositoryIdentityReport: String?
     @State private var stabilityReport: String?
     @State private var isCheckingStability = false
     @State private var identityAudit: String?
@@ -273,6 +274,12 @@ struct DeveloperDiagnosticsView: View {
                         .disabled(importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
                         if let recordIdentitySimulationReport {
                             Text(recordIdentitySimulationReport).font(.callout)
+                        }
+                        Button("Vis faktisk CKRecord.ID-strategi (kun kontroll)") {
+                            inspectRepositoryIdentityStrategy()
+                        }
+                        if let repositoryIdentityReport {
+                            Text(repositoryIdentityReport).font(.callout)
                         }
                         Button("Les og slett lokal testjournal") {
                             inspectAndRemovePersistentTestJournal()
@@ -712,6 +719,30 @@ struct DeveloperDiagnosticsView: View {
             "Dette er IKKE eksisterende CKRecord.ID-er eller en CloudKit-kontroll. " +
             "Faktisk ID-strategi og servereierskap må avklares før skriving.\n" +
             "Skriving til CloudKit: SPERRET."
+    }
+
+    // Test 222: a read-only architectural diagnostic documenting the actual
+    // repository save branches. No CloudKit access or mutation is performed.
+    // The findings below were checked against the five repository save methods
+    // in the 0067 source tree. They are not a runtime verification of server IDs.
+    @MainActor
+    private func inspectRepositoryIdentityStrategy() {
+        repositoryIdentityReport = """
+        Faktisk CKRecord.ID-strategi i appens eksisterende repositories:
+        Textile, Piece, TextileMaterial, TextileColor, TextileImage: samme mønster.
+        • Med cloudRecordName: hent eksisterende CKRecord.ID(recordName:) og oppdater posten.
+        • Uten cloudRecordName: opprett CKRecord(recordType:) uten eksplisitt recordID; CloudKit tildeler recordName ved lagring.
+        • Logisk textileID / pieceID / materialID / colorID / imageID lagres som egne felt, ikke som CKRecord.ID.
+        • Etter lagring leses recordID.recordName tilbake i modellen.
+
+        Konsekvens for import:
+        Kandidat-ID-ene fra test 221 er IKKE appens nåværende ID-strategi.
+        Backupens logiske ID alene kan ikke brukes til å anta et eksisterende CKRecord.ID.
+        Å gjenta en opprettelse uten kjent recordName kan opprette duplikat.
+        Før faktisk import må vi velge og implementere en stabil opprettelsesidentitet, kontrollere eksisterende logiske ID-er på serveren og avvise eierskapskonflikter.
+        Denne rapporten beskriver inspisert kildekode, ikke en live CloudKit-verifikasjon.
+        Skriving til CloudKit: SPERRET.
+        """
     }
 
     // Local-only test journal. This is NOT an import transaction or a recovery
