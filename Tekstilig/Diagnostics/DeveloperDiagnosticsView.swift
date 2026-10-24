@@ -32,6 +32,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var recordIdentitySimulationReport: String?
     @State private var repositoryIdentityReport: String?
     @State private var importIdentityPreflightReport: String?
+    @State private var deterministicIdentityReport: String?
+    @State private var isCheckingDeterministicIdentity = false
     @State private var isCheckingImportIdentity = false
     @State private var stabilityReport: String?
     @State private var isCheckingStability = false
@@ -279,6 +281,16 @@ struct DeveloperDiagnosticsView: View {
                         }
                         if let importIdentityPreflightReport {
                             Text(importIdentityPreflightReport).font(.callout)
+                        }
+                        Button("Vurder stabile import-ID-er mot CloudKit (kun lesing)") {
+                            Task { await assessDeterministicImportIdentities() }
+                        }
+                        .disabled(isCheckingDeterministicIdentity || isCheckingImportIdentity || isReadingBackup || backupDiagnostic.isRunning)
+                        if isCheckingDeterministicIdentity {
+                            BackupActivityLabel("Kontrollerer importidentiteter …")
+                        }
+                        if let deterministicIdentityReport {
+                            Text(deterministicIdentityReport).font(.callout)
                         }
                         Button("Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun i minnet)") {
                             simulateStableRecordIdentities()
@@ -733,6 +745,71 @@ struct DeveloperDiagnosticsView: View {
             "Dette er IKKE eksisterende CKRecord.ID-er eller en CloudKit-kontroll. " +
             "Faktisk ID-strategi og servereierskap må avklares før skriving.\n" +
             "Skriving til CloudKit: SPERRET."
+    }
+
+    // Test 224: read-only feasibility check for a deterministic import-only
+    // CKRecord.ID strategy. Existing normal save paths are not modified.
+    // No CKRecord is created or saved by this diagnostic.
+    @MainActor
+    private func assessDeterministicImportIdentities() async {
+        guard let backup = importResult?.document, !isCheckingDeterministicIdentity else { return }
+        isCheckingDeterministicIdentity = true
+        deterministicIdentityReport = nil
+        defer { isCheckingDeterministicIdentity = false }
+        do {
+            let textiles = try await CloudKitTextileRepository().fetchTextiles()
+            let pieces = try await CloudKitPieceRepository().fetchAllPieces()
+            let materials = try await CloudKitTextileMaterialRepository().fetchAllMaterials()
+            let colors = try await CloudKitTextileColorRepository().fetchAllColors()
+            // The image repository exposes logical IDs but not all CKRecord.IDs.
+            // This test intentionally does not claim to validate image record names.
+            let existingTextileIDs = Set(textiles.map(\.textileID))
+            let candidates = backup.textiles.filter { !existingTextileIDs.contains($0.textileID) }
+            let existingNames = Set(textiles.compactMap(\.cloudRecordName) +
+                pieces.compactMap(\.cloudRecordName) +
+                materials.compactMap(\.cloudRecordName) +
+                colors.compactMap(\.cloudRecordName))
+            var candidateKeys: [String] = []
+            var blankKeys = 0
+            func append(_ type: String, _ id: String) {
+                if id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    blankKeys += 1
+                } else {
+                    candidateKeys.append("\(type):\(id)")
+                }
+            }
+            for textile in candidates {
+                append("Textile", textile.textileID)
+                for piece in textile.pieces { append("Piece", piece.pieceID) }
+                for material in textile.materials { append("TextileMaterial", material.materialID) }
+                for color in textile.colors { append("TextileColor", color.colorID) }
+            }
+            // Stable, namespaced candidates; this is an evaluation only, not
+            // a change to the application's current CloudKit naming strategy.
+            let candidateNames = candidateKeys.map { key in
+                "tekstilig-import-v1-" + key.utf8.map { String(format: "%02x", $0) }.joined()
+            }
+            let duplicateKeys = candidateKeys.count - Set(candidateKeys).count
+            let collisions = candidateNames.filter { existingNames.contains($0) }.count
+            let longNames = candidateNames.filter { $0.utf8.count > 255 }.count
+            let imageCount = candidates.reduce(0) { $0 + $1.images.count }
+            let blocked = blankKeys > 0 || duplicateKeys > 0 || collisions > 0 || longNames > 0
+            deterministicIdentityReport = """
+            Vurdering av stabile import-ID-er (kun lesing):
+            Status: \(blocked ? "AVVIST" : "FORELØPIG OK – IKKE SKRIVEKLAR")
+            Nye tekstiler i backup: \(candidates.count); eksisterende hoppes over: \(backup.textiles.count - candidates.count).
+            Kandidater (tekstil/stykke/materiale/farge): \(candidateNames.count).
+            Tomme logiske ID-er: \(blankKeys); dupliserte type/ID-par: \(duplicateKeys).
+            Kollisjoner med kjente CKRecord.recordName: \(collisions); kandidatnavn over 255 byte: \(longNames).
+            Bilder til nye tekstiler: \(imageCount) – bilde-recordName IKKE kontrollert.
+            Kandidatnavnene er bare en teknisk vurdering. Eksisterende normal lagring bruker fortsatt servergenererte navn.
+            Kontroll av eierskap, endringer mellom lesing og skriving og ukjent serversvar er IKKE løst.
+            Ingen CloudKit-post er reservert; ingen import kan startes.
+            Skriving til CloudKit: SPERRET. Ingen data er endret.
+            """
+        } catch {
+            deterministicIdentityReport = "AVVIST: CloudKit-lesing feilet: \(error.localizedDescription). Skriving til CloudKit: SPERRET."
+        }
     }
 
     // Test 223: reconcile the logical identifiers from the backup with live

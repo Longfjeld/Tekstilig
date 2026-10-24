@@ -4250,7 +4250,7 @@ Ny knapp **Vis faktisk CKRecord.ID-strategi (kun kontroll)** i Roadmap 7. Rappor
 
 ## 223. Devpatch 0111 – kontroll av faktiske CloudKit-ID-er før import (kun lesing)
 
-**223 ❗️ – avventer eksplisitt validering. 222 ✅ godkjent av bruker.**
+**223 ✅ – validert av bruker. 222 ✅ godkjent av bruker.**
 
 Ny knapp **Kontroller eksisterende CloudKit-ID-er før import (kun lesing)**. Leser tekstiler, stoffstykker, materialer, farger og bilde-ID-er fra CloudKit; sammenligner logiske ID-er i validert backup og eksisterende bibliotek. Eksisterende tekstiler skal hoppes over. Avviser dupliserte CloudKit-ID-er, tomme/dupliserte tekstil-ID-er i backup, manglende recordName for fire posttyper og kollisjoner for underposter til nye tekstiler. Bilde-recordName og CKAsset kontrolleres ikke. Resultatet er ikke en atomisk snapshot, og gir aldri tillatelse til skriving. Ingen import er implementert.
 
@@ -4260,3 +4260,15 @@ UX-feil fra test 222: knappene **Vis faktisk CKRecord.ID-strategi** og **Les og 
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7** uten å velge backup. Kontroller at **Vis faktisk CKRecord.ID-strategi** og **Les og slett lokal testjournal** er tilgjengelige. Trykk **Vis faktisk CKRecord.ID-strategi** og kontroller at rapporten vises. **Stopp ved feil.**
 3. Velg gyldig ZIP-backup og trykk **Kontroller eksisterende CloudKit-ID-er før import (kun lesing)**. Kontroller at rapporten viser nye/hoppede tekstiler, duplikater, kollisjoner, status og **Skriving til CloudKit: SPERRET**. Ved ingen konflikter forventes **FORELØPIG OK – IKKE SKRIVEKLAR**. **Stopp ved feil.**
 4. Kontroller uendret bibliotek og gjenta på iPhone og iPad. **223 forblir ❗️ til bruker validerer.**
+
+
+## 224. Devpatch 0112 – vurder stabile import-ID-er mot eksisterende CloudKit (kun lesing)
+
+**224 ❗️ – avventer eksplisitt validering. 223 ✅ godkjent av bruker.**
+
+Ny knapp **Vurder stabile import-ID-er mot CloudKit (kun lesing)**. Lager import-spesifikke kandidatnavn fra posttype og logisk ID for *nye* tekstiler og deres stoffstykker/materialer/farger; sammenligner kandidatnavn mot kjente `cloudRecordName` fra CloudKit. Avviser tomme/dupliserte type/ID-par, kollisjoner og svært lange kandidatnavn. Denne diagnostikken lager ikke CKRecord-objekter, skriver ikke CloudKit og endrer ikke normale repository-save-metoder. Den verifiserer **ikke** bilde-recordName, eierskap eller atomisk snapshot; «FORELØPIG OK» gir aldri skrivetillatelse.
+
+1. Installer devpatch 0112 på komplett eksport 0069 via `project-workflow`. Bygg med ⌘B i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg gyldig ZIP-backup og trykk **Vurder stabile import-ID-er mot CloudKit (kun lesing)**. **Stopp ved feil.**
+3. Kontroller status, antall kandidater, duplikater, kollisjoner og at bilde-recordName ikke er kontrollert. Bekreft **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
+4. Kontroller uendret bibliotek på Mac, iPhone og iPad. **224 forblir ❗️ til bruker validerer.**
