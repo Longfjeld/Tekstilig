@@ -34,6 +34,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var importIdentityPreflightReport: String?
     @State private var deterministicIdentityReport: String?
     @State private var combinedPreflightReport: String?
+    @State private var approvedDiagnosticOperations: [String]?
+    @State private var importJournalPlanReport: String?
     @State private var isCheckingCombinedPreflight = false
     @State private var imageIdentityReport: String?
     @State private var isCheckingImageIdentity = false
@@ -306,6 +308,13 @@ struct DeveloperDiagnosticsView: View {
                         if let combinedPreflightReport {
                             Text(combinedPreflightReport).font(.callout)
                         }
+                        Button("Lagre kontrollert importplan i lokal testjournal (ingen import)") {
+                            saveReadOnlyImportPlanJournal()
+                        }
+                        .disabled(approvedDiagnosticOperations == nil || isCheckingCombinedPreflight || isReadingBackup || backupDiagnostic.isRunning)
+                        if let importJournalPlanReport {
+                            Text(importJournalPlanReport).font(.callout)
+                        }
                         Button("Kontroller bildeidentiteter og eierskap (kun lesing)") {
                             Task { await checkImportImageIdentities() }
                         }
@@ -428,6 +437,9 @@ struct DeveloperDiagnosticsView: View {
             .fileImporter(isPresented: $showBackupImporter, allowedContentTypes: [.zip]) { result in
                 guard !isReadingBackup else { return }
                 importResult = nil
+                approvedDiagnosticOperations = nil
+                combinedPreflightReport = nil
+                importJournalPlanReport = nil
                 importPlan = nil
                 conflictReport = nil
                 stabilityReport = nil
@@ -778,6 +790,8 @@ struct DeveloperDiagnosticsView: View {
         guard let backup = importResult?.document, !isCheckingCombinedPreflight else { return }
         isCheckingCombinedPreflight = true
         combinedPreflightReport = nil
+        approvedDiagnosticOperations = nil
+        importJournalPlanReport = nil
         defer { isCheckingCombinedPreflight = false }
         do {
             let textiles = try await CloudKitTextileRepository().fetchTextiles()
@@ -834,6 +848,11 @@ struct DeveloperDiagnosticsView: View {
             if candidateNames.contains(where: { $0.utf8.count > 255 || existingNameSet.contains($0) }) {
                 issues.append("For langt kandidatnavn eller CKRecord.recordName-kollisjon")
             }
+            if issues.isEmpty {
+                // This is an ephemeral, read-only snapshot of the candidate order.
+                // It is invalidated whenever another backup is selected or preflight reruns.
+                approvedDiagnosticOperations = candidates.map { "\($0.type):\($0.id)" }
+            }
             let status = issues.isEmpty ? "FORELØPIG OK – IKKE SKRIVEKLAR" : "AVVIST"
             let counts = ["Textile", "Piece", "TextileMaterial", "TextileColor", "TextileImage"].map { type in
                 "\(type): \(candidates.filter { $0.type == type }.count)"
@@ -851,6 +870,61 @@ struct DeveloperDiagnosticsView: View {
             """
         } catch {
             combinedPreflightReport = "Status: AVVIST – CloudKit-lesing feilet: \(error.localizedDescription). Skriving til CloudKit: SPERRET."
+        }
+    }
+
+    // Test 227: persist a read-only operation plan from the latest successful
+    // combined preflight. This is NOT a write-ahead log for real CloudKit writes.
+    private struct ReadOnlyImportPlanJournal: Codable {
+        let schemaVersion: Int
+        let journalID: UUID
+        let state: String
+        let operationIDs: [String]
+        let completedOperationCount: Int
+    }
+
+    @MainActor
+    private func saveReadOnlyImportPlanJournal() {
+        guard let operations = approvedDiagnosticOperations else {
+            importJournalPlanReport = "AVVIST: Kjør konfliktfri samlet importkontroll først. CloudKit: SPERRET."
+            return
+        }
+        guard operations.count == Set(operations).count,
+              operations.allSatisfy({ !$0.isEmpty && !$0.hasSuffix(":") }) else {
+            importJournalPlanReport = "AVVIST: Ugyldige operasjonsidentiteter. CloudKit: SPERRET."
+            return
+        }
+        do {
+            let directory = try FileManager.default.url(
+                for: .applicationSupportDirectory, in: .userDomainMask,
+                appropriateFor: nil, create: true
+            ).appendingPathComponent("TekstiligImportDiagnostics", isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let url = directory.appendingPathComponent("read-only-import-plan-v1.json")
+            guard !FileManager.default.fileExists(atPath: url.path) else {
+                importJournalPlanReport = "AVVIST: Lokal importplan finnes allerede og overskrives ikke. CloudKit: SPERRET."
+                return
+            }
+            let journal = ReadOnlyImportPlanJournal(
+                schemaVersion: 1, journalID: UUID(), state: "planned-read-only",
+                operationIDs: operations, completedOperationCount: 0
+            )
+            try JSONEncoder().encode(journal).write(to: url, options: [.atomic])
+            let reopened = try JSONDecoder().decode(ReadOnlyImportPlanJournal.self, from: Data(contentsOf: url))
+            guard reopened.schemaVersion == 1, reopened.journalID == journal.journalID,
+                  reopened.operationIDs == operations, reopened.completedOperationCount == 0,
+                  reopened.state == "planned-read-only" else {
+                importJournalPlanReport = "AVVIST: Kunne ikke verifisere lokal journal. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            importJournalPlanReport = "Lokal importplan lagret og lest tilbake: OK.\n" +
+                "Operasjoner: \(operations.count). Fullførte: 0.\n" +
+                "Journal-ID: \(journal.journalID.uuidString).\n" +
+                "Eksisterende journal overskrives aldri. Ny plan krever manuell opprydding.\n" +
+                "Planen er basert på et ikke-atomisk CloudKit-øyeblikksbilde.\n" +
+                "Skriving til CloudKit: SPERRET."
+        } catch {
+            importJournalPlanReport = "AVVIST: Lokal journalfeil: \(error.localizedDescription). CloudKit: SPERRET."
         }
     }
 

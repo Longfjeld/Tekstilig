@@ -4288,11 +4288,24 @@ Ny knapp **Kontroller bildeidentiteter og eierskap (kun lesing)**. Henter alle `
 
 ## 226. Devpatch 0114 – samlet importkontroll for fem CloudKit-posttyper (kun lesing)
 
-**226 ❗️ – avventer validering. 225 ✅ godkjent av bruker.**
+**226 ✅ – validert OK av bruker. 225 ✅ godkjent av bruker.**
 
 Ny knapp **Samlet importkontroll for alle fem posttyper (kun lesing)**. Leser metadata for Textile, Piece, TextileMaterial, TextileColor og TextileImage, velger bare tekstiler som mangler i CloudKit, og vurderer logiske ID-er, eier, duplikater, kandidatnavn og kollisjoner samlet. Ingen CKAsset lastes ned. CloudKit-lesing er ikke atomisk; status FORELØPIG OK er ikke skrivetillatelse. Ingen save/delete.
 
 1. Installer devpatch 0114 på komplett eksport 0071 via `project-workflow`. Bygg i Xcode 27 med ⌘B. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg gyldig ZIP-backup, trykk **Samlet importkontroll for alle fem posttyper (kun lesing)**. **Stopp ved feil.**
 3. Kontroller at alle fem posttyper og antall kandidater vises, status **FORELØPIG OK – IKKE SKRIVEKLAR** ved konfliktfritt resultat (ellers **AVVIST** med årsak), samt **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
-4. Kontroller at biblioteket er uendret; gjenta på iPhone og iPad. **226 forblir ❗️ til bruker validerer.**
+4. Kontroller at biblioteket er uendret; gjenta på iPhone og iPad. **226 validert OK av bruker.**
+
+
+## 227. Devpatch 0115 – vedvarende skrivebeskyttet operasjonsplan
+
+**227 ❗️ – avventer validering. 226 ✅ godkjent av bruker.**
+
+Ny knapp **Lagre kontrollert importplan i lokal testjournal (ingen import)** aktiveres bare etter konfliktfri **Samlet importkontroll for alle fem posttyper (kun lesing)**. Den lagrer operasjonsrekkefølge for alle fem posttyper til `Application Support/TekstiligImportDiagnostics/read-only-import-plan-v1.json` med atomisk filskriving og leser den tilbake for verifisering. Alle operasjoner har status planlagt og null fullførte. Eksisterende journal overskrives ikke. Ingen CloudKit-skriving; planen er ikke en virkelig importjournal, og CloudKit-snapshot er ikke atomisk.
+
+1. Installer devpatch 0115 på komplett eksport 0072 via `project-workflow`; bygg i Xcode 27 med ⌘B. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg gyldig backup. Kontroller at journal-knappen er deaktivert før samlet importkontroll.
+3. Kjør **Samlet importkontroll for alle fem posttyper (kun lesing)**. Bare ved status **FORELØPIG OK – IKKE SKRIVEKLAR**: trykk **Lagre kontrollert importplan i lokal testjournal (ingen import)**.
+4. Kontroller **Lokal importplan lagret og lest tilbake: OK**, antall operasjoner, **Fullførte: 0**, og **Skriving til CloudKit: SPERRET**. Trykk igjen og kontroller at overskriving **AVVIST**.
+5. Kontroller uendret bibliotek. Test på iPhone og iPad. Merk at journalfilen bevisst beholdes for senere test av gjenfinning og sletting. **227 forblir ❗️ til bruker validerer.**
