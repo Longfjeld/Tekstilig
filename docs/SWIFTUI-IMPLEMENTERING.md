@@ -4276,7 +4276,7 @@ Ny knapp **Vurder stabile import-ID-er mot CloudKit (kun lesing)**. Lager import
 
 ## 225. Devpatch 0113 – bildeidentiteter og eierskap (kun lesing)
 
-**225 ❗️ – avventer eksplisitt validering. 224 ✅ godkjent av bruker.**
+**225 ✅ – validert OK av bruker. 224 ✅ godkjent av bruker.**
 
 Ny knapp **Kontroller bildeidentiteter og eierskap (kun lesing)**. Henter alle `TextileImage`-recordnavn, logiske `imageId` og eier `textileId` med paginering uten å hente `CKAsset`. Sammenligner bilde-ID-er fra nye tekstiler i valgt backup med eksisterende bildeposter, avviser tomme/dupliserte ID-er, kollisjoner med eksisterende imageID, kandidatnavnkollisjoner og mangelfulle eksisterende bildeidentiteter. Rapporterer også kollisjoner med annen eier. Ingen endring i normale save-metoder. Ingen CloudKit-skriving. Snapshot er ikke atomisk, og kontrollen gir ingen importtillatelse.
 
@@ -4284,3 +4284,15 @@ Ny knapp **Kontroller bildeidentiteter og eierskap (kun lesing)**. Henter alle `
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup og trykk **Kontroller bildeidentiteter og eierskap (kun lesing)**. **Stopp ved feil.**
 3. Kontroller antall CloudKit-bilder, nye bilder, duplikater, kollisjoner og eierskap. Bekreft **Skriving til CloudKit: SPERRET**. Ved ingen funn forventes **FORELØPIG OK – IKKE SKRIVEKLAR**. **Stopp ved feil.**
 4. Bekreft at biblioteket er uendret. Gjenta på iPhone og iPad. **225 forblir ❗️ til bruker validerer.**
+
+
+## 226. Devpatch 0114 – samlet importkontroll for fem CloudKit-posttyper (kun lesing)
+
+**226 ❗️ – avventer validering. 225 ✅ godkjent av bruker.**
+
+Ny knapp **Samlet importkontroll for alle fem posttyper (kun lesing)**. Leser metadata for Textile, Piece, TextileMaterial, TextileColor og TextileImage, velger bare tekstiler som mangler i CloudKit, og vurderer logiske ID-er, eier, duplikater, kandidatnavn og kollisjoner samlet. Ingen CKAsset lastes ned. CloudKit-lesing er ikke atomisk; status FORELØPIG OK er ikke skrivetillatelse. Ingen save/delete.
+
+1. Installer devpatch 0114 på komplett eksport 0071 via `project-workflow`. Bygg i Xcode 27 med ⌘B. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg gyldig ZIP-backup, trykk **Samlet importkontroll for alle fem posttyper (kun lesing)**. **Stopp ved feil.**
+3. Kontroller at alle fem posttyper og antall kandidater vises, status **FORELØPIG OK – IKKE SKRIVEKLAR** ved konfliktfritt resultat (ellers **AVVIST** med årsak), samt **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
+4. Kontroller at biblioteket er uendret; gjenta på iPhone og iPad. **226 forblir ❗️ til bruker validerer.**

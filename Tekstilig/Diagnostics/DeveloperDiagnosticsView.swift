@@ -33,6 +33,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var repositoryIdentityReport: String?
     @State private var importIdentityPreflightReport: String?
     @State private var deterministicIdentityReport: String?
+    @State private var combinedPreflightReport: String?
+    @State private var isCheckingCombinedPreflight = false
     @State private var imageIdentityReport: String?
     @State private var isCheckingImageIdentity = false
     @State private var isCheckingDeterministicIdentity = false
@@ -293,6 +295,16 @@ struct DeveloperDiagnosticsView: View {
                         }
                         if let deterministicIdentityReport {
                             Text(deterministicIdentityReport).font(.callout)
+                        }
+                        Button("Samlet importkontroll for alle fem posttyper (kun lesing)") {
+                            Task { await checkCombinedImportPreflight() }
+                        }
+                        .disabled(isCheckingCombinedPreflight || isReadingBackup || backupDiagnostic.isRunning)
+                        if isCheckingCombinedPreflight {
+                            BackupActivityLabel("Kontrollerer alle fem CloudKit-posttyper …")
+                        }
+                        if let combinedPreflightReport {
+                            Text(combinedPreflightReport).font(.callout)
                         }
                         Button("Kontroller bildeidentiteter og eierskap (kun lesing)") {
                             Task { await checkImportImageIdentities() }
@@ -757,6 +769,89 @@ struct DeveloperDiagnosticsView: View {
             "Dette er IKKE eksisterende CKRecord.ID-er eller en CloudKit-kontroll. " +
             "Faktisk ID-strategi og servereierskap må avklares før skriving.\n" +
             "Skriving til CloudKit: SPERRET."
+    }
+
+    // Test 226: one consolidated read-only preflight for all five record types.
+    // No reservation, atomic snapshot, or authorization to write is implied.
+    @MainActor
+    private func checkCombinedImportPreflight() async {
+        guard let backup = importResult?.document, !isCheckingCombinedPreflight else { return }
+        isCheckingCombinedPreflight = true
+        combinedPreflightReport = nil
+        defer { isCheckingCombinedPreflight = false }
+        do {
+            let textiles = try await CloudKitTextileRepository().fetchTextiles()
+            let pieces = try await CloudKitPieceRepository().fetchAllPieces()
+            let materials = try await CloudKitTextileMaterialRepository().fetchAllMaterials()
+            let colors = try await CloudKitTextileColorRepository().fetchAllColors()
+            let images = try await CloudKitTextileImageRepository().fetchImageIdentitiesForImportCheck()
+
+            let existingTextileIDs = Set(textiles.map(\.textileID))
+            let incoming = backup.textiles.filter { !existingTextileIDs.contains($0.textileID) }
+            let skipped = backup.textiles.count - incoming.count
+            var issues: [String] = []
+            var candidates: [(type: String, id: String, owner: String)] = []
+            for textile in incoming {
+                candidates.append(("Textile", textile.textileID, textile.textileID))
+                candidates += textile.pieces.map { ("Piece", $0.pieceID, textile.textileID) }
+                candidates += textile.materials.map { ("TextileMaterial", $0.materialID, textile.textileID) }
+                candidates += textile.colors.map { ("TextileColor", $0.colorID, textile.textileID) }
+                candidates += textile.images.map { ("TextileImage", $0.imageID, textile.textileID) }
+            }
+            func duplicateCount(_ values: [String]) -> Int {
+                values.count - Set(values).count
+            }
+            let allBackupIDs = backup.textiles.map(\.textileID)
+            if allBackupIDs.contains(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) || duplicateCount(allBackupIDs) > 0 {
+                issues.append("Tomme eller dupliserte tekstil-ID-er i backup")
+            }
+            let existing: [(String, String, String, String)] =
+                textiles.map { ("Textile", $0.textileID, $0.textileID, $0.cloudRecordName ?? "") } +
+                pieces.map { ("Piece", $0.pieceID, $0.textileID, $0.cloudRecordName ?? "") } +
+                materials.map { ("TextileMaterial", $0.materialID, $0.textileID, $0.cloudRecordName ?? "") } +
+                colors.map { ("TextileColor", $0.colorID, $0.textileID, $0.cloudRecordName ?? "") } +
+                images.map { ("TextileImage", $0.imageID, $0.textileID, $0.recordName) }
+            let existingKeys = existing.map { "\($0.0):\($0.1)" }
+            let incomingKeys = candidates.map { "\($0.type):\($0.id)" }
+            if duplicateCount(existingKeys) > 0 { issues.append("Dupliserte logiske ID-er i CloudKit") }
+            if duplicateCount(incomingKeys) > 0 { issues.append("Dupliserte importkandidater") }
+            if candidates.contains(where: { $0.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0.owner.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+                issues.append("Tom ID eller eier i importkandidater")
+            }
+            if existing.contains(where: { $0.1.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0.2.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0.3.isEmpty }) {
+                issues.append("Tom ID, eier eller recordName i CloudKit")
+            }
+            let existingKeySet = Set(existingKeys)
+            if incomingKeys.contains(where: { existingKeySet.contains($0) }) {
+                issues.append("Logisk ID-kollisjon mot CloudKit")
+            }
+            let recordNames = existing.map { $0.3 }
+            if duplicateCount(recordNames) > 0 { issues.append("Dupliserte recordName i CloudKit") }
+            let candidateNames = incomingKeys.map { key in
+                "tekstilig-import-v1-" + key.utf8.map { String(format: "%02x", $0) }.joined()
+            }
+            let existingNameSet = Set(recordNames)
+            if candidateNames.contains(where: { $0.utf8.count > 255 || existingNameSet.contains($0) }) {
+                issues.append("For langt kandidatnavn eller CKRecord.recordName-kollisjon")
+            }
+            let status = issues.isEmpty ? "FORELØPIG OK – IKKE SKRIVEKLAR" : "AVVIST"
+            let counts = ["Textile", "Piece", "TextileMaterial", "TextileColor", "TextileImage"].map { type in
+                "\(type): \(candidates.filter { $0.type == type }.count)"
+            }.joined(separator: "; ")
+            combinedPreflightReport = """
+            Samlet importkontroll for alle fem posttyper (kun lesing):
+            Status: \(status)
+            Nye tekstiler: \(incoming.count); eksisterende hoppes over: \(skipped).
+            Importkandidater: \(counts).
+            CloudKit-metadata lest: \(existing.count) poster (inkludert bilder uten CKAsset).
+            Konflikter: \(issues.isEmpty ? "Ingen påvist" : issues.joined(separator: "; ")).
+            Kontrollen er IKKE atomisk; nye serverendringer kan oppstå etter lesingen.
+            Ingen CKRecord er reservert. Journal, gjenopptakelse og skrivesikkerhet er IKKE verifisert.
+            Skriving til CloudKit: SPERRET. Ingen data er endret.
+            """
+        } catch {
+            combinedPreflightReport = "Status: AVVIST – CloudKit-lesing feilet: \(error.localizedDescription). Skriving til CloudKit: SPERRET."
+        }
     }
 
     // Test 225: image record names and ownership are read without CKAsset bytes.
