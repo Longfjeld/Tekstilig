@@ -27,6 +27,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var conflictReport: String?
     @State private var isCheckingConflicts = false
     @State private var interruptionReport: String?
+    @State private var persistentJournalReport: String?
     @State private var stabilityReport: String?
     @State private var isCheckingStability = false
     @State private var identityAudit: String?
@@ -252,6 +253,17 @@ struct DeveloperDiagnosticsView: View {
                         .disabled(isReadingBackup || isPlanningImport || isCheckingConflicts || isCheckingStability || isAuditingIdentities || backupDiagnostic.isRunning)
                         if let interruptionReport {
                             Text(interruptionReport).font(.callout)
+                        }
+                        Button("Opprett lokal testjournal (ingen import)") {
+                            createPersistentTestJournal()
+                        }
+                        .disabled(importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
+                        Button("Les og slett lokal testjournal") {
+                            inspectAndRemovePersistentTestJournal()
+                        }
+                        .disabled(isReadingBackup || backupDiagnostic.isRunning)
+                        if let persistentJournalReport {
+                            Text(persistentJournalReport).font(.callout)
                         }
                         Button("Kartlegg CloudKit-identiteter (kun kontroll)") {
                             Task { await auditCloudKitIdentities() }
@@ -564,6 +576,98 @@ struct DeveloperDiagnosticsView: View {
             "og opprydding etter appavslutning er IKKE testet. " +
             "Faktisk import må bruke vedvarende journal, idempotente record-ID-er " +
             "og verifisert gjenopptakelse/kompensasjon før den kan aktiveres."
+    }
+
+    // Local-only test journal. This is NOT an import transaction or a recovery
+    // implementation. No CloudKit record is ever written by these functions.
+    private struct LocalImportTestJournal: Codable {
+        let schemaVersion: Int
+        let journalID: UUID
+        let textileID: String
+        let operationIDs: [String]
+        let completedOperationCount: Int
+        let state: String
+    }
+
+    private func localJournalURL() throws -> URL {
+        let directory = try FileManager.default.url(
+            for: .applicationSupportDirectory, in: .userDomainMask,
+            appropriateFor: nil, create: true
+        ).appendingPathComponent("TekstiligImportDiagnostics", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appendingPathComponent("interrupted-import-test.json")
+    }
+
+    @MainActor
+    private func createPersistentTestJournal() {
+        guard let textile = importResult?.document.textiles.first else {
+            persistentJournalReport = "AVVIST: Velg en gyldig backup med minst ett tekstil."
+            return
+        }
+        do {
+            let url = try localJournalURL()
+            // Never overwrite an existing journal: it may be evidence of an
+            // interrupted previous diagnostic run.
+            guard !FileManager.default.fileExists(atPath: url.path) else {
+                persistentJournalReport = "AVVIST: En testjournal finnes allerede. Les og slett den først. Ingen data er endret."
+                return
+            }
+            let operations = ["textile:" + textile.textileID] +
+                textile.pieces.map { "piece:" + $0.pieceID } +
+                textile.materials.map { "material:" + $0.materialID } +
+                textile.colors.map { "color:" + $0.colorID } +
+                textile.images.map { "image:" + $0.imageID }
+            let journal = LocalImportTestJournal(
+                schemaVersion: 1, journalID: UUID(), textileID: textile.textileID,
+                operationIDs: operations, completedOperationCount: 0,
+                state: "interrupted-test-only"
+            )
+            let data = try JSONEncoder().encode(journal)
+            try data.write(to: url, options: [.atomic])
+            let readBack = try JSONDecoder().decode(LocalImportTestJournal.self, from: Data(contentsOf: url))
+            guard readBack.journalID == journal.journalID && readBack.operationIDs == operations else {
+                persistentJournalReport = "FEIL: Journalen kunne ikke verifiseres etter lagring. CloudKit: SPERRET."
+                return
+            }
+            persistentJournalReport = "Lokal testjournal opprettet og lest tilbake: OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString)\n" +
+                "Planlagte operasjoner: \(operations.count). Fullførte: 0.\n" +
+                "Avbrudd simulert ved lagret status. Avslutt appen helt og åpne den igjen. " +
+                "Trykk deretter «Les og slett lokal testjournal».\n" +
+                "Skriving til CloudKit: SPERRET."
+        } catch {
+            persistentJournalReport = "AVVIST: Kunne ikke lagre lokal testjournal: \(error.localizedDescription). CloudKit: SPERRET."
+        }
+    }
+
+    @MainActor
+    private func inspectAndRemovePersistentTestJournal() {
+        do {
+            let url = try localJournalURL()
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                persistentJournalReport = "Ingen lokal testjournal funnet. CloudKit: SPERRET."
+                return
+            }
+            // Decode and validate before deleting. Corrupt journal must remain
+            // available for diagnostics rather than silently disappearing.
+            let journal = try JSONDecoder().decode(LocalImportTestJournal.self, from: Data(contentsOf: url))
+            guard journal.schemaVersion == 1,
+                  journal.state == "interrupted-test-only",
+                  journal.completedOperationCount == 0,
+                  !journal.operationIDs.isEmpty,
+                  journal.operationIDs.first == "textile:" + journal.textileID else {
+                persistentJournalReport = "AVVIST: Uventet journalinnhold. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            try FileManager.default.removeItem(at: url)
+            persistentJournalReport = "Journal gjenfunnet etter ny lesing: OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString).\n" +
+                "Ufullført testimport oppdaget; fullførte operasjoner: 0.\n" +
+                "Lokal testjournal slettet: OK.\n" +
+                "Ingen import eller tilbakeføring er utført. Skriving til CloudKit: SPERRET."
+        } catch {
+            persistentJournalReport = "AVVIST: Kunne ikke lese/slette journal: \(error.localizedDescription). CloudKit: SPERRET."
+        }
     }
 
     // Diagnostic only: two consecutive enumerations are NOT an atomic snapshot.

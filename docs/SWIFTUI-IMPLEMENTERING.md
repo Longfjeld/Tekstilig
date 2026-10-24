@@ -4192,10 +4192,22 @@ Ny knapp **Kontroller endringer mellom to CloudKit-lesinger (kun kontroll)**. Le
 
 ## 218. Devpatch 0106 – simulering av avbrutt import (kun i minnet)
 
-**218 ❗️ – avventer eksplisitt validering. 217 ✅ godkjent av bruker.**
+**218 ✅ – validert OK av bruker. 217 ✅ godkjent av bruker.**
 
 Ny knapp **Simuler avbrutt import (kun i minnet)** under Roadmap 7. Bruker ett tekstil fra en allerede validert ZIP-backup og bygger en tenkt operasjonsrekkefølge: tekstil, stoffstykker, materialer, farger og bilder. Simulerer avbrudd før hver operasjon og etter siste, fører en journal over tenkte opprettelser og kontrollerer om kompensasjon i omvendt rekkefølge tømmer den simulerte tilstanden. Ingen CloudKit-kall og ingen skriving. Testen er **ikke** bevis for at CloudKit-rollback fungerer: delvise nettverksfeil, CKAsset, ukjent serversvar, appavslutning og samtidig endring krever en separat, vedvarende og idempotent implementasjon.
 
 1. Installer devpatch 0106 på komplett versjon 0063 med `project-workflow`, og bygg i Xcode 27. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7** og velg en gyldig ZIP-backup med minst ett tekstil. Trykk **Simuler avbrutt import (kun i minnet)**. Kontroller at rapporten viser antall planlagte operasjoner, injiserte avbrudd, **Journal tilbakeført ... OK**, og **Simulerte gjenstående poster ... 0**. **Stopp ved feil.**
-3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **218 forblir ❗️ til eksplisitt godkjenning.**
+3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **218 validert OK av bruker.**
+
+
+## 219. Devpatch 0107 – vedvarende lokal testjournal (ingen CloudKit-skriving)
+
+**219 ❗️ – avventer eksplisitt validering. 218 ✅ godkjent av bruker.**
+
+Diagnostikken oppretter en JSON-testjournal under appens Application Support med atomisk filskriving og umiddelbar kontroll ved gjenlesing. Journalen inneholder unik journal-ID, ett eksempeltekstil, planlagt operasjonsrekkefølge og status «interrupted-test-only», med **null fullførte operasjoner**. En separat knapp leser journalen på nytt (også etter fullstendig appavslutning), validerer innholdet og sletter den lokale testfilen. Ukjent eller skadet journal beholdes for feilsøking. Eksisterende journal overskrives aldri. Dette er **ikke** automatisk gjenopptakelse, kompensasjon eller en virkelig importjournal. Ingen CloudKit-skriving.
+
+1. Installer devpatch 0107 på komplett versjon 0064 med `project-workflow`, bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup med tekstiler og trykk **Opprett lokal testjournal (ingen import)**. Kontroller «opprettet og lest tilbake: OK», fullførte 0 og «Skriving til CloudKit: SPERRET». **Stopp ved feil.**
+3. Avslutt appen helt, åpne den igjen, gå til samme diagnostikkside og trykk **Les og slett lokal testjournal** (du trenger ikke velge backup igjen). Kontroller «Journal gjenfunnet ... OK», «Lokal testjournal slettet: OK» og at CloudKit er sperret. **Stopp ved feil.**
+4. Trykk **Les og slett lokal testjournal** en gang til og kontroller «Ingen lokal testjournal funnet». Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad. **219 forblir ❗️ til eksplisitt godkjenning.**
