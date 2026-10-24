@@ -26,6 +26,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var isPlanningImport = false
     @State private var conflictReport: String?
     @State private var isCheckingConflicts = false
+    @State private var stabilityReport: String?
+    @State private var isCheckingStability = false
     @State private var identityAudit: String?
     @State private var isAuditingIdentities = false
     @State private var backupExportMessage: String?
@@ -226,12 +228,22 @@ struct DeveloperDiagnosticsView: View {
                         Button("Kontroller importkonflikter (kun kontroll)") {
                             Task { await checkImportConflicts() }
                         }
-                        .disabled(isReadingBackup || isPlanningImport || isCheckingConflicts || isAuditingIdentities || backupDiagnostic.isRunning)
+                        .disabled(isReadingBackup || isPlanningImport || isCheckingConflicts || isCheckingStability || isAuditingIdentities || backupDiagnostic.isRunning)
                         if isCheckingConflicts {
                             BackupActivityLabel("Kontrollerer importkonflikter …")
                         }
                         if let conflictReport {
                             Text(conflictReport).font(.callout)
+                        }
+                        Button("Kontroller endringer mellom to CloudKit-lesinger (kun kontroll)") {
+                            Task { await checkCloudKitStability() }
+                        }
+                        .disabled(isReadingBackup || isPlanningImport || isCheckingConflicts || isCheckingStability || isAuditingIdentities || backupDiagnostic.isRunning)
+                        if isCheckingStability {
+                            BackupActivityLabel("Leser CloudKit-identiteter to ganger …")
+                        }
+                        if let stabilityReport {
+                            Text(stabilityReport).font(.callout)
                         }
                         Button("Kartlegg CloudKit-identiteter (kun kontroll)") {
                             Task { await auditCloudKitIdentities() }
@@ -325,6 +337,7 @@ struct DeveloperDiagnosticsView: View {
                 importResult = nil
                 importPlan = nil
                 conflictReport = nil
+                stabilityReport = nil
                 identityAudit = nil
                 validatedZIPData = nil
                 negativeZIPTestResult = nil
@@ -488,6 +501,54 @@ struct DeveloperDiagnosticsView: View {
                 "Ingen data er endret."
         } catch {
             conflictReport = "Konfliktkontroll AVVIST: \(error.localizedDescription). Ingen data er endret."
+        }
+    }
+
+    // Diagnostic only: two consecutive enumerations are NOT an atomic snapshot.
+    // This detects changes to logical IDs, parent links, record names and textile
+    // updatedAt between passes. It cannot rule out concurrent writes or ABA changes.
+    @MainActor
+    private func checkCloudKitStability() async {
+        guard importResult != nil, !isCheckingStability else { return }
+        isCheckingStability = true
+        stabilityReport = nil
+        defer { isCheckingStability = false }
+        do {
+            func snapshot() async throws -> [[String]] {
+                let textiles = try await CloudKitTextileRepository().fetchTextiles()
+                let pieces = try await CloudKitPieceRepository().fetchAllPieces()
+                let materials = try await CloudKitTextileMaterialRepository().fetchAllMaterials()
+                let colors = try await CloudKitTextileColorRepository().fetchAllColors()
+                let images = try await CloudKitTextileImageRepository().fetchAllImageIDsForConflictCheck()
+                return [
+                    textiles.map { "\($0.textileID)|\($0.cloudRecordName ?? "")|\($0.updatedAt.timeIntervalSince1970)" }.sorted(),
+                    pieces.map { "\($0.pieceID)|\($0.textileID)|\($0.cloudRecordName ?? "")" }.sorted(),
+                    images.sorted(),
+                    materials.map { "\($0.materialID)|\($0.textileID)|\($0.cloudRecordName ?? "")" }.sorted(),
+                    colors.map { "\($0.colorID)|\($0.textileID)|\($0.cloudRecordName ?? "")" }.sorted()
+                ]
+            }
+            let first = try await snapshot()
+            let second = try await snapshot()
+            let names = ["Tekstiler", "Stoffstykker", "Bilder (kun ID)", "Materialer", "Farger"]
+            let changes = zip(first, second).enumerated().compactMap { index, pair -> String? in
+                pair.0 == pair.1 ? nil : names[index]
+            }
+            let status = changes.isEmpty ? "INGEN ENDRINGER OBSERVERT" : "ENDRINGER OPPDAGET – AVVIST"
+            stabilityReport = "CloudKit-stabilitet (to lesinger, kun kontroll):\n" +
+                "Status: \(status)\n" +
+                "Antall første/andre lesing (tekstil/stykke/bilde/materiale/farge): " +
+                "\(first.map(\.count).map(String.init).joined(separator: "/")) / " +
+                "\(second.map(\.count).map(String.init).joined(separator: "/"))\n" +
+                "Endrede grupper: \(changes.isEmpty ? "Ingen" : changes.joined(separator: ", "))\n" +
+                "Dette er IKKE en transaksjon eller en skriveautorisasjon. Bildeinnhold og bilde-recordName er ikke kontrollert. " +
+                "Endringer kan skje etter kontrollen eller mellom enkeltoppslag; en endring som reverseres kan overses.\n" +
+                "For sikker import kreves kontroll rett før hver skriveoperasjon, idempotente record-identiteter " +
+                "og eksplisitt plan for delvise feil og opprydding.\n" +
+                "Skriving til CloudKit: SPERRET. Ingen data er endret."
+        } catch {
+            stabilityReport = "CloudKit-stabilitet AVVIST: Lesing feilet: \(error.localizedDescription). " +
+                "Skriving til CloudKit: SPERRET. Ingen data er endret."
         }
     }
 

@@ -4170,10 +4170,21 @@ Ny knapp **Kontroller importkonflikter (kun kontroll)**. Leser eksisterende teks
 
 ## 216. Devpatch 0104 – konfliktkontroll mot eksisterende CloudKit-underposter (kun kontroll)
 
-**216 ❗️ – avventer eksplisitt validering. 215 ✅ godkjent av bruker.**
+**216 ✅ – validert OK av bruker på macOS, iPhone og iPad. 215 ✅ godkjent.**
 
 Konfliktkontrollen henter nå paginerte logiske ID-er fra alle eksisterende stoffstykker, bilder, materialer og farger. Bildeoppslaget henter kun `imageId`, aldri CKAsset-data, og utelater kjent diagnostikkpost. Sammenligningen mot live-ID-er gjelder bare underpostene til **nye** tekstiler som ville blitt importert; underposter til overlappende tekstiler hoppes over. Dupliserte eller tomme underpost-ID-er i live-biblioteket og kollisjoner mot nye backup-underposter gir **AVVIST**. Feil i et eneste CloudKit-oppslag avviser kontrollen. **FORELØPIG OK** er fortsatt ikke klarsignal til import: samtidige endringer og delvis feil er ikke løst. Ingen CloudKit-skriving eller -sletting.
 
 1. Installer devpatch 0104 på komplett versjon 0061 med `project-workflow` og bygg i Xcode 27. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup og trykk **Kontroller importkonflikter (kun kontroll)**. Kontroller at rapporten viser duplikater/tomme ID-er i iCloud og kollisjoner for stoffstykker, bilder, materialer og farger. **Stopp ved feil.**
-3. Kontroller at rapporten viser **Skriving til CloudKit: SPERRET**, at biblioteket er uendret, og gjenta på iPhone og iPad. **216 forblir ❗️ til eksplisitt godkjenning.**
+3. Kontroller at rapporten viser **Skriving til CloudKit: SPERRET**, at biblioteket er uendret, og gjenta på iPhone og iPad. **216 godkjent ✅ av bruker.**
+
+
+## 217. Devpatch 0105 – to påfølgende CloudKit-lesinger (kun kontroll)
+
+**217 ❗️ – avventer eksplisitt validering. 216 ✅ godkjent av bruker.**
+
+Ny knapp **Kontroller endringer mellom to CloudKit-lesinger (kun kontroll)**. Leser tekstiler, stoffstykker, alle bilde-ID-er, materialer og farger to ganger og sammenligner sorterte identiteter, foreldre og recordName (for tekstiler også updatedAt). Feil i en lesing gir AVVIST. Testen oppdager enkelte samtidige endringer, men er **ikke** atomisk, oppdager ikke alle feltendringer eller endringer som skjer etter kontrollen, og gir aldri klarsignal til skriving. Bildeinnhold og bilde-recordName inngår ikke. Ingen CloudKit-skriving eller -sletting.
+
+1. Installer devpatch 0105 på komplett versjon 0062 med `project-workflow` og bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup og trykk **Kontroller endringer mellom to CloudKit-lesinger (kun kontroll)**. Kontroller at rapporten viser to opptellinger, status og eksplisitte begrensninger. **Stopp ved feil.**
+3. Kontroller at rapporten viser **Skriving til CloudKit: SPERRET**, at biblioteket er uendret, og gjenta på iPhone og iPad. **217 forblir ❗️ til eksplisitt godkjenning.**
