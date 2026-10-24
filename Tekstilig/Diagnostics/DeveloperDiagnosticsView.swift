@@ -36,6 +36,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var combinedPreflightReport: String?
     @State private var approvedDiagnosticOperations: [String]?
     @State private var importJournalPlanReport: String?
+    @State private var importJournalRecoveryReport: String?
     @State private var isCheckingCombinedPreflight = false
     @State private var imageIdentityReport: String?
     @State private var isCheckingImageIdentity = false
@@ -350,6 +351,13 @@ struct DeveloperDiagnosticsView: View {
                     .disabled(isReadingBackup || backupDiagnostic.isRunning)
                     if let repositoryIdentityReport {
                         Text(repositoryIdentityReport).font(.callout)
+                    }
+                    Button("Gjenfinn og valider importplanjournal (ingen import)") {
+                        inspectReadOnlyImportPlanJournal()
+                    }
+                    .disabled(isReadingBackup || backupDiagnostic.isRunning)
+                    if let importJournalRecoveryReport {
+                        Text(importJournalRecoveryReport).font(.callout)
                     }
                     Button("Les og slett lokal testjournal") {
                         inspectAndRemovePersistentTestJournal()
@@ -925,6 +933,77 @@ struct DeveloperDiagnosticsView: View {
                 "Skriving til CloudKit: SPERRET."
         } catch {
             importJournalPlanReport = "AVVIST: Lokal journalfeil: \(error.localizedDescription). CloudKit: SPERRET."
+        }
+    }
+
+    // Test 228: recover the read-only plan after process restart. No backup,
+    // CloudKit connection, or prior in-memory preflight is required.
+    private func readOnlyImportPlanURL() throws -> URL {
+        let directory = try FileManager.default.url(
+            for: .applicationSupportDirectory, in: .userDomainMask,
+            appropriateFor: nil, create: true
+        ).appendingPathComponent("TekstiligImportDiagnostics", isDirectory: true)
+        return directory.appendingPathComponent("read-only-import-plan-v1.json")
+    }
+
+    private func validReadOnlyImportPlan(_ journal: ReadOnlyImportPlanJournal) -> Bool {
+        guard journal.schemaVersion == 1,
+              journal.state == "planned-read-only",
+              journal.completedOperationCount == 0,
+              !journal.operationIDs.isEmpty,
+              journal.operationIDs.count == Set(journal.operationIDs).count else { return false }
+        let allowedTypes: Set<String> = ["textile", "piece", "material", "color", "image"]
+        return journal.operationIDs.allSatisfy { operation in
+            let parts = operation.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+            return parts.count == 2 && allowedTypes.contains(String(parts[0])) &&
+                !parts[1].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    @MainActor
+    private func inspectReadOnlyImportPlanJournal() {
+        do {
+            let url = try readOnlyImportPlanURL()
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                importJournalRecoveryReport = "Ingen lagret importplanjournal funnet. CloudKit: SPERRET."
+                return
+            }
+            let data = try Data(contentsOf: url)
+            let journal = try JSONDecoder().decode(ReadOnlyImportPlanJournal.self, from: data)
+            guard validReadOnlyImportPlan(journal) else {
+                importJournalRecoveryReport = "AVVIST: Ugyldig eller ufullstendig importplanjournal. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            // Negative tests operate on copies only. Never modify the persisted journal.
+            let invalidState = ReadOnlyImportPlanJournal(
+                schemaVersion: journal.schemaVersion, journalID: journal.journalID,
+                state: "writing", operationIDs: journal.operationIDs,
+                completedOperationCount: journal.completedOperationCount
+            )
+            let invalidDuplicate = ReadOnlyImportPlanJournal(
+                schemaVersion: journal.schemaVersion, journalID: journal.journalID,
+                state: journal.state, operationIDs: journal.operationIDs + [journal.operationIDs[0]],
+                completedOperationCount: journal.completedOperationCount
+            )
+            let invalidProgress = ReadOnlyImportPlanJournal(
+                schemaVersion: journal.schemaVersion, journalID: journal.journalID,
+                state: journal.state, operationIDs: journal.operationIDs,
+                completedOperationCount: 1
+            )
+            guard !validReadOnlyImportPlan(invalidState),
+                  !validReadOnlyImportPlan(invalidDuplicate),
+                  !validReadOnlyImportPlan(invalidProgress) else {
+                importJournalRecoveryReport = "FEIL: Negativ journalvalidering mislyktes. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            importJournalRecoveryReport = "Importplanjournal gjenfunnet og validert: OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString).\n" +
+                "Operasjoner: \(journal.operationIDs.count). Fullførte: 0.\n" +
+                "Ugyldig status, duplikat og uventet fremdrift avvist: OK (kun minnekopier).\n" +
+                "Journalfilen er beholdt. Ingen import utført.\n" +
+                "Skriving til CloudKit: SPERRET."
+        } catch {
+            importJournalRecoveryReport = "AVVIST: Kan ikke lese/dekode importplanjournal: \(error.localizedDescription). Filen beholdes. CloudKit: SPERRET."
         }
     }
 

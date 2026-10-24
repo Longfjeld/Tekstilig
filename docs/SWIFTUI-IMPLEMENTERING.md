@@ -4300,7 +4300,7 @@ Ny knapp **Samlet importkontroll for alle fem posttyper (kun lesing)**. Leser me
 
 ## 227. Devpatch 0115 – vedvarende skrivebeskyttet operasjonsplan
 
-**227 ❗️ – avventer validering. 226 ✅ godkjent av bruker.**
+**227 ✅ – validert OK av bruker. 226 ✅ godkjent av bruker.**
 
 Ny knapp **Lagre kontrollert importplan i lokal testjournal (ingen import)** aktiveres bare etter konfliktfri **Samlet importkontroll for alle fem posttyper (kun lesing)**. Den lagrer operasjonsrekkefølge for alle fem posttyper til `Application Support/TekstiligImportDiagnostics/read-only-import-plan-v1.json` med atomisk filskriving og leser den tilbake for verifisering. Alle operasjoner har status planlagt og null fullførte. Eksisterende journal overskrives ikke. Ingen CloudKit-skriving; planen er ikke en virkelig importjournal, og CloudKit-snapshot er ikke atomisk.
 
@@ -4309,3 +4309,16 @@ Ny knapp **Lagre kontrollert importplan i lokal testjournal (ingen import)** akt
 3. Kjør **Samlet importkontroll for alle fem posttyper (kun lesing)**. Bare ved status **FORELØPIG OK – IKKE SKRIVEKLAR**: trykk **Lagre kontrollert importplan i lokal testjournal (ingen import)**.
 4. Kontroller **Lokal importplan lagret og lest tilbake: OK**, antall operasjoner, **Fullførte: 0**, og **Skriving til CloudKit: SPERRET**. Trykk igjen og kontroller at overskriving **AVVIST**.
 5. Kontroller uendret bibliotek. Test på iPhone og iPad. Merk at journalfilen bevisst beholdes for senere test av gjenfinning og sletting. **227 forblir ❗️ til bruker validerer.**
+
+
+## 228. Devpatch 0116 – gjenfinn og valider lokal importplanjournal etter omstart
+
+**228 ❗️ – avventer validering. 227 ✅ godkjent av bruker.**
+
+Ny knapp **Gjenfinn og valider importplanjournal (ingen import)** er tilgjengelig uten valgt backup. Leser den eksisterende `read-only-import-plan-v1.json` fra Application Support etter omstart, validerer formatversjon, tilstand, null fullførte operasjoner, ikke-tom operasjonsliste, tillatte posttyper og unike/ikke-tomme operasjons-ID-er. Tester også ugyldig status, duplikat og uventet fremdrift på **minnekopier**. Ugyldig eller uleselig journal avvises, og filen beholdes for feilsøking. Journalen slettes ikke av denne testen. Ingen CloudKit-lesing eller -skriving. Dette er fremdeles ikke en ekte gjenopptakelsesmekanisme.
+
+1. Installer devpatch 0116 på komplett eksport 0073 med `project-workflow`; bygg med ⌘B. Stopp ved byggefeil.
+2. Avslutt appen helt og start den på nytt. Åpne **Utvikling → Diagnostikk → Roadmap 7** **uten** å velge backup.
+3. Trykk **Gjenfinn og valider importplanjournal (ingen import)**. Kontroller **Importplanjournal gjenfunnet og validert: OK**, journal-ID, antall operasjoner, **Fullførte: 0**, negativtestene **avvist: OK** og **Skriving til CloudKit: SPERRET**. Stopp ved feil.
+4. Trykk knappen på nytt og kontroller samme journal-ID (filen beholdes). Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad **der test 227 opprettet journal**. Merk at journalen er lokal per enhet.
+5. Dersom journalen ikke finnes, **ikke** opprett en ny uten å avklare resultatet først; meld tilbake **Ingen lagret importplanjournal funnet**.
