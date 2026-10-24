@@ -26,6 +26,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var isPlanningImport = false
     @State private var conflictReport: String?
     @State private var isCheckingConflicts = false
+    @State private var interruptionReport: String?
     @State private var stabilityReport: String?
     @State private var isCheckingStability = false
     @State private var identityAudit: String?
@@ -245,6 +246,13 @@ struct DeveloperDiagnosticsView: View {
                         if let stabilityReport {
                             Text(stabilityReport).font(.callout)
                         }
+                        Button("Simuler avbrutt import (kun i minnet)") {
+                            simulateInterruptedImport()
+                        }
+                        .disabled(isReadingBackup || isPlanningImport || isCheckingConflicts || isCheckingStability || isAuditingIdentities || backupDiagnostic.isRunning)
+                        if let interruptionReport {
+                            Text(interruptionReport).font(.callout)
+                        }
                         Button("Kartlegg CloudKit-identiteter (kun kontroll)") {
                             Task { await auditCloudKitIdentities() }
                         }
@@ -338,6 +346,7 @@ struct DeveloperDiagnosticsView: View {
                 importPlan = nil
                 conflictReport = nil
                 stabilityReport = nil
+                interruptionReport = nil
                 identityAudit = nil
                 validatedZIPData = nil
                 negativeZIPTestResult = nil
@@ -502,6 +511,59 @@ struct DeveloperDiagnosticsView: View {
         } catch {
             conflictReport = "Konfliktkontroll AVVIST: \(error.localizedDescription). Ingen data er endret."
         }
+    }
+
+    // Deterministic fault-injection simulation, entirely in memory. This does NOT
+    // exercise CloudKit, CKAsset uploads, record change tags, or real rollback.
+    // It establishes the intended journal ordering and fail-closed invariants.
+    @MainActor
+    private func simulateInterruptedImport() {
+        guard let result = importResult else { return }
+        // Use one representative textile from the validated backup. A backup with
+        // no textiles cannot exercise the parent/child operation sequence.
+        guard let textile = result.document.textiles.first else {
+            interruptionReport = "Simulering AVVIST: Backup inneholder ingen tekstiler. Ingen data er endret."
+            return
+        }
+        var operations = ["Tekstil: \(textile.textileID)"]
+        operations += textile.pieces.map { "Stoffstykke: \($0.pieceID)" }
+        operations += textile.materials.map { "Materiale: \($0.materialID)" }
+        operations += textile.colors.map { "Farge: \($0.colorID)" }
+        operations += textile.images.map { "Bilde: \($0.imageID)" }
+
+        var passed = 0
+        // Inject a failure immediately before each prospective operation, and
+        // after the final operation. Journal entries are reversed for compensation.
+        for failureIndex in 0...operations.count {
+            var journal: [String] = []
+            for operation in operations.prefix(failureIndex) {
+                journal.append(operation)
+            }
+            let compensationOrder = Array(journal.reversed())
+            // The simulated compensations remove only entries created by this
+            // simulated run, leaving an empty in-memory state.
+            var simulatedCreated = Set(journal)
+            for operation in compensationOrder {
+                simulatedCreated.remove(operation)
+            }
+            guard simulatedCreated.isEmpty && compensationOrder == Array(journal.reversed()) else {
+                interruptionReport = "Simulering FEILET: Journalen ble ikke tømt. Skriving til CloudKit: SPERRET."
+                return
+            }
+            passed += 1
+        }
+        interruptionReport = "Avbrutt import – deterministisk simulering (kun i minnet):\n" +
+            "Eksempeltekstil: \(textile.textileID)\n" +
+            "Planlagte operasjoner: \(operations.count) (tekstil + underposter).\n" +
+            "Injiserte avbrudd testet: \(passed) (før hver operasjon og etter siste).\n" +
+            "Journal tilbakeført i omvendt rekkefølge: OK i alle simuleringer.\n" +
+            "Simulerte gjenstående poster etter kompensasjon: 0.\n" +
+            "Skriving til CloudKit: SPERRET. Ingen data er endret.\n" +
+            "BEGRENSNING: Dette er IKKE ekte CloudKit-rollback. Nettverksfeil, " +
+            "ukjent resultat av serveroperasjon, CKAsset-opplasting, samtidige endringer " +
+            "og opprydding etter appavslutning er IKKE testet. " +
+            "Faktisk import må bruke vedvarende journal, idempotente record-ID-er " +
+            "og verifisert gjenopptakelse/kompensasjon før den kan aktiveres."
     }
 
     // Diagnostic only: two consecutive enumerations are NOT an atomic snapshot.

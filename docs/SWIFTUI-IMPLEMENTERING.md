@@ -4181,10 +4181,21 @@ Konfliktkontrollen henter nå paginerte logiske ID-er fra alle eksisterende stof
 
 ## 217. Devpatch 0105 – to påfølgende CloudKit-lesinger (kun kontroll)
 
-**217 ❗️ – avventer eksplisitt validering. 216 ✅ godkjent av bruker.**
+**217 ✅ – validert OK av bruker. 216 ✅ godkjent.**
 
 Ny knapp **Kontroller endringer mellom to CloudKit-lesinger (kun kontroll)**. Leser tekstiler, stoffstykker, alle bilde-ID-er, materialer og farger to ganger og sammenligner sorterte identiteter, foreldre og recordName (for tekstiler også updatedAt). Feil i en lesing gir AVVIST. Testen oppdager enkelte samtidige endringer, men er **ikke** atomisk, oppdager ikke alle feltendringer eller endringer som skjer etter kontrollen, og gir aldri klarsignal til skriving. Bildeinnhold og bilde-recordName inngår ikke. Ingen CloudKit-skriving eller -sletting.
 
 1. Installer devpatch 0105 på komplett versjon 0062 med `project-workflow` og bygg i Xcode 27. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup og trykk **Kontroller endringer mellom to CloudKit-lesinger (kun kontroll)**. Kontroller at rapporten viser to opptellinger, status og eksplisitte begrensninger. **Stopp ved feil.**
-3. Kontroller at rapporten viser **Skriving til CloudKit: SPERRET**, at biblioteket er uendret, og gjenta på iPhone og iPad. **217 forblir ❗️ til eksplisitt godkjenning.**
+3. Kontroller at rapporten viser **Skriving til CloudKit: SPERRET**, at biblioteket er uendret, og gjenta på iPhone og iPad. **217 godkjent ✅ av bruker.**
+
+
+## 218. Devpatch 0106 – simulering av avbrutt import (kun i minnet)
+
+**218 ❗️ – avventer eksplisitt validering. 217 ✅ godkjent av bruker.**
+
+Ny knapp **Simuler avbrutt import (kun i minnet)** under Roadmap 7. Bruker ett tekstil fra en allerede validert ZIP-backup og bygger en tenkt operasjonsrekkefølge: tekstil, stoffstykker, materialer, farger og bilder. Simulerer avbrudd før hver operasjon og etter siste, fører en journal over tenkte opprettelser og kontrollerer om kompensasjon i omvendt rekkefølge tømmer den simulerte tilstanden. Ingen CloudKit-kall og ingen skriving. Testen er **ikke** bevis for at CloudKit-rollback fungerer: delvise nettverksfeil, CKAsset, ukjent serversvar, appavslutning og samtidig endring krever en separat, vedvarende og idempotent implementasjon.
+
+1. Installer devpatch 0106 på komplett versjon 0063 med `project-workflow`, og bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7** og velg en gyldig ZIP-backup med minst ett tekstil. Trykk **Simuler avbrutt import (kun i minnet)**. Kontroller at rapporten viser antall planlagte operasjoner, injiserte avbrudd, **Journal tilbakeført ... OK**, og **Simulerte gjenstående poster ... 0**. **Stopp ved feil.**
+3. Kontroller at **Skriving til CloudKit: SPERRET** vises og at biblioteket er uendret. Gjenta på iPhone og iPad. **218 forblir ❗️ til eksplisitt godkjenning.**
