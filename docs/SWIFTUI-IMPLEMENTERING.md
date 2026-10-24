@@ -4238,11 +4238,25 @@ Ny knapp i Roadmap 7: **Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun
 
 ## 222. Devpatch 0110 – kartlegg eksisterende CKRecord.ID-strategi (kun kontroll)
 
-**222 ❗️ – avventer eksplisitt validering. 221 ✅ godkjent av bruker.**
+**222 ✅ – validert OK av bruker. 221 ✅ godkjent av bruker.**
 
 Ny knapp **Vis faktisk CKRecord.ID-strategi (kun kontroll)** i Roadmap 7. Rapporten dokumenterer funn ved inspeksjon av `save`-metodene i `CloudKitTextileRepository`, `CloudKitPieceRepository`, `CloudKitTextileMaterialRepository`, `CloudKitTextileColorRepository` og `CloudKitTextileImageRepository` fra komplett versjon 0067: eksisterende `cloudRecordName` gir oppslag og oppdatering med `CKRecord.ID(recordName:)`; manglende `cloudRecordName` gir ny `CKRecord(recordType:)` med servergenerert ID. Logiske ID-er lagres som felt. Derfor er test 221 sine kandidatnavn ikke en del av eksisterende persistensstrategi. Dette er en kildekodebasert rapport, ikke live serververifikasjon. Ingen CloudKit-lesing eller -skriving utføres av knappen.
 
 1. Installer devpatch 0110 på komplett versjon 0067 via `project-workflow`; bygg med ⌘B i Xcode 27. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7** og trykk **Vis faktisk CKRecord.ID-strategi (kun kontroll)**. Ingen backup kreves.
 3. Kontroller at rapporten viser de fem repository-typene, forskjellen mellom eksisterende og ny post, og at logisk ID ikke er CKRecord.ID. Kontroller **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
-4. Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad. **222 forblir ❗️ til bruker validerer.**
+4. Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad. **222 validert OK av bruker.**
+
+
+## 223. Devpatch 0111 – kontroll av faktiske CloudKit-ID-er før import (kun lesing)
+
+**223 ❗️ – avventer eksplisitt validering. 222 ✅ godkjent av bruker.**
+
+Ny knapp **Kontroller eksisterende CloudKit-ID-er før import (kun lesing)**. Leser tekstiler, stoffstykker, materialer, farger og bilde-ID-er fra CloudKit; sammenligner logiske ID-er i validert backup og eksisterende bibliotek. Eksisterende tekstiler skal hoppes over. Avviser dupliserte CloudKit-ID-er, tomme/dupliserte tekstil-ID-er i backup, manglende recordName for fire posttyper og kollisjoner for underposter til nye tekstiler. Bilde-recordName og CKAsset kontrolleres ikke. Resultatet er ikke en atomisk snapshot, og gir aldri tillatelse til skriving. Ingen import er implementert.
+
+UX-feil fra test 222: knappene **Vis faktisk CKRecord.ID-strategi** og **Les og slett lokal testjournal** flyttet ut av betingelsen som krevde valgt backup. De skal nå være tilgjengelige før backup velges. Andre backup-avhengige tester krever fortsatt valgt backup.
+
+1. Installer devpatch 0111 på komplett eksport 0068 via `project-workflow`. Bygg med ⌘B i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7** uten å velge backup. Kontroller at **Vis faktisk CKRecord.ID-strategi** og **Les og slett lokal testjournal** er tilgjengelige. Trykk **Vis faktisk CKRecord.ID-strategi** og kontroller at rapporten vises. **Stopp ved feil.**
+3. Velg gyldig ZIP-backup og trykk **Kontroller eksisterende CloudKit-ID-er før import (kun lesing)**. Kontroller at rapporten viser nye/hoppede tekstiler, duplikater, kollisjoner, status og **Skriving til CloudKit: SPERRET**. Ved ingen konflikter forventes **FORELØPIG OK – IKKE SKRIVEKLAR**. **Stopp ved feil.**
+4. Kontroller uendret bibliotek og gjenta på iPhone og iPad. **223 forblir ❗️ til bruker validerer.**

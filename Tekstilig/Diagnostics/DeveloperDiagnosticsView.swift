@@ -31,6 +31,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var retrySimulationReport: String?
     @State private var recordIdentitySimulationReport: String?
     @State private var repositoryIdentityReport: String?
+    @State private var importIdentityPreflightReport: String?
+    @State private var isCheckingImportIdentity = false
     @State private var stabilityReport: String?
     @State private var isCheckingStability = false
     @State private var identityAudit: String?
@@ -268,25 +270,22 @@ struct DeveloperDiagnosticsView: View {
                         if let retrySimulationReport {
                             Text(retrySimulationReport).font(.callout)
                         }
+                        Button("Kontroller eksisterende CloudKit-ID-er før import (kun lesing)") {
+                            Task { await preflightExistingImportIdentities() }
+                        }
+                        .disabled(isCheckingImportIdentity || isReadingBackup || isPlanningImport || isCheckingConflicts || isCheckingStability || isAuditingIdentities || backupDiagnostic.isRunning)
+                        if isCheckingImportIdentity {
+                            BackupActivityLabel("Kontrollerer logiske ID-er mot CloudKit …")
+                        }
+                        if let importIdentityPreflightReport {
+                            Text(importIdentityPreflightReport).font(.callout)
+                        }
                         Button("Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun i minnet)") {
                             simulateStableRecordIdentities()
                         }
                         .disabled(importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
                         if let recordIdentitySimulationReport {
                             Text(recordIdentitySimulationReport).font(.callout)
-                        }
-                        Button("Vis faktisk CKRecord.ID-strategi (kun kontroll)") {
-                            inspectRepositoryIdentityStrategy()
-                        }
-                        if let repositoryIdentityReport {
-                            Text(repositoryIdentityReport).font(.callout)
-                        }
-                        Button("Les og slett lokal testjournal") {
-                            inspectAndRemovePersistentTestJournal()
-                        }
-                        .disabled(isReadingBackup || backupDiagnostic.isRunning)
-                        if let persistentJournalReport {
-                            Text(persistentJournalReport).font(.callout)
                         }
                         Button("Kartlegg CloudKit-identiteter (kun kontroll)") {
                             Task { await auditCloudKitIdentities() }
@@ -298,6 +297,21 @@ struct DeveloperDiagnosticsView: View {
                         if let identityAudit {
                             Text(identityAudit).font(.callout)
                         }
+                    }
+                    // These checks do not need a selected backup and must stay visible.
+                    Button("Vis faktisk CKRecord.ID-strategi (kun kontroll)") {
+                        inspectRepositoryIdentityStrategy()
+                    }
+                    .disabled(isReadingBackup || backupDiagnostic.isRunning)
+                    if let repositoryIdentityReport {
+                        Text(repositoryIdentityReport).font(.callout)
+                    }
+                    Button("Les og slett lokal testjournal") {
+                        inspectAndRemovePersistentTestJournal()
+                    }
+                    .disabled(isReadingBackup || backupDiagnostic.isRunning)
+                    if let persistentJournalReport {
+                        Text(persistentJournalReport).font(.callout)
                     }
                     if let importError {
                         Text(importError).foregroundStyle(.orange)
@@ -719,6 +733,64 @@ struct DeveloperDiagnosticsView: View {
             "Dette er IKKE eksisterende CKRecord.ID-er eller en CloudKit-kontroll. " +
             "Faktisk ID-strategi og servereierskap må avklares før skriving.\n" +
             "Skriving til CloudKit: SPERRET."
+    }
+
+    // Test 223: reconcile the logical identifiers from the backup with live
+    // CloudKit metadata. This is NOT a reservation, atomic snapshot, or permission
+    // to write; the server may change immediately after this read-only check.
+    @MainActor
+    private func preflightExistingImportIdentities() async {
+        guard let backup = importResult?.document, !isCheckingImportIdentity else { return }
+        isCheckingImportIdentity = true
+        importIdentityPreflightReport = nil
+        defer { isCheckingImportIdentity = false }
+        do {
+            let textiles = try await CloudKitTextileRepository().fetchTextiles()
+            let pieces = try await CloudKitPieceRepository().fetchAllPieces()
+            let materials = try await CloudKitTextileMaterialRepository().fetchAllMaterials()
+            let colors = try await CloudKitTextileColorRepository().fetchAllColors()
+            let images = try await CloudKitTextileImageRepository().fetchAllImageIDsForConflictCheck()
+            func duplicates(_ ids: [String]) -> Int {
+                ids.count - Set(ids).count
+            }
+            let existingTextileIDs = textiles.map(\.textileID)
+            let backupIDs = backup.textiles.map(\.textileID)
+            let existing = Set(existingTextileIDs)
+            let newTextiles = backup.textiles.filter { !existing.contains($0.textileID) }
+            let newPieceIDs = newTextiles.flatMap { $0.pieces.map(\.pieceID) }
+            let newMaterialIDs = newTextiles.flatMap { $0.materials.map(\.materialID) }
+            let newColorIDs = newTextiles.flatMap { $0.colors.map(\.colorID) }
+            let newImageIDs = newTextiles.flatMap { $0.images.map(\.imageID) }
+            let collisions = [
+                newPieceIDs.filter { Set(pieces.map(\.pieceID)).contains($0) }.count,
+                newMaterialIDs.filter { Set(materials.map(\.materialID)).contains($0) }.count,
+                newColorIDs.filter { Set(colors.map(\.colorID)).contains($0) }.count,
+                newImageIDs.filter { Set(images).contains($0) }.count
+            ]
+            let missingRecordNames = textiles.filter { ($0.cloudRecordName ?? "").isEmpty }.count +
+                pieces.filter { ($0.cloudRecordName ?? "").isEmpty }.count +
+                materials.filter { ($0.cloudRecordName ?? "").isEmpty }.count +
+                colors.filter { ($0.cloudRecordName ?? "").isEmpty }.count
+            let duplicateLive = [duplicates(existingTextileIDs), duplicates(pieces.map(\.pieceID)),
+                                 duplicates(materials.map(\.materialID)), duplicates(colors.map(\.colorID)),
+                                 duplicates(images)]
+            let missingIDs = backupIDs.filter { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count
+            let blocked = duplicateLive.contains(where: { $0 > 0 }) || duplicates(backupIDs) > 0 ||
+                missingIDs > 0 || missingRecordNames > 0 || collisions.contains(where: { $0 > 0 })
+            importIdentityPreflightReport = "Importidentiteter (live metadata, kun lesing):\n" +
+                "Status: \(blocked ? "AVVIST" : "FORELØPIG OK – IKKE SKRIVEKLAR")\n" +
+                "Nye tekstiler: \(newTextiles.count); eksisterende tekstiler hoppes over: \(backup.textiles.count - newTextiles.count).\n" +
+                "Dupliserte logiske ID-er i CloudKit (tekstil/stykke/materiale/farge/bilde): \(duplicateLive.map(String.init).joined(separator: "/")).\n" +
+                "Dupliserte tekstil-ID-er i backup: \(duplicates(backupIDs)); tomme: \(missingIDs).\n" +
+                "Eksisterende poster uten recordName (unntatt bilder): \(missingRecordNames).\n" +
+                "Kollisjoner for nye underposter (stykke/materiale/farge/bilde): \(collisions.map(String.init).joined(separator: "/")).\n" +
+                "Eksisterende recordName beholdes; nye recordName kan ikke utledes fra logisk ID. " +
+                "Bilde-recordName og CKAsset er ikke verifisert her. " +
+                "Dette er ingen atomisk snapshot eller tillatelse til import.\n" +
+                "Skriving til CloudKit: SPERRET. Ingen data er endret."
+        } catch {
+            importIdentityPreflightReport = "AVVIST: CloudKit-lesing feilet: \(error.localizedDescription). Skriving til CloudKit: SPERRET."
+        }
     }
 
     // Test 222: a read-only architectural diagnostic documenting the actual
