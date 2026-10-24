@@ -4264,7 +4264,7 @@ UX-feil fra test 222: knappene **Vis faktisk CKRecord.ID-strategi** og **Les og 
 
 ## 224. Devpatch 0112 – vurder stabile import-ID-er mot eksisterende CloudKit (kun lesing)
 
-**224 ❗️ – avventer eksplisitt validering. 223 ✅ godkjent av bruker.**
+**224 ✅ – validert OK av bruker. 223 ✅ godkjent av bruker.**
 
 Ny knapp **Vurder stabile import-ID-er mot CloudKit (kun lesing)**. Lager import-spesifikke kandidatnavn fra posttype og logisk ID for *nye* tekstiler og deres stoffstykker/materialer/farger; sammenligner kandidatnavn mot kjente `cloudRecordName` fra CloudKit. Avviser tomme/dupliserte type/ID-par, kollisjoner og svært lange kandidatnavn. Denne diagnostikken lager ikke CKRecord-objekter, skriver ikke CloudKit og endrer ikke normale repository-save-metoder. Den verifiserer **ikke** bilde-recordName, eierskap eller atomisk snapshot; «FORELØPIG OK» gir aldri skrivetillatelse.
 
@@ -4272,3 +4272,15 @@ Ny knapp **Vurder stabile import-ID-er mot CloudKit (kun lesing)**. Lager import
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg gyldig ZIP-backup og trykk **Vurder stabile import-ID-er mot CloudKit (kun lesing)**. **Stopp ved feil.**
 3. Kontroller status, antall kandidater, duplikater, kollisjoner og at bilde-recordName ikke er kontrollert. Bekreft **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
 4. Kontroller uendret bibliotek på Mac, iPhone og iPad. **224 forblir ❗️ til bruker validerer.**
+
+
+## 225. Devpatch 0113 – bildeidentiteter og eierskap (kun lesing)
+
+**225 ❗️ – avventer eksplisitt validering. 224 ✅ godkjent av bruker.**
+
+Ny knapp **Kontroller bildeidentiteter og eierskap (kun lesing)**. Henter alle `TextileImage`-recordnavn, logiske `imageId` og eier `textileId` med paginering uten å hente `CKAsset`. Sammenligner bilde-ID-er fra nye tekstiler i valgt backup med eksisterende bildeposter, avviser tomme/dupliserte ID-er, kollisjoner med eksisterende imageID, kandidatnavnkollisjoner og mangelfulle eksisterende bildeidentiteter. Rapporterer også kollisjoner med annen eier. Ingen endring i normale save-metoder. Ingen CloudKit-skriving. Snapshot er ikke atomisk, og kontrollen gir ingen importtillatelse.
+
+1. Installer devpatch 0113 på komplett eksport 0070 med `project-workflow`. Bygg i Xcode 27 med ⌘B. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup og trykk **Kontroller bildeidentiteter og eierskap (kun lesing)**. **Stopp ved feil.**
+3. Kontroller antall CloudKit-bilder, nye bilder, duplikater, kollisjoner og eierskap. Bekreft **Skriving til CloudKit: SPERRET**. Ved ingen funn forventes **FORELØPIG OK – IKKE SKRIVEKLAR**. **Stopp ved feil.**
+4. Bekreft at biblioteket er uendret. Gjenta på iPhone og iPad. **225 forblir ❗️ til bruker validerer.**

@@ -33,6 +33,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var repositoryIdentityReport: String?
     @State private var importIdentityPreflightReport: String?
     @State private var deterministicIdentityReport: String?
+    @State private var imageIdentityReport: String?
+    @State private var isCheckingImageIdentity = false
     @State private var isCheckingDeterministicIdentity = false
     @State private var isCheckingImportIdentity = false
     @State private var stabilityReport: String?
@@ -291,6 +293,16 @@ struct DeveloperDiagnosticsView: View {
                         }
                         if let deterministicIdentityReport {
                             Text(deterministicIdentityReport).font(.callout)
+                        }
+                        Button("Kontroller bildeidentiteter og eierskap (kun lesing)") {
+                            Task { await checkImportImageIdentities() }
+                        }
+                        .disabled(isCheckingImageIdentity || isReadingBackup || backupDiagnostic.isRunning)
+                        if isCheckingImageIdentity {
+                            BackupActivityLabel("Leser bildeidentiteter fra CloudKit …")
+                        }
+                        if let imageIdentityReport {
+                            Text(imageIdentityReport).font(.callout)
                         }
                         Button("Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun i minnet)") {
                             simulateStableRecordIdentities()
@@ -745,6 +757,56 @@ struct DeveloperDiagnosticsView: View {
             "Dette er IKKE eksisterende CKRecord.ID-er eller en CloudKit-kontroll. " +
             "Faktisk ID-strategi og servereierskap må avklares før skriving.\n" +
             "Skriving til CloudKit: SPERRET."
+    }
+
+    // Test 225: image record names and ownership are read without CKAsset bytes.
+    // This is a preflight diagnostic only, not authorization to import.
+    @MainActor
+    private func checkImportImageIdentities() async {
+        guard let backup = importResult?.document, !isCheckingImageIdentity else { return }
+        isCheckingImageIdentity = true
+        imageIdentityReport = nil
+        defer { isCheckingImageIdentity = false }
+        do {
+            let textiles = try await CloudKitTextileRepository().fetchTextiles()
+            let images = try await CloudKitTextileImageRepository().fetchImageIdentitiesForImportCheck()
+            let existingTextileIDs = Set(textiles.map(\.textileID))
+            let newTextiles = backup.textiles.filter { !existingTextileIDs.contains($0.textileID) }
+            let incoming = newTextiles.flatMap { textile in
+                textile.images.map { (imageID: $0.imageID.trimmingCharacters(in: .whitespacesAndNewlines), textileID: textile.textileID) }
+            }
+            let existingNames = Set(images.map(\.recordName))
+            let candidateNames = incoming.map { entry in
+                "tekstilig-import-v1-" + ("TextileImage:" + entry.imageID).utf8.map { String(format: "%02x", $0) }.joined()
+            }
+            let emptyIDs = incoming.filter { $0.imageID.isEmpty }.count
+            let duplicateIncomingIDs = incoming.count - Set(incoming.map(\.imageID)).count
+            let existingImageIDs = Set(images.map(\.imageID))
+            let logicalCollisions = incoming.filter { existingImageIDs.contains($0.imageID) }.count
+            let recordNameCollisions = candidateNames.filter { existingNames.contains($0) }.count
+            let longNames = candidateNames.filter { $0.utf8.count > 255 }.count
+            let existingMissingIDs = images.filter { $0.imageID.isEmpty || $0.textileID.isEmpty || $0.recordName.isEmpty }.count
+            let existingDuplicateIDs = images.count - Set(images.map(\.imageID)).count
+            let existingOwners = Dictionary(grouping: images, by: \.imageID)
+            let crossOwnerConflicts = incoming.filter { entry in
+                (existingOwners[entry.imageID] ?? []).contains { $0.textileID != entry.textileID }
+            }.count
+            let blocked = emptyIDs > 0 || duplicateIncomingIDs > 0 || logicalCollisions > 0 || recordNameCollisions > 0 || longNames > 0 || existingMissingIDs > 0 || existingDuplicateIDs > 0
+            imageIdentityReport = """
+            Kontroll av bildeidentiteter og eierskap (kun lesing):
+            Status: \(blocked ? "AVVIST" : "FORELØPIG OK – IKKE SKRIVEKLAR")
+            CloudKit-bildeposter lest (alle sider): \(images.count).
+            Bilder til nye tekstiler i backup: \(incoming.count); nye tekstiler: \(newTextiles.count).
+            Tomme bilde-ID-er i backup: \(emptyIDs); dupliserte bilde-ID-er i backup: \(duplicateIncomingIDs).
+            Kollisjon mot eksisterende logisk imageID: \(logicalCollisions); annen eier: \(crossOwnerConflicts).
+            Kollisjon mot eksisterende CKRecord.recordName: \(recordNameCollisions); kandidatnavn over 255 byte: \(longNames).
+            Eksisterende bildeposter med manglende ID/eier/recordName: \(existingMissingIDs); dupliserte eksisterende imageID: \(existingDuplicateIDs).
+            CKAsset-data er IKKE lest. Resultatet er ikke atomisk og gir ingen skrivetillatelse.
+            Skriving til CloudKit: SPERRET. Ingen data er endret.
+            """
+        } catch {
+            imageIdentityReport = "AVVIST: CloudKit-lesing feilet: \(error.localizedDescription). Skriving til CloudKit: SPERRET."
+        }
     }
 
     // Test 224: read-only feasibility check for a deterministic import-only

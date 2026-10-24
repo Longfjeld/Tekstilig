@@ -172,6 +172,36 @@ final class CloudKitTextileImageRepository: TextileImageRepository {
         return ids
     }
 
+    // Import preflight: complete read-only image identity inventory.
+    // Does not request imageAsset and fails closed on any partial query error.
+    func fetchImageIdentitiesForImportCheck() async throws -> [(imageID: String, textileID: String, recordName: String)] {
+        let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
+        var cursor: CKQueryOperation.Cursor?
+        var result: [(imageID: String, textileID: String, recordName: String)] = []
+        repeat {
+            let page: (matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)], queryCursor: CKQueryOperation.Cursor?)
+            if let cursor {
+                page = try await database.records(continuingMatchFrom: cursor, desiredKeys: ["imageId", "textileId"], resultsLimit: 100)
+            } else {
+                page = try await database.records(matching: query, inZoneWith: nil, desiredKeys: ["imageId", "textileId"], resultsLimit: 100)
+            }
+            for (_, recordResult) in page.matchResults {
+                switch recordResult {
+                case .failure(let error): throw error
+                case .success(let record):
+                    if Self.diagnosticRecordNames.contains(record.recordID.recordName) { continue }
+                    result.append((
+                        imageID: (record["imageId"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
+                        textileID: (record["textileId"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
+                        recordName: record.recordID.recordName
+                    ))
+                }
+            }
+            cursor = page.queryCursor
+        } while cursor != nil
+        return result
+    }
+
     // Read-only inventory of ALL TextileImage records; CKAsset bytes are not downloaded.
     // Excludes the known diagnostic PoC record, consistent with normal image queries.
     func auditAllImageRecords(knownTextileIDs: Set<String>) async throws -> String {
