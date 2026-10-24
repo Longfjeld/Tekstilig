@@ -4215,10 +4215,22 @@ Diagnostikken oppretter en JSON-testjournal under appens Application Support med
 
 ## 220. Devpatch 0108 – ukjent serversvar og idempotent gjentakelse (kun simulering)
 
-**220 ❗️ – avventer eksplisitt validering. 219 ✅ godkjent av bruker.**
+**220 ✅ – validert OK av bruker. 219 ✅ godkjent av bruker.**
 
 Ny knapp under Roadmap 7: **Simuler ukjent serversvar og trygg gjentakelse (kun i minnet)**. Bruker ett tekstil fra validert ZIP-backup og lager logiske operasjonsnøkler for tekstil, stoffstykker, materialer, farger og bilder. For hver operasjon simuleres to mulige utfall av et manglende serversvar: serveren har lagret posten, eller den har ikke lagret den. Simulert gjenlesing og gjentakelse skal gi nøyaktig én logisk post per nøkkel. Dupliserte eller tomme logiske nøkler avvises. **Dette er ikke CloudKit-idempotens:** modellen verifiserer verken CKRecord.ID, CKRecord.changeTag, konkurrerende skrivere, asset-tilstand eller faktisk serversvar. Ingen CloudKit-kall eller -skriving.
 
 1. Installer devpatch 0108 på komplett versjon 0065 med `project-workflow`, og bygg i Xcode 27. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg gyldig ZIP-backup med minst ett tekstil, trykk **Simuler ukjent serversvar og trygg gjentakelse (kun i minnet)**. Kontroller **Simulering av ukjent serversvar: OK**, at scenarier er større enn null og **Dupliserte logiske poster etter gjentakelse: 0**. **Stopp ved feil.**
-3. Kontroller **Skriving til CloudKit: SPERRET** og uendret bibliotek. Gjenta på iPhone og iPad. **220 forblir ❗️ inntil bruker har validert.**
+3. Kontroller **Skriving til CloudKit: SPERRET** og uendret bibliotek. Gjenta på iPhone og iPad. **220 validert OK av bruker.**
+
+
+## 221. Devpatch 0109 – stabile kandidat-ID-er og eierskapskonflikt (kun simulering)
+
+**221 ❗️ – avventer eksplisitt validering. 220 ✅ godkjent av bruker.**
+
+Ny knapp i Roadmap 7: **Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun i minnet)**. Testen bruker første tekstil i valgt, validert ZIP-backup, lager deterministiske *kandidatnavn* fra type og logisk ID, avviser tomme/dupliserte nøkler og simulerer to utfall ved tapt serversvar. Den kontrollerer også at en post med samme kandidatnavn, men en annen eier, **må avvises**. Navnene er **ikke** verifisert mot eksisterende CKRecord.ID-strategi i appen eller mot CloudKit; denne testen gir ingen tillatelse til import. Ingen CloudKit-skriving.
+
+1. Installer devpatch 0109 på komplett eksport 0066 via `project-workflow`. Bygg med ⌘B i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup med minst ett tekstil. Trykk **Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun i minnet)**.
+3. Kontroller **Simulering av stabile kandidat-ID-er: OK**, **Kollisjon med annen eier avvist: OK** og **Skriving til CloudKit: SPERRET**. **Stopp ved feil.**
+4. Kontroller uendret bibliotek og gjenta på iPhone og iPad. **221 forblir ❗️ til bruker validerer.**

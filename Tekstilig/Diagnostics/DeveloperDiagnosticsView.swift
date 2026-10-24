@@ -29,6 +29,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var interruptionReport: String?
     @State private var persistentJournalReport: String?
     @State private var retrySimulationReport: String?
+    @State private var recordIdentitySimulationReport: String?
     @State private var stabilityReport: String?
     @State private var isCheckingStability = false
     @State private var identityAudit: String?
@@ -265,6 +266,13 @@ struct DeveloperDiagnosticsView: View {
                         .disabled(importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
                         if let retrySimulationReport {
                             Text(retrySimulationReport).font(.callout)
+                        }
+                        Button("Simuler stabile CloudKit-ID-er og eierskapskonflikt (kun i minnet)") {
+                            simulateStableRecordIdentities()
+                        }
+                        .disabled(importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
+                        if let recordIdentitySimulationReport {
+                            Text(recordIdentitySimulationReport).font(.callout)
                         }
                         Button("Les og slett lokal testjournal") {
                             inspectAndRemovePersistentTestJournal()
@@ -639,6 +647,70 @@ struct DeveloperDiagnosticsView: View {
             "Testede scenarier (lagret / ikke lagret): \(checkedCases).\n" +
             "Dupliserte logiske poster etter gjentakelse: 0.\n" +
             "Kun en modell i minnet – ingen CloudKit-ID-er eller serverresultater er verifisert.\n" +
+            "Skriving til CloudKit: SPERRET."
+    }
+
+    // Test 221: local model of deterministic record names and ownership.
+    // Does not call CloudKit or assert that these names are compatible with
+    // record names already used by the repositories. No import is enabled.
+    @MainActor
+    private func simulateStableRecordIdentities() {
+        guard let textile = importResult?.document.textiles.first else {
+            recordIdentitySimulationReport = "AVVIST: Velg en gyldig backup med minst ett tekstil. CloudKit: SPERRET."
+            return
+        }
+        let textileID = textile.textileID.trimmingCharacters(in: .whitespacesAndNewlines)
+        let children: [(String, String)] =
+            textile.pieces.map { ("piece", $0.pieceID) } +
+            textile.materials.map { ("material", $0.materialID) } +
+            textile.colors.map { ("color", $0.colorID) } +
+            textile.images.map { ("image", $0.imageID) }
+        let entries = [("textile", textile.textileID)] + children
+        guard !textileID.isEmpty, entries.allSatisfy({ !$0.1.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            recordIdentitySimulationReport = "AVVIST: Tom logisk ID. CloudKit: SPERRET."
+            return
+        }
+        // Length-prefix encoding avoids ambiguous separators in logical IDs.
+        // This is only a candidate naming scheme, not the repository's schema.
+        func candidateName(_ kind: String, _ id: String) -> String {
+            "tekstilig-import-v1-\(kind.count):\(kind)-\(id.utf8.count):\(id)"
+        }
+        let names = entries.map { candidateName($0.0, $0.1) }
+        guard Set(names).count == names.count else {
+            recordIdentitySimulationReport = "AVVIST: Dupliserte kandidatidentiteter. CloudKit: SPERRET."
+            return
+        }
+        let owner = textileID
+        // Simulate the two possible outcomes of a lost acknowledgement.
+        for committed in [false, true] {
+            var server: [String: String] = [:]
+            if committed { server[names[0]] = owner }
+            for name in names {
+                if let existingOwner = server[name], existingOwner != owner {
+                    recordIdentitySimulationReport = "AVVIST: Uventet eier ved gjentakelse. CloudKit: SPERRET."
+                    return
+                }
+                server[name] = owner
+            }
+            guard server.count == names.count else {
+                recordIdentitySimulationReport = "FEIL: Gjentakelse ga uventet antall poster. CloudKit: SPERRET."
+                return
+            }
+        }
+        // A pre-existing record with the same name but different owner must
+        // never be treated as successful completion of an import operation.
+        var conflictingServer: [String: String] = [names[0]: "another-textile-owner"]
+        let ownershipConflictBlocked = conflictingServer[names[0]] != owner
+        guard ownershipConflictBlocked else {
+            recordIdentitySimulationReport = "FEIL: Eierskapskonflikt ble ikke avvist. CloudKit: SPERRET."
+            return
+        }
+        conflictingServer.removeAll()
+        recordIdentitySimulationReport = "Simulering av stabile kandidat-ID-er: OK.\n" +
+            "Kandidatposter: \(names.count). To utfall av ukjent serversvar: OK.\n" +
+            "Kollisjon med annen eier avvist: OK.\n" +
+            "Dette er IKKE eksisterende CKRecord.ID-er eller en CloudKit-kontroll. " +
+            "Faktisk ID-strategi og servereierskap må avklares før skriving.\n" +
             "Skriving til CloudKit: SPERRET."
     }
 
