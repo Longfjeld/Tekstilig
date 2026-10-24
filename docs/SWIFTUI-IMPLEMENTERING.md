@@ -4203,11 +4203,22 @@ Ny knapp **Simuler avbrutt import (kun i minnet)** under Roadmap 7. Bruker ett t
 
 ## 219. Devpatch 0107 – vedvarende lokal testjournal (ingen CloudKit-skriving)
 
-**219 ❗️ – avventer eksplisitt validering. 218 ✅ godkjent av bruker.**
+**219 ✅ – validert OK av bruker. 218 ✅ godkjent av bruker.**
 
 Diagnostikken oppretter en JSON-testjournal under appens Application Support med atomisk filskriving og umiddelbar kontroll ved gjenlesing. Journalen inneholder unik journal-ID, ett eksempeltekstil, planlagt operasjonsrekkefølge og status «interrupted-test-only», med **null fullførte operasjoner**. En separat knapp leser journalen på nytt (også etter fullstendig appavslutning), validerer innholdet og sletter den lokale testfilen. Ukjent eller skadet journal beholdes for feilsøking. Eksisterende journal overskrives aldri. Dette er **ikke** automatisk gjenopptakelse, kompensasjon eller en virkelig importjournal. Ingen CloudKit-skriving.
 
 1. Installer devpatch 0107 på komplett versjon 0064 med `project-workflow`, bygg i Xcode 27. **Stopp ved byggefeil.**
 2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg en gyldig ZIP-backup med tekstiler og trykk **Opprett lokal testjournal (ingen import)**. Kontroller «opprettet og lest tilbake: OK», fullførte 0 og «Skriving til CloudKit: SPERRET». **Stopp ved feil.**
 3. Avslutt appen helt, åpne den igjen, gå til samme diagnostikkside og trykk **Les og slett lokal testjournal** (du trenger ikke velge backup igjen). Kontroller «Journal gjenfunnet ... OK», «Lokal testjournal slettet: OK» og at CloudKit er sperret. **Stopp ved feil.**
-4. Trykk **Les og slett lokal testjournal** en gang til og kontroller «Ingen lokal testjournal funnet». Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad. **219 forblir ❗️ til eksplisitt godkjenning.**
+4. Trykk **Les og slett lokal testjournal** en gang til og kontroller «Ingen lokal testjournal funnet». Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad. **219 validert OK av bruker.**
+
+
+## 220. Devpatch 0108 – ukjent serversvar og idempotent gjentakelse (kun simulering)
+
+**220 ❗️ – avventer eksplisitt validering. 219 ✅ godkjent av bruker.**
+
+Ny knapp under Roadmap 7: **Simuler ukjent serversvar og trygg gjentakelse (kun i minnet)**. Bruker ett tekstil fra validert ZIP-backup og lager logiske operasjonsnøkler for tekstil, stoffstykker, materialer, farger og bilder. For hver operasjon simuleres to mulige utfall av et manglende serversvar: serveren har lagret posten, eller den har ikke lagret den. Simulert gjenlesing og gjentakelse skal gi nøyaktig én logisk post per nøkkel. Dupliserte eller tomme logiske nøkler avvises. **Dette er ikke CloudKit-idempotens:** modellen verifiserer verken CKRecord.ID, CKRecord.changeTag, konkurrerende skrivere, asset-tilstand eller faktisk serversvar. Ingen CloudKit-kall eller -skriving.
+
+1. Installer devpatch 0108 på komplett versjon 0065 med `project-workflow`, og bygg i Xcode 27. **Stopp ved byggefeil.**
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg gyldig ZIP-backup med minst ett tekstil, trykk **Simuler ukjent serversvar og trygg gjentakelse (kun i minnet)**. Kontroller **Simulering av ukjent serversvar: OK**, at scenarier er større enn null og **Dupliserte logiske poster etter gjentakelse: 0**. **Stopp ved feil.**
+3. Kontroller **Skriving til CloudKit: SPERRET** og uendret bibliotek. Gjenta på iPhone og iPad. **220 forblir ❗️ inntil bruker har validert.**

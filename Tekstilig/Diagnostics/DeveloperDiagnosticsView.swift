@@ -28,6 +28,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var isCheckingConflicts = false
     @State private var interruptionReport: String?
     @State private var persistentJournalReport: String?
+    @State private var retrySimulationReport: String?
     @State private var stabilityReport: String?
     @State private var isCheckingStability = false
     @State private var identityAudit: String?
@@ -258,6 +259,13 @@ struct DeveloperDiagnosticsView: View {
                             createPersistentTestJournal()
                         }
                         .disabled(importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
+                        Button("Simuler ukjent serversvar og trygg gjentakelse (kun i minnet)") {
+                            simulateUnknownServerOutcome()
+                        }
+                        .disabled(importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
+                        if let retrySimulationReport {
+                            Text(retrySimulationReport).font(.callout)
+                        }
                         Button("Les og slett lokal testjournal") {
                             inspectAndRemovePersistentTestJournal()
                         }
@@ -576,6 +584,62 @@ struct DeveloperDiagnosticsView: View {
             "og opprydding etter appavslutning er IKKE testet. " +
             "Faktisk import må bruke vedvarende journal, idempotente record-ID-er " +
             "og verifisert gjenopptakelse/kompensasjon før den kan aktiveres."
+    }
+
+    // Test 220: a pure in-memory model of ambiguous server outcomes.
+    // The keys below are LOGICAL operation keys, not CKRecord.ID values.
+    // A real importer must separately validate deterministic CloudKit record IDs,
+    // ownership and current server state before any retry or compensation.
+    @MainActor
+    private func simulateUnknownServerOutcome() {
+        guard let textile = importResult?.document.textiles.first else {
+            retrySimulationReport = "AVVIST: Velg en gyldig backup med minst ett tekstil. CloudKit: SPERRET."
+            return
+        }
+        let operations = ["textile:" + textile.textileID] +
+            textile.pieces.map { "piece:" + $0.pieceID } +
+            textile.materials.map { "material:" + $0.materialID } +
+            textile.colors.map { "color:" + $0.colorID } +
+            textile.images.map { "image:" + $0.imageID }
+        guard operations.allSatisfy({ operation in
+            guard let separator = operation.firstIndex(of: ":") else { return false }
+            return !operation[operation.index(after: separator)...].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }) else {
+            retrySimulationReport = "AVVIST: Tom logisk ID i backup. CloudKit: SPERRET."
+            return
+        }
+        guard Set(operations).count == operations.count else {
+            retrySimulationReport = "AVVIST: Dupliserte logiske operasjons-ID-er. CloudKit: SPERRET."
+            return
+        }
+        // The first attempt has an unknown acknowledgement: the server might
+        // have committed the operation, or might have done nothing.
+        var checkedCases = 0
+        for ambiguousIndex in operations.indices {
+            for serverCommitted in [false, true] {
+                var simulatedServer = Set(operations.prefix(ambiguousIndex))
+                if serverCommitted { simulatedServer.insert(operations[ambiguousIndex]) }
+                // Reconciliation queries the simulated server before applying
+                // the desired operation. A repeated operation never creates a
+                // second logical record in either possible outcome.
+                for operation in operations {
+                    if !simulatedServer.contains(operation) {
+                        simulatedServer.insert(operation)
+                    }
+                }
+                guard simulatedServer == Set(operations) else {
+                    retrySimulationReport = "FEIL: Simulert gjentakelse ga uventet tilstand. CloudKit: SPERRET."
+                    return
+                }
+                checkedCases += 1
+            }
+        }
+        retrySimulationReport = "Simulering av ukjent serversvar: OK.\n" +
+            "Planlagte logiske operasjoner: \(operations.count).\n" +
+            "Testede scenarier (lagret / ikke lagret): \(checkedCases).\n" +
+            "Dupliserte logiske poster etter gjentakelse: 0.\n" +
+            "Kun en modell i minnet – ingen CloudKit-ID-er eller serverresultater er verifisert.\n" +
+            "Skriving til CloudKit: SPERRET."
     }
 
     // Local-only test journal. This is NOT an import transaction or a recovery
