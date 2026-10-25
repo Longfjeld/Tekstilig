@@ -4411,3 +4411,16 @@ Ny knapp **Simuler samtidighetskonflikter før import (kun i minnet)** leser eks
 3. Trykk **Simuler samtidighetskonflikter før import (kun i minnet)**. Kontroller **Samtidighetskontroll (kun simulering): OK**, samme journal-ID, og at endret changeTag, ny logisk ID-kollisjon, slettet post og manglende snapshot alle er avvist. Kontroller **Skriving til CloudKit: SPERRET**.
 4. Avslutt og start appen, velg samme ZIP og gjenta. Kontroller samme journal-ID og ingen endringer i biblioteket.
 5. Behold journal og backup. Ikke marker 233 som godkjent før bruker har validert. Negativtesten med en annen ZIP fra test 230 er fortsatt ❗️.
+
+
+## 234. Devpatch 0125 – les ekte CloudKit-recordChangeTag (kun lesing)
+
+**233 ✅ validert OK av bruker. 234 ❗️ avventer validering.**
+
+Ny knapp **Les faktiske CloudKit-versjoner (kun lesing)** henter CKRecord-metadata fra alle fem posttyper i privat Development-database. Den bruker paginerte CloudKit-spørringer, teller poster og manglende `recordChangeTag`, og avviser feil i enkeltposter, uventet posttype eller dupliserte `recordName`. Ingen endringer gjøres i v2-journal, backup eller CloudKit. Denne testen oppretter **ikke** historisk snapshot og gjør **ikke** import skriveklar.
+
+1. Installer devpatch 0125 på full eksport 0082 og bygg i Xcode 27. Stopp ved feil.
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**. Trykk **Les faktiske CloudKit-versjoner (kun lesing)**. Backup er ikke nødvendig for denne metadata-kontrollen.
+3. Forvent **Faktiske CloudKit-versjoner (kun lesing): OK**, fem posttyper, antall poster og antall uten changeTag. Dersom noen poster mangler changeTag, noter dette som avvik; ikke godkjenn som full dekning. Kontroller **Skriving til CloudKit: SPERRET**.
+4. Avslutt og start appen igjen og gjenta. Kontroller at resultatet fortsatt er OK. Antall poster kan endres dersom andre enheter endrer CloudKit; rapporter slike avvik.
+5. Kontroller at biblioteket er uendret. Behold v2-journal og backup. Negativtesten med en annen ZIP fra 230 er fortsatt ❗️.

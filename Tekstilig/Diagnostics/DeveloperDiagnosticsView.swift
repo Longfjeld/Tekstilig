@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import CloudKit
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
@@ -43,6 +44,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var journalOperationAuditReport: String?
     @State private var liveJournalRecheckReport: String?
     @State private var concurrencyGateReport: String?
+    @State private var liveVersionReport: String?
+    @State private var isReadingLiveVersions = false
     @State private var isRecheckingLiveJournal = false
     @State private var emptyJournalCleanupReport: String?
     @State private var showEmptyJournalCleanupConfirmation = false
@@ -345,6 +348,16 @@ struct DeveloperDiagnosticsView: View {
                         .disabled(validatedZIPData == nil || importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
                         if let concurrencyGateReport {
                             Text(concurrencyGateReport).font(.callout)
+                        }
+                        Button("Les faktiske CloudKit-versjoner (kun lesing)") {
+                            Task { await inspectLiveCloudKitVersionTags() }
+                        }
+                        .disabled(isReadingLiveVersions || isReadingBackup || backupDiagnostic.isRunning)
+                        if isReadingLiveVersions {
+                            BackupActivityLabel("Leser CloudKit-recordChangeTag …")
+                        }
+                        if let liveVersionReport {
+                            Text(liveVersionReport).font(.callout)
                         }
                         Button("Kontroller journaloperasjoner mot backup (kun lokalt)") {
                             auditBoundJournalOperations()
@@ -1504,6 +1517,61 @@ struct DeveloperDiagnosticsView: View {
                 "atomisk opprettelse eller gjenopptakelse. Skriving til CloudKit: SPERRET."
         } catch {
             concurrencyGateReport = "AVVIST: Kan ikke lese journal: \(error.localizedDescription). CloudKit: SPERRET."
+        }
+    }
+
+    // Test 234: read actual CloudKit record version metadata from all five types.
+    // Query pagination and per-record failures are handled fail-closed. This does
+    // NOT persist a historical baseline or make any import operation safe to run.
+    @MainActor
+    private func inspectLiveCloudKitVersionTags() async {
+        guard !isReadingLiveVersions else { return }
+        isReadingLiveVersions = true
+        liveVersionReport = nil
+        defer { isReadingLiveVersions = false }
+        let types = ["Textile", "Piece", "TextileMaterial", "TextileColor", "TextileImage"]
+        let database = CKContainer(identifier: CloudKitTextileRepository.containerIdentifier).privateCloudDatabase
+        var lines: [String] = []
+        do {
+            for type in types {
+                let query = CKQuery(recordType: type, predicate: NSPredicate(value: true))
+                var cursor: CKQueryOperation.Cursor?
+                var count = 0
+                var missingTags = 0
+                var seenNames = Set<String>()
+                repeat {
+                    let response: (matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)], queryCursor: CKQueryOperation.Cursor?)
+                    if let cursor {
+                        response = try await database.records(continuingMatchFrom: cursor, desiredKeys: [], resultsLimit: 200)
+                    } else {
+                        response = try await database.records(matching: query, inZoneWith: nil, desiredKeys: [], resultsLimit: 200)
+                    }
+                    for (_, result) in response.matchResults {
+                        let record = try result.get()
+                        guard record.recordType == type else {
+                            throw NSError(domain: "TekstiligVersionAudit", code: 1,
+                                userInfo: [NSLocalizedDescriptionKey: "Uventet posttype i CloudKit-resultat"])
+                        }
+                        guard seenNames.insert(record.recordID.recordName).inserted else {
+                            throw NSError(domain: "TekstiligVersionAudit", code: 2,
+                                userInfo: [NSLocalizedDescriptionKey: "Duplisert recordName i CloudKit-resultat"])
+                        }
+                        count += 1
+                        if (record.recordChangeTag ?? "").isEmpty { missingTags += 1 }
+                    }
+                    cursor = response.queryCursor
+                } while cursor != nil
+                lines.append("\(type): \(count) poster; uten changeTag: \(missingTags)")
+            }
+            liveVersionReport = "Faktiske CloudKit-versjoner (kun lesing): OK.\n" +
+                lines.joined(separator: "\n") + "\n" +
+                "Alle fem posttyper lest med paginering. recordName og recordChangeTag er hentet fra ekte CKRecord-metadata.\n" +
+                "VIKTIG: Ingen historisk baseline er lagret, og lesingene er ikke atomiske. " +
+                "En ny kontroll kan ikke alene garantere sikker import.\n" +
+                "Skriving til CloudKit: SPERRET."
+        } catch {
+            liveVersionReport = "AVVIST: Kunne ikke lese alle CloudKit-versjoner: \(error.localizedDescription). " +
+                "Delresultater: \(lines.joined(separator: "; ")). Skriving til CloudKit: SPERRET."
         }
     }
 
