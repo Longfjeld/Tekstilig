@@ -45,6 +45,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var liveJournalRecheckReport: String?
     @State private var concurrencyGateReport: String?
     @State private var liveVersionReport: String?
+    @State private var versionBaselineReport: String?
+    @State private var isCheckingVersionBaseline = false
     @State private var isReadingLiveVersions = false
     @State private var isRecheckingLiveJournal = false
     @State private var emptyJournalCleanupReport: String?
@@ -358,6 +360,20 @@ struct DeveloperDiagnosticsView: View {
                         }
                         if let liveVersionReport {
                             Text(liveVersionReport).font(.callout)
+                        }
+                        Button("Lagre CloudKit-versjonsbaseline for v2-journal (kun lesing)") {
+                            Task { await checkCloudKitVersionBaseline(create: true) }
+                        }
+                        .disabled(isCheckingVersionBaseline || validatedZIPData == nil || importResult == nil)
+                        Button("Sammenlign CloudKit med lagret versjonsbaseline (kun lesing)") {
+                            Task { await checkCloudKitVersionBaseline(create: false) }
+                        }
+                        .disabled(isCheckingVersionBaseline || validatedZIPData == nil || importResult == nil)
+                        if isCheckingVersionBaseline {
+                            BackupActivityLabel("Leser versjoner for journal …")
+                        }
+                        if let versionBaselineReport {
+                            Text(versionBaselineReport).font(.callout)
                         }
                         Button("Kontroller journaloperasjoner mot backup (kun lokalt)") {
                             auditBoundJournalOperations()
@@ -1572,6 +1588,136 @@ struct DeveloperDiagnosticsView: View {
         } catch {
             liveVersionReport = "AVVIST: Kunne ikke lese alle CloudKit-versjoner: \(error.localizedDescription). " +
                 "Delresultater: \(lines.joined(separator: "; ")). Skriving til CloudKit: SPERRET."
+        }
+    }
+
+    // Test 235: immutable diagnostic baseline associated with an existing v2 journal.
+    // CloudKit enumeration is non-atomic. This is never authorization to write.
+    private struct CloudKitVersionEntry: Codable, Equatable {
+        let recordType: String
+        let recordName: String
+        let changeTag: String
+    }
+
+    private struct CloudKitVersionBaseline: Codable {
+        let schemaVersion: Int
+        let journalID: UUID
+        let zipSHA256: String
+        let entries: [CloudKitVersionEntry]
+    }
+
+    private func cloudKitVersionBaselineURL() throws -> URL {
+        try boundReadOnlyJournalURL().deletingLastPathComponent()
+            .appendingPathComponent("read-only-cloudkit-versions-v1.json")
+    }
+
+    private func readCloudKitVersionEntries() async throws -> [CloudKitVersionEntry] {
+        let database = CKContainer(identifier: CloudKitTextileRepository.containerIdentifier).privateCloudDatabase
+        let types = ["Textile", "Piece", "TextileMaterial", "TextileColor", "TextileImage"]
+        var entries: [CloudKitVersionEntry] = []
+        for type in types {
+            let query = CKQuery(recordType: type, predicate: NSPredicate(value: true))
+            var cursor: CKQueryOperation.Cursor?
+            var names = Set<String>()
+            repeat {
+                let response: (matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)], queryCursor: CKQueryOperation.Cursor?)
+                if let cursor {
+                    response = try await database.records(continuingMatchFrom: cursor, desiredKeys: [], resultsLimit: 200)
+                } else {
+                    response = try await database.records(matching: query, inZoneWith: nil, desiredKeys: [], resultsLimit: 200)
+                }
+                for (_, result) in response.matchResults {
+                    let record = try result.get()
+                    guard record.recordType == type,
+                          names.insert(record.recordID.recordName).inserted,
+                          let tag = record.recordChangeTag, !tag.isEmpty else {
+                        throw NSError(domain: "TekstiligVersionBaseline", code: 1,
+                            userInfo: [NSLocalizedDescriptionKey: "Ugyldig eller manglende CloudKit-versjonsmetadata for \(type)"])
+                    }
+                    entries.append(CloudKitVersionEntry(recordType: type,
+                        recordName: record.recordID.recordName, changeTag: tag))
+                }
+                cursor = response.queryCursor
+            } while cursor != nil
+        }
+        return entries.sorted {
+            ($0.recordType, $0.recordName) < ($1.recordType, $1.recordName)
+        }
+    }
+
+    @MainActor
+    private func checkCloudKitVersionBaseline(create: Bool) async {
+        guard !isCheckingVersionBaseline else { return }
+        isCheckingVersionBaseline = true
+        versionBaselineReport = nil
+        defer { isCheckingVersionBaseline = false }
+        do {
+            guard let zip = validatedZIPData, importResult != nil else {
+                throw NSError(domain: "TekstiligVersionBaseline", code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "Velg og valider samme ZIP-backup som journalen"])
+            }
+            let journal = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
+                from: Data(contentsOf: boundReadOnlyJournalURL()))
+            guard validBoundReadOnlyJournal(journal), journal.zipSHA256 == zipDigest(zip) else {
+                throw NSError(domain: "TekstiligVersionBaseline", code: 3,
+                    userInfo: [NSLocalizedDescriptionKey: "Ugyldig v2-journal eller ZIP-hash"])
+            }
+            let url = try cloudKitVersionBaselineURL()
+            // Do not read CloudKit unnecessarily if the create action cannot succeed.
+            if create && FileManager.default.fileExists(atPath: url.path) {
+                throw NSError(domain: "TekstiligVersionBaseline", code: 4,
+                    userInfo: [NSLocalizedDescriptionKey: "Baseline finnes allerede og overskrives ikke"])
+            }
+            if !create && !FileManager.default.fileExists(atPath: url.path) {
+                throw NSError(domain: "TekstiligVersionBaseline", code: 5,
+                    userInfo: [NSLocalizedDescriptionKey: "Ingen lagret baseline; opprett den først"])
+            }
+            let current = try await readCloudKitVersionEntries()
+            if create {
+                // Re-check before persisting; no automatic replacement of existing files.
+                guard !FileManager.default.fileExists(atPath: url.path) else {
+                    throw NSError(domain: "TekstiligVersionBaseline", code: 6,
+                        userInfo: [NSLocalizedDescriptionKey: "Baseline ble opprettet under lesingen"])
+                }
+                let baseline = CloudKitVersionBaseline(schemaVersion: 1,
+                    journalID: journal.journalID, zipSHA256: journal.zipSHA256, entries: current)
+                try JSONEncoder().encode(baseline).write(to: url, options: [.atomic])
+                let readback = try JSONDecoder().decode(CloudKitVersionBaseline.self,
+                    from: Data(contentsOf: url))
+                guard readback.schemaVersion == 1, readback.journalID == journal.journalID,
+                      readback.zipSHA256 == journal.zipSHA256, readback.entries == current else {
+                    throw NSError(domain: "TekstiligVersionBaseline", code: 7,
+                        userInfo: [NSLocalizedDescriptionKey: "Lagret baseline kunne ikke valideres"])
+                }
+                versionBaselineReport = "CloudKit-versjonsbaseline lagret og lest tilbake: OK.\n" +
+                    "Journal-ID: \(journal.journalID.uuidString). Poster: \(current.count).\n" +
+                    "Baseline er ikke atomisk og gir IKKE skrivetillatelse. CloudKit: SPERRET."
+            } else {
+                let baseline = try JSONDecoder().decode(CloudKitVersionBaseline.self,
+                    from: Data(contentsOf: url))
+                guard baseline.schemaVersion == 1, baseline.journalID == journal.journalID,
+                      baseline.zipSHA256 == journal.zipSHA256 else {
+                    throw NSError(domain: "TekstiligVersionBaseline", code: 8,
+                        userInfo: [NSLocalizedDescriptionKey: "Baseline tilhører ikke valgt journal/ZIP"])
+                }
+                guard baseline.entries == current else {
+                    let before = Set(baseline.entries.map { "\($0.recordType):\($0.recordName):\($0.changeTag)" })
+                    let after = Set(current.map { "\($0.recordType):\($0.recordName):\($0.changeTag)" })
+                    versionBaselineReport = "AVVIST: CloudKit-versjoner er endret siden baseline.\n" +
+                        "Tidligere: \(baseline.entries.count), nå: \(current.count). " +
+                        "Endrede/fjernede versjoner: \(before.subtracting(after).count); " +
+                        "nye/endrede versjoner: \(after.subtracting(before).count).\n" +
+                        "Journal og baseline beholdes. CloudKit: SPERRET."
+                    return
+                }
+                versionBaselineReport = "CloudKit-versjoner mot lagret baseline: OK.\n" +
+                    "Journal-ID: \(journal.journalID.uuidString). Poster: \(current.count).\n" +
+                    "Samme recordName og recordChangeTag: OK. " +
+                    "Ikke-atomisk kontroll, ingen skrivetillatelse. CloudKit: SPERRET."
+            }
+        } catch {
+            versionBaselineReport = "AVVIST: \(error.localizedDescription). " +
+                "Ingen CloudKit-skriving. Eksisterende filer beholdes. CloudKit: SPERRET."
         }
     }
 

@@ -4424,3 +4424,18 @@ Ny knapp **Les faktiske CloudKit-versjoner (kun lesing)** henter CKRecord-metada
 3. Forvent **Faktiske CloudKit-versjoner (kun lesing): OK**, fem posttyper, antall poster og antall uten changeTag. Dersom noen poster mangler changeTag, noter dette som avvik; ikke godkjenn som full dekning. Kontroller **Skriving til CloudKit: SPERRET**.
 4. Avslutt og start appen igjen og gjenta. Kontroller at resultatet fortsatt er OK. Antall poster kan endres dersom andre enheter endrer CloudKit; rapporter slike avvik.
 5. Kontroller at biblioteket er uendret. Behold v2-journal og backup. Negativtesten med en annen ZIP fra 230 er fortsatt ❗️.
+
+
+## 235. Devpatch 0126 – bevar og sammenlign faktiske CloudKit-versjoner (kun lesing)
+
+**234 ✅ validert OK av bruker. 235 ❗️ avventer validering.**
+
+To nye knapper i Roadmap 7 lagrer en **separat, uforanderlig lokal baseline** (`read-only-cloudkit-versions-v1.json`) med alle fem posttypers `recordName` og `recordChangeTag`, knyttet til v2-journal-ID og backupens SHA-256. Lagret baseline overskrives ikke. En ny CloudKit-lesing sammenligner alle poster og versjonstagger; tillegg, sletting og endret tag avvises. Manglende changeTag og CloudKit-lesefeil avvises. **Begrensning:** Baseline er hentet med flere ikke-atomiske spørringer, og en lik baseline gir ingen garanti mot endringer mellom kontroll og fremtidig skriving. Ingen CloudKit-skriving.
+
+1. Installer devpatch 0126 på full eksport 0083. Bygg i Xcode 27 og stopp ved feil.
+2. Åpne Utvikling → Diagnostikk → Roadmap 7. Velg samme ZIP-backup som for v2-journalen.
+3. Trykk **Lagre CloudKit-versjonsbaseline for v2-journal (kun lesing)**. Kontroller OK, journal-ID, antall poster og CloudKit SPERRET. Ved AVVIST: send rapporten, ikke slett filer.
+4. Trykk samme knapp igjen. Forvent AVVIST fordi baseline ikke kan overskrives.
+5. Trykk **Sammenlign CloudKit med lagret versjonsbaseline (kun lesing)**. Forvent OK og uendret journal-ID dersom ingen andre enheter har endret CloudKit.
+6. Avslutt appen helt, start igjen, velg samme ZIP og gjenta sammenligningen. Kontroller OK, samme journal-ID og antall poster.
+7. Kontroller at biblioteket er uendret. Behold v1/v2-journal, backupbinding, versjonsbaseline og ZIP. **Ikke fremprovoser CloudKit-endringer** i denne testen. Negativtesten med en annen ZIP fra 230 er fortsatt ❗️.
