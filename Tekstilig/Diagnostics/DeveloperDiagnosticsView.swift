@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
@@ -37,6 +38,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var approvedDiagnosticOperations: [String]?
     @State private var importJournalPlanReport: String?
     @State private var importJournalRecoveryReport: String?
+    @State private var backupBindingReport: String?
     @State private var emptyJournalCleanupReport: String?
     @State private var showEmptyJournalCleanupConfirmation = false
     @State private var isCheckingCombinedPreflight = false
@@ -318,6 +320,17 @@ struct DeveloperDiagnosticsView: View {
                         if let importJournalPlanReport {
                             Text(importJournalPlanReport).font(.callout)
                         }
+                        Button("Bind valgt backup til eksisterende testjournal (kun lokalt)") {
+                            bindBackupToJournal()
+                        }
+                        .disabled(validatedZIPData == nil || isReadingBackup || backupDiagnostic.isRunning)
+                        Button("Kontroller backupbinding mot journal (kun lokalt)") {
+                            verifyBackupJournalBinding()
+                        }
+                        .disabled(validatedZIPData == nil || isReadingBackup || backupDiagnostic.isRunning)
+                        if let backupBindingReport {
+                            Text(backupBindingReport).font(.callout)
+                        }
                         Button("Slett ugyldig tom importplanjournal (kun lokal testfil)", role: .destructive) {
                             showEmptyJournalCleanupConfirmation = true
                         }
@@ -467,6 +480,7 @@ struct DeveloperDiagnosticsView: View {
                 approvedDiagnosticOperations = nil
                 combinedPreflightReport = nil
                 importJournalPlanReport = nil
+                backupBindingReport = nil
                 importPlan = nil
                 conflictReport = nil
                 stabilityReport = nil
@@ -994,6 +1008,102 @@ struct DeveloperDiagnosticsView: View {
             importJournalRecoveryReport = nil
         } catch {
             emptyJournalCleanupReport = "AVVIST: Kan ikke kontrollere eller slette lokal testjournal: \(error.localizedDescription). CloudKit: SPERRET."
+        }
+    }
+
+    // Test 229: SHA-256 of the exact validated ZIP bytes is bound to the existing
+    // read-only journal in a separate, local file. No legacy journal migration,
+    // no CloudKit calls, and no ability to resume a real import.
+    private struct ReadOnlyBackupBinding: Codable {
+        let schemaVersion: Int
+        let journalID: UUID
+        let operationIDs: [String]
+        let zipSHA256: String
+    }
+
+    private func readOnlyBackupBindingURL() throws -> URL {
+        try readOnlyImportPlanURL().deletingLastPathComponent()
+            .appendingPathComponent("read-only-import-binding-v1.json")
+    }
+
+    private func zipDigest(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    @MainActor
+    private func bindBackupToJournal() {
+        guard let zip = validatedZIPData, importResult != nil else {
+            backupBindingReport = "AVVIST: Velg og valider en ZIP-backup. CloudKit: SPERRET."
+            return
+        }
+        do {
+            let journal = try JSONDecoder().decode(ReadOnlyImportPlanJournal.self,
+                from: Data(contentsOf: readOnlyImportPlanURL()))
+            guard validReadOnlyImportPlan(journal) else {
+                backupBindingReport = "AVVIST: Journalen er ugyldig. Ingen binding opprettet. CloudKit: SPERRET."
+                return
+            }
+            let bindingURL = try readOnlyBackupBindingURL()
+            guard !FileManager.default.fileExists(atPath: bindingURL.path) else {
+                backupBindingReport = "AVVIST: Backupbinding finnes allerede og overskrives ikke. Bruk kontrollknappen. CloudKit: SPERRET."
+                return
+            }
+            let binding = ReadOnlyBackupBinding(schemaVersion: 1,
+                journalID: journal.journalID, operationIDs: journal.operationIDs,
+                zipSHA256: zipDigest(zip))
+            try JSONEncoder().encode(binding).write(to: bindingURL, options: [.atomic])
+            let reopened = try JSONDecoder().decode(ReadOnlyBackupBinding.self,
+                from: Data(contentsOf: bindingURL))
+            guard reopened.journalID == binding.journalID,
+                  reopened.operationIDs == binding.operationIDs,
+                  reopened.zipSHA256 == binding.zipSHA256 else {
+                backupBindingReport = "AVVIST: Lokal binding kunne ikke leses tilbake. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            backupBindingReport = "Lokal backupbinding lagret og lest tilbake: OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString). Operasjoner: \(journal.operationIDs.count).\n" +
+                "SHA-256 (ZIP): \(binding.zipSHA256).\n" +
+                "Merk: Dette knytter backupbytes til en eksisterende testjournal, men beviser ikke at den opprinnelige journalen ble opprettet fra denne backupen.\n" +
+                "Ingen import. Skriving til CloudKit: SPERRET."
+        } catch {
+            backupBindingReport = "AVVIST: Kunne ikke opprette lokal binding: \(error.localizedDescription). CloudKit: SPERRET."
+        }
+    }
+
+    @MainActor
+    private func verifyBackupJournalBinding() {
+        guard let zip = validatedZIPData, importResult != nil else {
+            backupBindingReport = "AVVIST: Velg og valider ZIP-backup. CloudKit: SPERRET."
+            return
+        }
+        do {
+            let journal = try JSONDecoder().decode(ReadOnlyImportPlanJournal.self,
+                from: Data(contentsOf: readOnlyImportPlanURL()))
+            let binding = try JSONDecoder().decode(ReadOnlyBackupBinding.self,
+                from: Data(contentsOf: readOnlyBackupBindingURL()))
+            guard validReadOnlyImportPlan(journal), binding.schemaVersion == 1,
+                  binding.journalID == journal.journalID,
+                  binding.operationIDs == journal.operationIDs,
+                  binding.zipSHA256.count == 64 else {
+                backupBindingReport = "AVVIST: Journal eller binding er endret/ugyldig. Filene beholdes. CloudKit: SPERRET."
+                return
+            }
+            guard binding.zipSHA256 == zipDigest(zip) else {
+                backupBindingReport = "AVVIST: Valgt ZIP er ikke identisk med bundet backup (SHA-256 avviker). Filene beholdes. CloudKit: SPERRET."
+                return
+            }
+            var changed = zip
+            changed.append(0)
+            guard zipDigest(changed) != binding.zipSHA256 else {
+                backupBindingReport = "FEIL: Endret ZIP ble ikke avvist i minnet. CloudKit: SPERRET."
+                return
+            }
+            backupBindingReport = "Backupbinding kontrollert: OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString). Operasjoner: \(journal.operationIDs.count).\n" +
+                "SHA-256 samsvarer: OK. Endret ZIP avvist i minnet: OK.\n" +
+                "Ingen import. Skriving til CloudKit: SPERRET."
+        } catch {
+            backupBindingReport = "AVVIST: Binding/journal mangler eller kan ikke leses: \(error.localizedDescription). CloudKit: SPERRET."
         }
     }
 

@@ -4313,7 +4313,7 @@ Ny knapp **Lagre kontrollert importplan i lokal testjournal (ingen import)** akt
 
 ## 228. Devpatch 0116 – gjenfinn og valider lokal importplanjournal etter omstart
 
-**228 ❗️ – avventer validering. 227 ✅ godkjent av bruker.**
+**228 ✅ – validert OK av bruker etter omstart med 4 operasjoner. 227 ✅ godkjent av bruker.**
 
 Ny knapp **Gjenfinn og valider importplanjournal (ingen import)** er tilgjengelig uten valgt backup. Leser den eksisterende `read-only-import-plan-v1.json` fra Application Support etter omstart, validerer formatversjon, tilstand, null fullførte operasjoner, ikke-tom operasjonsliste, tillatte posttyper og unike/ikke-tomme operasjons-ID-er. Tester også ugyldig status, duplikat og uventet fremdrift på **minnekopier**. Ugyldig eller uleselig journal avvises, og filen beholdes for feilsøking. Journalen slettes ikke av denne testen. Ingen CloudKit-lesing eller -skriving. Dette er fremdeles ikke en ekte gjenopptakelsesmekanisme.
 
@@ -4344,3 +4344,16 @@ Ny knapp **Gjenfinn og valider importplanjournal (ingen import)** er tilgjengeli
 **228 ❗️ – avventer ny validering.** Årsak bekreftet med devpatch 0118: test 227 tillot tom operasjonsliste (0 nye tekstiler), mens test 228 avviser den. Rettelse: Journalopprettelse avviser nå 0 operasjoner og skriver ingen fil. En egen knapp kan etter bekreftelse slette **bare** lokal `read-only-import-plan-v1.json` når den dekoder korrekt, har schemaVersion 1, state `planned-read-only`, 0 operasjoner og 0 fullførte. Alle andre journaler beholdes. Ingen CloudKit-skriving eller automatisk nettsletting.
 
 ❗️ Test: 1. Bygg. 2. På Mac, slett tom lokal journal med den nye knappen og bekreft. 3. Velg backup der alle tekstiler allerede finnes i CloudKit; kjør samlet importkontroll og forsøk å lagre journal; forvent tydelig AVVIST 0 operasjoner. 4. Sørg for at minst ett tekstil i backup ikke finnes i CloudKit (testdata kan slettes manuelt via appen etter eget valg), kjør samlet kontroll på nytt og lagre journal; forvent >0 operasjoner. 5. Avslutt og start appen på nytt, gjenfinn journal uten backup; forvent OK og samme journal-ID ved gjentakelse. 6. Bekreft ingen importskriving og ingen uønsket endring i biblioteket. Ikke marker 228 som godkjent før bruker har bekreftet.
+
+
+## 229. Devpatch 0120 – lokal SHA-256-binding mellom ZIP-backup og eksisterende testjournal
+
+**229 ❗️ – avventer validering. 228 ✅ validert OK av bruker.**
+
+Eksisterende journal fra test 228 bevares uendret. Ny lokal sidefil `read-only-import-binding-v1.json` lagrer journal-ID, operasjons-ID-er og SHA-256 av de eksakte ZIP-bytene som brukeren velger. Bindingen overskrives ikke. Kontroll avviser endret ZIP, feil journal-ID og endret operasjonsliste. Negativtesten for endret ZIP utføres kun i minnet. **Begrensning:** Den gamle journalen inneholder ikke hash fra opprettelsestidspunktet; bindingen beviser derfor ikke historisk at journalen opprinnelig ble opprettet fra denne ZIP-en. Dette må bygges inn ved journalopprettelse før faktisk import kan vurderes. Ingen CloudKit-skriving.
+
+1. Installer devpatch 0120 på komplett eksport 0077 og bygg i Xcode. Stopp ved feil.
+2. Åpne Roadmap 7, velg samme ZIP-backup som ved test 228. Trykk «Bind valgt backup til eksisterende testjournal (kun lokalt)». Kontroller OK, journal-ID og SHA-256. Stopp ved avvisning.
+3. Trykk «Kontroller backupbinding mot journal (kun lokalt)». Kontroller OK og at endret ZIP avvises i minnet.
+4. Avslutt og start appen på nytt, velg den samme ZIP-filen og kjør kontrollen på nytt. Kontroller samme journal-ID og OK.
+5. Velg en annen gyldig ZIP-backup dersom tilgjengelig og kontroller at den avvises ved ulik hash. Velg deretter originalen på nytt og kontroller OK. Ikke slett journalen eller sidefilen. CloudKit skal være uendret.
