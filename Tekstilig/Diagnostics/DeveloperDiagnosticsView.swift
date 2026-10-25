@@ -960,6 +960,34 @@ struct DeveloperDiagnosticsView: View {
         }
     }
 
+    // Test 228 diagnostics: explain rejection without modifying the persisted journal.
+    // Keep this separate from the validator so existing safety checks remain unchanged.
+    private func readOnlyImportPlanValidationIssues(_ journal: ReadOnlyImportPlanJournal) -> [String] {
+        var issues: [String] = []
+        if journal.schemaVersion != 1 { issues.append("Ustøttet schemaVersion: \(journal.schemaVersion) (forventet 1)") }
+        if journal.state != "planned-read-only" { issues.append("Uventet state: \(journal.state) (forventet planned-read-only)") }
+        if journal.completedOperationCount != 0 { issues.append("Uventet completedOperationCount: \(journal.completedOperationCount) (forventet 0)") }
+        if journal.operationIDs.isEmpty { issues.append("Operasjonslisten er tom") }
+        let duplicates = journal.operationIDs.count - Set(journal.operationIDs).count
+        if duplicates > 0 { issues.append("Dupliserte operasjons-ID-er: \(duplicates)") }
+        let allowedTypes: Set<String> = ["Textile", "Piece", "TextileMaterial", "TextileColor", "TextileImage"]
+        for (index, operation) in journal.operationIDs.enumerated() {
+            let parts = operation.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+            if parts.count != 2 {
+                issues.append("Operasjon \(index + 1): Mangler type:ID-format (type: \(String(operation.prefix(50))))")
+            } else if !allowedTypes.contains(String(parts[0])) {
+                issues.append("Operasjon \(index + 1): Ukjent posttype: \(parts[0])")
+            } else if parts[1].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                issues.append("Operasjon \(index + 1): Tom logisk ID (posttype: \(parts[0]))")
+            }
+            if issues.count >= 12 {
+                issues.append("Flere feil kan finnes; rapporten er begrenset til 12 kontroller.")
+                break
+            }
+        }
+        return issues
+    }
+
     @MainActor
     private func inspectReadOnlyImportPlanJournal() {
         do {
@@ -971,7 +999,12 @@ struct DeveloperDiagnosticsView: View {
             let data = try Data(contentsOf: url)
             let journal = try JSONDecoder().decode(ReadOnlyImportPlanJournal.self, from: data)
             guard validReadOnlyImportPlan(journal) else {
-                importJournalRecoveryReport = "AVVIST: Ugyldig eller ufullstendig importplanjournal. Filen beholdes. CloudKit: SPERRET."
+                let issues = readOnlyImportPlanValidationIssues(journal)
+                importJournalRecoveryReport = "AVVIST: Ugyldig eller ufullstendig importplanjournal.\n" +
+                    "Journal-ID: \(journal.journalID.uuidString).\n" +
+                    "Operasjoner: \(journal.operationIDs.count). Fullførte: \(journal.completedOperationCount).\n" +
+                    "Valideringsfeil:\n- " + (issues.isEmpty ? "Ukjent avvik mellom validator og diagnostikk" : issues.joined(separator: "\n- ")) +
+                    "\nJournalfilen er uendret. Skriving til CloudKit: SPERRET."
                 return
             }
             // Negative tests operate on copies only. Never modify the persisted journal.

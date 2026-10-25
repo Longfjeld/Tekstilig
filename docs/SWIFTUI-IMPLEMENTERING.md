@@ -4327,3 +4327,13 @@ Ny knapp **Gjenfinn og valider importplanjournal (ingen import)** er tilgjengeli
 ### Rettelse for test 228 – devpatch 0117
 
 **228 ❗️ – ny validering kreves.** Test 227 lagret operasjons-ID-er med faktiske posttypenavn (`Textile`, `Piece`, `TextileMaterial`, `TextileColor`, `TextileImage`), mens første versjon av test 228 validerte mot feilaktige små bokstaver og kortnavn. Derfor ble en gyldig journal avvist etter omstart. Devpatch 0117 retter bare tillatte posttypenavn i validatoren; eksisterende journal skal **ikke slettes eller overskrives**. Kjør test 228 på nytt uten valgt backup og kontroller samme journal-ID ved gjentatt kontroll. Ingen CloudKit-skriving.
+
+
+### Diagnostisk rettelse for test 228 – devpatch 0118
+
+**228 ❗️ – fortsatt ikke validert.** På macOS avviser også devpatch 0117 eksisterende journal. Vi bevarer den opprinnelige journalfilen og viser nå hvert avvik i journalens versjon, status, fremdrift, duplikater eller operasjons-ID-format. Validatorens regler endres ikke. Rapporten begrenses til de første avvikene og viser journal-ID og antall operasjoner. **Ingen lokal journal endres eller slettes, og CloudKit-skriving er sperret.**
+
+1. Installer devpatch 0118 på den samme Mac-en uten å slette appen eller journalen. Bygg i Xcode.
+2. Åpne Utvikling → Diagnostikk → Roadmap 7 og velg «Gjenfinn og valider importplanjournal (ingen import)». Backup er ikke nødvendig.
+3. Hvis rapporten viser AVVIST, kopier hele rapporten med «Valideringsfeil» og send den til gjennomgang. Ikke opprett en ny journal.
+4. Hvis rapporten viser OK, gjenta kontrollen og verifiser samme journal-ID og uendret bibliotek. Først da kan 228 godkjennes.
