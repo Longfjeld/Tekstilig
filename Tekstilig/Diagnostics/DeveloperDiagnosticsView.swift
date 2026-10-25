@@ -42,6 +42,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var atomicJournalReport: String?
     @State private var journalOperationAuditReport: String?
     @State private var liveJournalRecheckReport: String?
+    @State private var concurrencyGateReport: String?
     @State private var isRecheckingLiveJournal = false
     @State private var emptyJournalCleanupReport: String?
     @State private var showEmptyJournalCleanupConfirmation = false
@@ -338,6 +339,13 @@ struct DeveloperDiagnosticsView: View {
                         if let liveJournalRecheckReport {
                             Text(liveJournalRecheckReport).font(.callout)
                         }
+                        Button("Simuler samtidighetskonflikter før import (kun i minnet)") {
+                            simulateConcurrentImportSafetyGate()
+                        }
+                        .disabled(validatedZIPData == nil || importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
+                        if let concurrencyGateReport {
+                            Text(concurrencyGateReport).font(.callout)
+                        }
                         Button("Kontroller journaloperasjoner mot backup (kun lokalt)") {
                             auditBoundJournalOperations()
                         }
@@ -515,6 +523,7 @@ struct DeveloperDiagnosticsView: View {
                 backupBindingReport = nil
                 atomicJournalReport = nil
                 liveJournalRecheckReport = nil
+                concurrencyGateReport = nil
                 importPlan = nil
                 conflictReport = nil
                 stabilityReport = nil
@@ -1422,6 +1431,79 @@ struct DeveloperDiagnosticsView: View {
                 "Skriving til CloudKit: SPERRET."
         } catch {
             liveJournalRecheckReport = "AVVIST: CloudKit-kontroll feilet: \(error.localizedDescription). Skriving til CloudKit: SPERRET."
+        }
+    }
+
+    // Test 233: deterministic, in-memory fail-closed gate simulation.
+    // This is NOT a CloudKit compare-and-swap implementation: v2 contains no
+    // server snapshot, and the repositories do not expose recordChangeTag here.
+    private struct SimulatedImportServerState {
+        let recordName: String
+        let logicalKey: String
+        let changeTag: String
+    }
+
+    private func simulatedWriteGate(
+        baseline: [SimulatedImportServerState]?,
+        current: [SimulatedImportServerState],
+        proposedKeys: Set<String>
+    ) -> Bool {
+        guard let baseline else { return false } // Unknown baseline must fail closed.
+        let baselineByName = Dictionary(grouping: baseline, by: \.recordName)
+        let currentByName = Dictionary(grouping: current, by: \.recordName)
+        guard baselineByName.values.allSatisfy({ $0.count == 1 }),
+              currentByName.values.allSatisfy({ $0.count == 1 }),
+              Set(current.map(\.logicalKey)).count == current.count else { return false }
+        guard baselineByName.keys.count == currentByName.keys.count,
+              Set(baselineByName.keys) == Set(currentByName.keys) else { return false }
+        for (name, records) in baselineByName {
+            guard let old = records.first, let now = currentByName[name]?.first,
+                  old.logicalKey == now.logicalKey, old.changeTag == now.changeTag else { return false }
+        }
+        return proposedKeys.isDisjoint(with: Set(current.map(\.logicalKey)))
+    }
+
+    @MainActor
+    private func simulateConcurrentImportSafetyGate() {
+        guard let zip = validatedZIPData, let backup = importResult?.document else {
+            concurrencyGateReport = "AVVIST: Velg og valider backup. CloudKit: SPERRET."
+            return
+        }
+        do {
+            let journal = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
+                from: Data(contentsOf: boundReadOnlyJournalURL()))
+            guard validBoundReadOnlyJournal(journal), journal.zipSHA256 == zipDigest(zip),
+                  journalOperationIssues(journal.operationIDs, backup: backup).isEmpty else {
+                concurrencyGateReport = "AVVIST: Journal eller backup er ugyldig. CloudKit: SPERRET."
+                return
+            }
+            let baseline = [SimulatedImportServerState(recordName: "server-record-1",
+                logicalKey: "Textile:existing", changeTag: "tag-1")]
+            let proposed = Set(journal.operationIDs)
+            let unchanged = simulatedWriteGate(baseline: baseline, current: baseline, proposedKeys: proposed)
+            let changed = [SimulatedImportServerState(recordName: "server-record-1",
+                logicalKey: "Textile:existing", changeTag: "tag-2")]
+            let collided = baseline + [SimulatedImportServerState(recordName: "server-record-2",
+                logicalKey: journal.operationIDs[0], changeTag: "tag-1")]
+            let missing: [SimulatedImportServerState] = []
+            let withoutSnapshot = simulatedWriteGate(baseline: nil, current: baseline, proposedKeys: proposed)
+            guard unchanged, !simulatedWriteGate(baseline: baseline, current: changed, proposedKeys: proposed),
+                  !simulatedWriteGate(baseline: baseline, current: collided, proposedKeys: proposed),
+                  !simulatedWriteGate(baseline: baseline, current: missing, proposedKeys: proposed),
+                  !withoutSnapshot else {
+                concurrencyGateReport = "FEIL: En simulert konflikt ble ikke avvist. CloudKit: SPERRET."
+                return
+            }
+            concurrencyGateReport = "Samtidighetskontroll (kun simulering): OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString). Operasjoner: \(journal.operationIDs.count).\n" +
+                "Uendret øyeblikksbilde akseptert i minnet: OK. Endret changeTag avvist: OK.\n" +
+                "Ny logisk ID-kollisjon avvist: OK. Slettet serverpost avvist: OK.\n" +
+                "Manglende opprinnelig snapshot avvist: OK.\n" +
+                "VIKTIG: v2-journalen har IKKE et historisk server-snapshot. " +
+                "Dette tester kun beslutningslogikk i minnet, ikke ekte CloudKit-samtidighet, " +
+                "atomisk opprettelse eller gjenopptakelse. Skriving til CloudKit: SPERRET."
+        } catch {
+            concurrencyGateReport = "AVVIST: Kan ikke lese journal: \(error.localizedDescription). CloudKit: SPERRET."
         }
     }
 

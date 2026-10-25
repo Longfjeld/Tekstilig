@@ -4398,3 +4398,16 @@ Ny knapp **Kontroller v2-journal mot CloudKit på nytt (kun lesing)** leser alle
 4. Avslutt appen helt, start igjen, velg samme backup og gjenta. Kontroller samme journal-ID.
 5. Dersom et disponibelt testtekstil kan legges til i CloudKit med samme logiske ID som et planlagt nytt tekstil, kan konfliktkontrollen testes separat; **ikke** endre CloudKit bare for denne testen uten en avtalt oppryddingsplan. Rapporter om testen ble utelatt.
 6. Kontroller at biblioteket er uendret. Behold v2-journal og ZIP. Den åpne negative testen med en annen ZIP fra 230 er fortsatt ❗️.
+
+
+## 233. Devpatch 0124 – samtidighetsporter (kun deterministisk minnesimulering)
+
+**232 ✅ godkjent av bruker. 233 ❗️ avventer test.**
+
+Ny knapp **Simuler samtidighetskonflikter før import (kun i minnet)** leser eksisterende v2-journal og kontrollert ZIP, men simulerer serverposter lokalt. En fail-closed beslutningsfunksjon sammenligner hypotetiske recordName, logisk ID og changeTag; avviser endret tag, slettet post, ny logisk ID-kollisjon og manglende opprinnelig snapshot. Positiv kontroll bruker identiske minnebilder. **Ingen ekte CloudKit-recordChangeTag leses eller lagres; ingen atomisk serverkontroll eller importskriving er implementert.** Eksisterende v2-journal og backupbinding beholdes. Dette er et avgrenset første steg mot samtidighetsbeskyttelse, ikke en fullført løsning.
+
+1. Installer devpatch 0124 på komplett eksport 0081 og bygg i Xcode 27. Stopp ved feil.
+2. Åpne Utvikling → Diagnostikk → Roadmap 7, velg samme ZIP som for test 230–232.
+3. Trykk **Simuler samtidighetskonflikter før import (kun i minnet)**. Kontroller **Samtidighetskontroll (kun simulering): OK**, samme journal-ID, og at endret changeTag, ny logisk ID-kollisjon, slettet post og manglende snapshot alle er avvist. Kontroller **Skriving til CloudKit: SPERRET**.
+4. Avslutt og start appen, velg samme ZIP og gjenta. Kontroller samme journal-ID og ingen endringer i biblioteket.
+5. Behold journal og backup. Ikke marker 233 som godkjent før bruker har validert. Negativtesten med en annen ZIP fra test 230 er fortsatt ❗️.
