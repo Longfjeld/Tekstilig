@@ -41,6 +41,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var backupBindingReport: String?
     @State private var atomicJournalReport: String?
     @State private var journalOperationAuditReport: String?
+    @State private var liveJournalRecheckReport: String?
+    @State private var isRecheckingLiveJournal = false
     @State private var emptyJournalCleanupReport: String?
     @State private var showEmptyJournalCleanupConfirmation = false
     @State private var isCheckingCombinedPreflight = false
@@ -326,6 +328,16 @@ struct DeveloperDiagnosticsView: View {
                             createBoundReadOnlyJournal()
                         }
                         .disabled(approvedDiagnosticOperations == nil || validatedZIPData == nil || isCheckingCombinedPreflight || isReadingBackup || backupDiagnostic.isRunning)
+                        Button("Kontroller v2-journal mot CloudKit på nytt (kun lesing)") {
+                            Task { await recheckBoundJournalAgainstCloudKit() }
+                        }
+                        .disabled(validatedZIPData == nil || importResult == nil || isRecheckingLiveJournal || isReadingBackup || isCheckingCombinedPreflight || backupDiagnostic.isRunning)
+                        if isRecheckingLiveJournal {
+                            BackupActivityLabel("Leser CloudKit på nytt …")
+                        }
+                        if let liveJournalRecheckReport {
+                            Text(liveJournalRecheckReport).font(.callout)
+                        }
                         Button("Kontroller journaloperasjoner mot backup (kun lokalt)") {
                             auditBoundJournalOperations()
                         }
@@ -502,6 +514,7 @@ struct DeveloperDiagnosticsView: View {
                 importJournalPlanReport = nil
                 backupBindingReport = nil
                 atomicJournalReport = nil
+                liveJournalRecheckReport = nil
                 importPlan = nil
                 conflictReport = nil
                 stabilityReport = nil
@@ -1312,6 +1325,103 @@ struct DeveloperDiagnosticsView: View {
                 "CloudKit er ikke lest på nytt. Skriving til CloudKit: SPERRET."
         } catch {
             journalOperationAuditReport = "AVVIST: Kunne ikke lese journal: \(error.localizedDescription). CloudKit: SPERRET."
+        }
+    }
+
+    // Test 232: read current CloudKit metadata again and compare the complete
+    // candidate set with the persisted v2 plan. Never updates the journal or
+    // writes CloudKit. A fresh read is not an atomic server-side reservation.
+    @MainActor
+    private func recheckBoundJournalAgainstCloudKit() async {
+        guard !isRecheckingLiveJournal, let zip = validatedZIPData,
+              let backup = importResult?.document else {
+            liveJournalRecheckReport = "AVVIST: Velg og valider backup først. CloudKit: SPERRET."
+            return
+        }
+        isRecheckingLiveJournal = true
+        liveJournalRecheckReport = nil
+        defer { isRecheckingLiveJournal = false }
+        do {
+            let journal = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
+                from: Data(contentsOf: boundReadOnlyJournalURL()))
+            guard validBoundReadOnlyJournal(journal), journal.zipSHA256 == zipDigest(zip) else {
+                liveJournalRecheckReport = "AVVIST: Ugyldig v2-journal eller feil ZIP-hash. CloudKit: SPERRET."
+                return
+            }
+            let backupIssues = journalOperationIssues(journal.operationIDs, backup: backup)
+            guard backupIssues.isEmpty else {
+                liveJournalRecheckReport = "AVVIST: Journal og backup er ikke konsistente: " +
+                    backupIssues.prefix(3).joined(separator: "; ") + ". CloudKit: SPERRET."
+                return
+            }
+            // All five types are fetched again, including image metadata without CKAsset.
+            let textiles = try await CloudKitTextileRepository().fetchTextiles()
+            let pieces = try await CloudKitPieceRepository().fetchAllPieces()
+            let materials = try await CloudKitTextileMaterialRepository().fetchAllMaterials()
+            let colors = try await CloudKitTextileColorRepository().fetchAllColors()
+            let images = try await CloudKitTextileImageRepository().fetchImageIdentitiesForImportCheck()
+            let existing: [(type: String, id: String, owner: String, record: String)] =
+                textiles.map { ("Textile", $0.textileID, $0.textileID, $0.cloudRecordName ?? "") } +
+                pieces.map { ("Piece", $0.pieceID, $0.textileID, $0.cloudRecordName ?? "") } +
+                materials.map { ("TextileMaterial", $0.materialID, $0.textileID, $0.cloudRecordName ?? "") } +
+                colors.map { ("TextileColor", $0.colorID, $0.textileID, $0.cloudRecordName ?? "") } +
+                images.map { ("TextileImage", $0.imageID, $0.textileID, $0.recordName) }
+            let liveKeys = existing.map { "\($0.type):\($0.id)" }
+            let liveRecords = existing.map { $0.record }
+            var issues: [String] = []
+            if Set(liveKeys).count != liveKeys.count { issues.append("Dupliserte logiske ID-er i CloudKit") }
+            if Set(liveRecords).count != liveRecords.count { issues.append("Dupliserte recordName i CloudKit") }
+            if existing.contains(where: { $0.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                $0.owner.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0.record.isEmpty }) {
+                issues.append("Tom ID, eier eller recordName i CloudKit")
+            }
+            let liveTextileIDs = Set(textiles.map(\.textileID))
+            let expected = backup.textiles.filter { !liveTextileIDs.contains($0.textileID) }
+                .flatMap { textile -> [String] in
+                    ["Textile:\(textile.textileID)"] +
+                    textile.pieces.map { "Piece:\($0.pieceID)" } +
+                    textile.materials.map { "TextileMaterial:\($0.materialID)" } +
+                    textile.colors.map { "TextileColor:\($0.colorID)" } +
+                    textile.images.map { "TextileImage:\($0.imageID)" }
+                }
+            let planned = Set(journal.operationIDs)
+            let current = Set(expected)
+            let missing = planned.subtracting(current).sorted()
+            let added = current.subtracting(planned).sorted()
+            if !missing.isEmpty { issues.append("Journaloperasjoner er ikke lenger kandidater: " + missing.prefix(3).joined(separator: ", ")) }
+            if !added.isEmpty { issues.append("Nye importkandidater mangler i journalen: " + added.prefix(3).joined(separator: ", ")) }
+            let liveKeySet = Set(liveKeys)
+            if !current.isDisjoint(with: liveKeySet) {
+                issues.append("Logisk ID-kollisjon mellom importkandidater og CloudKit")
+            }
+            let candidateNames = expected.map { key in
+                "tekstilig-import-v1-" + key.utf8.map { String(format: "%02x", $0) }.joined()
+            }
+            let recordSet = Set(liveRecords)
+            if candidateNames.contains(where: { $0.utf8.count > 255 || recordSet.contains($0) }) {
+                issues.append("Kandidatens recordName er for langt eller finnes allerede")
+            }
+            // Negative test uses in-memory sets only; the on-disk journal is untouched.
+            let altered = planned.union(["Piece:diagnostic-not-in-backup"])
+            guard altered != current else {
+                liveJournalRecheckReport = "AVVIST: Negativtest feilet. CloudKit: SPERRET."
+                return
+            }
+            if !issues.isEmpty {
+                liveJournalRecheckReport = "AVVIST: CloudKit-tilstand samsvarer ikke med lagret importplan.\n" +
+                    issues.prefix(6).joined(separator: "\n") +
+                    "\nJournalen er uendret. Skriving til CloudKit: SPERRET."
+                return
+            }
+            liveJournalRecheckReport = "Ny CloudKit-kontroll mot v2-journal: FORELØPIG OK – IKKE SKRIVEKLAR.\n" +
+                "Journal-ID: \(journal.journalID.uuidString). Operasjoner: \(journal.operationIDs.count).\n" +
+                "Samme kandidatmengde: OK. Fem posttyper lest: OK. Negativtest i minnet: OK.\n" +
+                "VIKTIG: Ingen opprinnelig CloudKit-snapshot er lagret i v2-journalen. " +
+                "Endringer som ikke påvirker kandidatsettet kan ikke påvises historisk. " +
+                "Lesingen er ikke atomisk og gir ingen lås/reservasjon. " +
+                "Skriving til CloudKit: SPERRET."
+        } catch {
+            liveJournalRecheckReport = "AVVIST: CloudKit-kontroll feilet: \(error.localizedDescription). Skriving til CloudKit: SPERRET."
         }
     }
 

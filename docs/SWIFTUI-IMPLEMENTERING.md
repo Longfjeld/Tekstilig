@@ -4382,3 +4382,19 @@ Ny knapp **Kontroller journaloperasjoner mot backup (kun lokalt)** leser v2-jour
 2. Velg **samme ZIP-backup som i test 230**, åpne Roadmap 7, og trykk **Kontroller journaloperasjoner mot backup (kun lokalt)**. Ingen ny samlet importkontroll er nødvendig.
 3. Kontroller **Journaloperasjoner mot valgt backup: OK**, journal-ID, operasjonstall, SHA-256 og **Skriving til CloudKit: SPERRET**. Negativtester skal vise at ekstra operasjon er avvist og, dersom underposter finnes, at utelatt underpost avvises.
 4. Avslutt og start appen, velg samme backup og gjenta kontrollen. Bekreft uendret journal-ID og bibliotek. Test 231 markeres først ✅ etter brukerbekreftelse.
+
+
+## 232. Devpatch 0123 – ny CloudKit-lesing mot lagret v2-importplan
+
+**231 ✅ godkjent av bruker. 232 ❗️ – avventer test.**
+
+Ny knapp **Kontroller v2-journal mot CloudKit på nytt (kun lesing)** leser alle fem posttyper fra CloudKit, sammenligner nåværende komplette importkandidatmengde med den lagrede v2-journalen, kontrollerer dupliserte ID-er, recordName og kollisjoner, og avviser endret kandidatsett. Valgt ZIP og journalens SHA-256 valideres først. En negativtest manipulerer kun en minnekopi. Journalen og CloudKit endres aldri.
+
+**Begrensning:** V2-journalen lagrer ikke opprinnelig CloudKit-snapshot, og kontrollen kan derfor **ikke** bevise at eksisterende poster er uendret historisk. CloudKit-lesingene er heller ikke atomiske; dette er **ikke** en garanti for trygg import eller en skriveklar plan. Endringer som ikke påvirker kandidatmengden kan gå uoppdaget.
+
+1. Installer devpatch 0123 på full eksport 0080 og bygg i Xcode 27. Stopp ved byggefeil.
+2. Åpne **Utvikling → Diagnostikk → Roadmap 7**, velg samme ZIP som for test 230–231. Trykk **Kontroller v2-journal mot CloudKit på nytt (kun lesing)**.
+3. Kontroller **FORELØPIG OK – IKKE SKRIVEKLAR**, samme journal-ID, operasjonstall, fem posttyper lest, negativtest OK og **Skriving til CloudKit: SPERRET**. Ved AVVIST: send hele rapporten og stopp; **ikke** endre eller slette journalen for å få grønt resultat.
+4. Avslutt appen helt, start igjen, velg samme backup og gjenta. Kontroller samme journal-ID.
+5. Dersom et disponibelt testtekstil kan legges til i CloudKit med samme logiske ID som et planlagt nytt tekstil, kan konfliktkontrollen testes separat; **ikke** endre CloudKit bare for denne testen uten en avtalt oppryddingsplan. Rapporter om testen ble utelatt.
+6. Kontroller at biblioteket er uendret. Behold v2-journal og ZIP. Den åpne negative testen med en annen ZIP fra 230 er fortsatt ❗️.
