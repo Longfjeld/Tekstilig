@@ -4322,3 +4322,8 @@ Ny knapp **Gjenfinn og valider importplanjournal (ingen import)** er tilgjengeli
 3. Trykk **Gjenfinn og valider importplanjournal (ingen import)**. Kontroller **Importplanjournal gjenfunnet og validert: OK**, journal-ID, antall operasjoner, **Fullførte: 0**, negativtestene **avvist: OK** og **Skriving til CloudKit: SPERRET**. Stopp ved feil.
 4. Trykk knappen på nytt og kontroller samme journal-ID (filen beholdes). Kontroller at biblioteket er uendret. Gjenta på iPhone og iPad **der test 227 opprettet journal**. Merk at journalen er lokal per enhet.
 5. Dersom journalen ikke finnes, **ikke** opprett en ny uten å avklare resultatet først; meld tilbake **Ingen lagret importplanjournal funnet**.
+
+
+### Rettelse for test 228 – devpatch 0117
+
+**228 ❗️ – ny validering kreves.** Test 227 lagret operasjons-ID-er med faktiske posttypenavn (`Textile`, `Piece`, `TextileMaterial`, `TextileColor`, `TextileImage`), mens første versjon av test 228 validerte mot feilaktige små bokstaver og kortnavn. Derfor ble en gyldig journal avvist etter omstart. Devpatch 0117 retter bare tillatte posttypenavn i validatoren; eksisterende journal skal **ikke slettes eller overskrives**. Kjør test 228 på nytt uten valgt backup og kontroller samme journal-ID ved gjentatt kontroll. Ingen CloudKit-skriving.

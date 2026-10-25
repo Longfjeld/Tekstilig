@@ -952,7 +952,7 @@ struct DeveloperDiagnosticsView: View {
               journal.completedOperationCount == 0,
               !journal.operationIDs.isEmpty,
               journal.operationIDs.count == Set(journal.operationIDs).count else { return false }
-        let allowedTypes: Set<String> = ["textile", "piece", "material", "color", "image"]
+        let allowedTypes: Set<String> = ["Textile", "Piece", "TextileMaterial", "TextileColor", "TextileImage"]
         return journal.operationIDs.allSatisfy { operation in
             let parts = operation.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
             return parts.count == 2 && allowedTypes.contains(String(parts[0])) &&
