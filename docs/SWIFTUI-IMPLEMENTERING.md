@@ -4348,7 +4348,7 @@ Ny knapp **Gjenfinn og valider importplanjournal (ingen import)** er tilgjengeli
 
 ## 229. Devpatch 0120 – lokal SHA-256-binding mellom ZIP-backup og eksisterende testjournal
 
-**229 ❗️ – avventer validering. 228 ✅ validert OK av bruker.**
+**229 ✅ – validert OK av bruker. 228 ✅ validert OK av bruker.**
 
 Eksisterende journal fra test 228 bevares uendret. Ny lokal sidefil `read-only-import-binding-v1.json` lagrer journal-ID, operasjons-ID-er og SHA-256 av de eksakte ZIP-bytene som brukeren velger. Bindingen overskrives ikke. Kontroll avviser endret ZIP, feil journal-ID og endret operasjonsliste. Negativtesten for endret ZIP utføres kun i minnet. **Begrensning:** Den gamle journalen inneholder ikke hash fra opprettelsestidspunktet; bindingen beviser derfor ikke historisk at journalen opprinnelig ble opprettet fra denne ZIP-en. Dette må bygges inn ved journalopprettelse før faktisk import kan vurderes. Ingen CloudKit-skriving.
 
@@ -4357,3 +4357,17 @@ Eksisterende journal fra test 228 bevares uendret. Ny lokal sidefil `read-only-i
 3. Trykk «Kontroller backupbinding mot journal (kun lokalt)». Kontroller OK og at endret ZIP avvises i minnet.
 4. Avslutt og start appen på nytt, velg den samme ZIP-filen og kjør kontrollen på nytt. Kontroller samme journal-ID og OK.
 5. Velg en annen gyldig ZIP-backup dersom tilgjengelig og kontroller at den avvises ved ulik hash. Velg deretter originalen på nytt og kontroller OK. Ikke slett journalen eller sidefilen. CloudKit skal være uendret.
+
+
+## 230. Devpatch 0121 – SHA-256 i journalen ved opprettelse (kun lokalt)
+
+**230 ❗️ – avventer validering. 229 ✅ validert OK av bruker.**
+
+Ny, separat `read-only-import-plan-v2.json` lagrer journal-ID, planlagte operasjoner og SHA-256 av de validerte ZIP-bytene **i samme atomiske filskriving**. Krever konfliktfri samlet CloudKit-forhåndskontroll og minst én operasjon. Eksisterende v1-journal og binding fra test 229 beholdes uendret. Eksisterende v2-journal overskrives aldri. Kontroll leser v2-filen, validerer format og sammenligner hash med valgt ZIP; endret ZIP avvises i minnet. Ingen CloudKit-skriving. V2 er fortsatt kun diagnostikk og kan ikke gjenoppta reell import.
+
+1. Installer devpatch 0121 på full eksport 0078, bygg med Xcode 27. Stopp ved feil.
+2. Velg samme gyldige ZIP som tidligere, kjør «Samlet importkontroll for alle fem posttyper (kun lesing)». Krever minst én kandidat og «FORELØPIG OK – IKKE SKRIVEKLAR». Stopp ved avvisning.
+3. Trykk «Opprett ny importplanjournal med innebygd SHA-256 (kun lokalt)». Kontroller OK, journal-ID, SHA-256, >0 operasjoner, Fullførte 0, CloudKit SPERRET.
+4. Trykk samme knapp igjen og kontroller at overskriving avvises. Trykk «Kontroller ny journal og backupbinding (kun lokalt)» og kontroller OK.
+5. Avslutt appen, start igjen, velg samme ZIP og kontroller v2-journalen på nytt. Kontroller samme journal-ID og SHA-256.
+6. Velg en annen gyldig ZIP med ulikt innhold og kontroller AVVIST ved hash-avvik. Velg originalen igjen og kontroller OK. Behold alle journalfiler for senere tester.
