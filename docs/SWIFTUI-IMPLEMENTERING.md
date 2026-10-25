@@ -4439,3 +4439,16 @@ To nye knapper i Roadmap 7 lagrer en **separat, uforanderlig lokal baseline** (`
 5. Trykk **Sammenlign CloudKit med lagret versjonsbaseline (kun lesing)**. Forvent OK og uendret journal-ID dersom ingen andre enheter har endret CloudKit.
 6. Avslutt appen helt, start igjen, velg samme ZIP og gjenta sammenligningen. Kontroller OK, samme journal-ID og antall poster.
 7. Kontroller at biblioteket er uendret. Behold v1/v2-journal, backupbinding, versjonsbaseline og ZIP. **Ikke fremprovoser CloudKit-endringer** i denne testen. Negativtesten med en annen ZIP fra 230 er fortsatt ❗️.
+
+
+## 236. Devpatch 0127 – skriveport mot faktisk CloudKit-baseline (ingen skriving)
+
+**235 ✅ godkjent av bruker. 236 ❗️ avventer validering.**
+
+Ny knapp **Test skriveport mot CloudKit-baseline (ingen skriving)** leser v2-journal og lagret baseline, kontrollerer valgt ZIP-hash, henter alle fem CloudKit-posttypers faktiske versjoner på nytt og avviser avvik. Deretter kjøres deterministiske minnetester som avviser endret `recordChangeTag`, slettet post, ny post og duplikater. Filer overskrives ikke. **Dette er ikke en reell atomisk skriveport**: CloudKit kan endres etter lesing, og ingen `CKRecord`-lagring er utført. Skriving er fortsatt sperret.
+
+1. Installer devpatch 0127 på full eksport 0084. Bygg i Xcode 27 og stopp ved feil.
+2. Åpne Utvikling → Diagnostikk → Roadmap 7 og velg samme ZIP som journalen og baseline er bundet til.
+3. Trykk **Test skriveport mot CloudKit-baseline (ingen skriving)**. Forvent **KONTROLL OK – IKKE SKRIVEKLAR**, uendret journal-ID, antall poster, negative minnetester OK og **CloudKit: SPERRET**. Ved AVVIST: send rapporten, ikke slett journal eller baseline.
+4. Avslutt appen helt, start igjen, velg samme ZIP og gjenta kontrollen. Bekreft samme journal-ID og OK.
+5. Bekreft uendret bibliotek og behold alle journaler, baseline og backup. Negativtesten med annen ZIP fra test 230 er fortsatt ❗️.

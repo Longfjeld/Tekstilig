@@ -45,6 +45,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var liveJournalRecheckReport: String?
     @State private var concurrencyGateReport: String?
     @State private var liveVersionReport: String?
+    @State private var writeGateReport: String?
+    @State private var isCheckingWriteGate = false
     @State private var versionBaselineReport: String?
     @State private var isCheckingVersionBaseline = false
     @State private var isReadingLiveVersions = false
@@ -374,6 +376,16 @@ struct DeveloperDiagnosticsView: View {
                         }
                         if let versionBaselineReport {
                             Text(versionBaselineReport).font(.callout)
+                        }
+                        Button("Test skriveport mot CloudKit-baseline (ingen skriving)") {
+                            Task { await testCloudKitWriteGate() }
+                        }
+                        .disabled(isCheckingWriteGate || isCheckingVersionBaseline || validatedZIPData == nil || importResult == nil)
+                        if isCheckingWriteGate {
+                            BackupActivityLabel("Kontrollerer skriveport uten å skrive …")
+                        }
+                        if let writeGateReport {
+                            Text(writeGateReport).font(.callout)
                         }
                         Button("Kontroller journaloperasjoner mot backup (kun lokalt)") {
                             auditBoundJournalOperations()
@@ -1718,6 +1730,79 @@ struct DeveloperDiagnosticsView: View {
         } catch {
             versionBaselineReport = "AVVIST: \(error.localizedDescription). " +
                 "Ingen CloudKit-skriving. Eksisterende filer beholdes. CloudKit: SPERRET."
+        }
+    }
+
+    // Test 236: fail-closed decision gate only. No CKModifyRecordsOperation or save calls.
+    // A successful read is NOT an authorization to write: CloudKit reads are non-atomic.
+    private func baselineMatches(_ expected: [CloudKitVersionEntry],
+                                 _ observed: [CloudKitVersionEntry]) -> Bool {
+        func valid(_ entries: [CloudKitVersionEntry]) -> Bool {
+            let keys = entries.map { "\($0.recordType):\($0.recordName)" }
+            return Set(keys).count == keys.count && entries.allSatisfy {
+                !$0.recordType.isEmpty && !$0.recordName.isEmpty && !$0.changeTag.isEmpty
+            }
+        }
+        return valid(expected) && valid(observed) &&
+            Set(expected.map { "\($0.recordType):\($0.recordName):\($0.changeTag)" }) ==
+            Set(observed.map { "\($0.recordType):\($0.recordName):\($0.changeTag)" })
+    }
+
+    @MainActor
+    private func testCloudKitWriteGate() async {
+        guard !isCheckingWriteGate else { return }
+        isCheckingWriteGate = true
+        writeGateReport = nil
+        defer { isCheckingWriteGate = false }
+        do {
+            guard let zip = validatedZIPData, importResult != nil else {
+                throw NSError(domain: "TekstiligWriteGate", code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Velg og valider ZIP-backup først"])
+            }
+            let journal = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
+                from: Data(contentsOf: boundReadOnlyJournalURL()))
+            guard validBoundReadOnlyJournal(journal), journal.zipSHA256 == zipDigest(zip) else {
+                throw NSError(domain: "TekstiligWriteGate", code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "Journal/backup-binding er ugyldig"])
+            }
+            let baseline = try JSONDecoder().decode(CloudKitVersionBaseline.self,
+                from: Data(contentsOf: cloudKitVersionBaselineURL()))
+            guard baseline.schemaVersion == 1, baseline.journalID == journal.journalID,
+                  baseline.zipSHA256 == journal.zipSHA256 else {
+                throw NSError(domain: "TekstiligWriteGate", code: 3,
+                    userInfo: [NSLocalizedDescriptionKey: "Baseline tilhører ikke journal/backup"])
+            }
+            let current = try await readCloudKitVersionEntries()
+            guard baselineMatches(baseline.entries, current) else {
+                writeGateReport = "AVVIST: CloudKit er endret eller baseline er ugyldig. " +
+                    "Ingen skriveoperasjon utført. CloudKit: SPERRET."
+                return
+            }
+            // All mutations below are confined to memory; persistent baseline remains untouched.
+            let sample = CloudKitVersionEntry(recordType: "Textile", recordName: "test-236", changeTag: "1")
+            let original = [sample]
+            let changed = [CloudKitVersionEntry(recordType: sample.recordType,
+                recordName: sample.recordName, changeTag: "2")]
+            let duplicate = [sample, sample]
+            let added = [sample, CloudKitVersionEntry(recordType: "Piece",
+                recordName: "test-236-extra", changeTag: "1")]
+            let negativeOK = baselineMatches(original, original) &&
+                !baselineMatches(original, changed) &&
+                !baselineMatches(original, []) &&
+                !baselineMatches(original, added) &&
+                !baselineMatches(duplicate, duplicate)
+            guard negativeOK else {
+                throw NSError(domain: "TekstiligWriteGate", code: 4,
+                    userInfo: [NSLocalizedDescriptionKey: "En eller flere negative minnetester feilet"])
+            }
+            writeGateReport = "Skriveport mot ekte CloudKit-baseline: KONTROLL OK – IKKE SKRIVEKLAR.\n" +
+                "Journal-ID: \(journal.journalID.uuidString). Poster: \(current.count).\n" +
+                "Uendret baseline: OK. Endret tag, slettet post, ny post og duplikat avvist i minnet: OK.\n" +
+                "Ingen atomisk serverlås eller betinget CKRecord-lagring er testet. " +
+                "Ingen skriveoperasjon utført. CloudKit: SPERRET."
+        } catch {
+            writeGateReport = "AVVIST: \(error.localizedDescription). " +
+                "Journal og baseline beholdes. Ingen skriveoperasjon utført. CloudKit: SPERRET."
         }
     }
 
