@@ -4337,3 +4337,10 @@ Ny knapp **Gjenfinn og valider importplanjournal (ingen import)** er tilgjengeli
 2. Åpne Utvikling → Diagnostikk → Roadmap 7 og velg «Gjenfinn og valider importplanjournal (ingen import)». Backup er ikke nødvendig.
 3. Hvis rapporten viser AVVIST, kopier hele rapporten med «Valideringsfeil» og send den til gjennomgang. Ikke opprett en ny journal.
 4. Hvis rapporten viser OK, gjenta kontrollen og verifiser samme journal-ID og uendret bibliotek. Først da kan 228 godkjennes.
+
+
+### Rettelse test 228 – devpatch 0119 (basert på full eksport 0076)
+
+**228 ❗️ – avventer ny validering.** Årsak bekreftet med devpatch 0118: test 227 tillot tom operasjonsliste (0 nye tekstiler), mens test 228 avviser den. Rettelse: Journalopprettelse avviser nå 0 operasjoner og skriver ingen fil. En egen knapp kan etter bekreftelse slette **bare** lokal `read-only-import-plan-v1.json` når den dekoder korrekt, har schemaVersion 1, state `planned-read-only`, 0 operasjoner og 0 fullførte. Alle andre journaler beholdes. Ingen CloudKit-skriving eller automatisk nettsletting.
+
+❗️ Test: 1. Bygg. 2. På Mac, slett tom lokal journal med den nye knappen og bekreft. 3. Velg backup der alle tekstiler allerede finnes i CloudKit; kjør samlet importkontroll og forsøk å lagre journal; forvent tydelig AVVIST 0 operasjoner. 4. Sørg for at minst ett tekstil i backup ikke finnes i CloudKit (testdata kan slettes manuelt via appen etter eget valg), kjør samlet kontroll på nytt og lagre journal; forvent >0 operasjoner. 5. Avslutt og start appen på nytt, gjenfinn journal uten backup; forvent OK og samme journal-ID ved gjentakelse. 6. Bekreft ingen importskriving og ingen uønsket endring i biblioteket. Ikke marker 228 som godkjent før bruker har bekreftet.

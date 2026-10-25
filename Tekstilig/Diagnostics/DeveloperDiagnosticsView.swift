@@ -37,6 +37,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var approvedDiagnosticOperations: [String]?
     @State private var importJournalPlanReport: String?
     @State private var importJournalRecoveryReport: String?
+    @State private var emptyJournalCleanupReport: String?
+    @State private var showEmptyJournalCleanupConfirmation = false
     @State private var isCheckingCombinedPreflight = false
     @State private var imageIdentityReport: String?
     @State private var isCheckingImageIdentity = false
@@ -315,6 +317,23 @@ struct DeveloperDiagnosticsView: View {
                         .disabled(approvedDiagnosticOperations == nil || isCheckingCombinedPreflight || isReadingBackup || backupDiagnostic.isRunning)
                         if let importJournalPlanReport {
                             Text(importJournalPlanReport).font(.callout)
+                        }
+                        Button("Slett ugyldig tom importplanjournal (kun lokal testfil)", role: .destructive) {
+                            showEmptyJournalCleanupConfirmation = true
+                        }
+                        .confirmationDialog(
+                            "Slette lokal importplanjournal med null operasjoner?",
+                            isPresented: $showEmptyJournalCleanupConfirmation,
+                            titleVisibility: .visible
+                        ) {
+                            Button("Slett bare tom lokal testjournal", role: .destructive) {
+                                removeEmptyReadOnlyImportPlanJournal()
+                            }
+                        } message: {
+                            Text("Sletter kun read-only-import-plan-v1.json dersom den er lesbar og har null operasjoner og null fullførte. Ingen CloudKit-data slettes.")
+                        }
+                        if let emptyJournalCleanupReport {
+                            Text(emptyJournalCleanupReport).font(.callout)
                         }
                         Button("Kontroller bildeidentiteter og eierskap (kun lesing)") {
                             Task { await checkImportImageIdentities() }
@@ -897,6 +916,10 @@ struct DeveloperDiagnosticsView: View {
             importJournalPlanReport = "AVVIST: Kjør konfliktfri samlet importkontroll først. CloudKit: SPERRET."
             return
         }
+        guard !operations.isEmpty else {
+            importJournalPlanReport = "AVVIST: Importplanen har 0 operasjoner. Alle tekstiler i backup finnes allerede i CloudKit, eller backupen inneholder ingen tekstiler. Ingen journal opprettet. CloudKit: SPERRET."
+            return
+        }
         guard operations.count == Set(operations).count,
               operations.allSatisfy({ !$0.isEmpty && !$0.hasSuffix(":") }) else {
             importJournalPlanReport = "AVVIST: Ugyldige operasjonsidentiteter. CloudKit: SPERRET."
@@ -944,6 +967,34 @@ struct DeveloperDiagnosticsView: View {
             appropriateFor: nil, create: true
         ).appendingPathComponent("TekstiligImportDiagnostics", isDirectory: true)
         return directory.appendingPathComponent("read-only-import-plan-v1.json")
+    }
+
+    // Recovery of the test-227 regression: remove ONLY a decoded empty local
+    // read-only journal. Never delete a nonempty or undecodable journal.
+    @MainActor
+    private func removeEmptyReadOnlyImportPlanJournal() {
+        do {
+            let url = try readOnlyImportPlanURL()
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                emptyJournalCleanupReport = "Ingen lokal importplanjournal å slette. CloudKit: SPERRET."
+                return
+            }
+            let journal = try JSONDecoder().decode(
+                ReadOnlyImportPlanJournal.self, from: Data(contentsOf: url)
+            )
+            guard journal.schemaVersion == 1,
+                  journal.state == "planned-read-only",
+                  journal.operationIDs.isEmpty,
+                  journal.completedOperationCount == 0 else {
+                emptyJournalCleanupReport = "AVVIST: Journalen er ikke en tom testjournal. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            try FileManager.default.removeItem(at: url)
+            emptyJournalCleanupReport = "Tom lokal testjournal slettet: OK. Journal-ID: \(journal.journalID.uuidString). Ingen CloudKit-data endret."
+            importJournalRecoveryReport = nil
+        } catch {
+            emptyJournalCleanupReport = "AVVIST: Kan ikke kontrollere eller slette lokal testjournal: \(error.localizedDescription). CloudKit: SPERRET."
+        }
     }
 
     private func validReadOnlyImportPlan(_ journal: ReadOnlyImportPlanJournal) -> Bool {
