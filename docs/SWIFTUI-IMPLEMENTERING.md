@@ -4371,3 +4371,14 @@ Ny, separat `read-only-import-plan-v2.json` lagrer journal-ID, planlagte operasj
 4. Trykk samme knapp igjen og kontroller at overskriving avvises. Trykk «Kontroller ny journal og backupbinding (kun lokalt)» og kontroller OK.
 5. Avslutt appen, start igjen, velg samme ZIP og kontroller v2-journalen på nytt. Kontroller samme journal-ID og SHA-256.
 6. Velg en annen gyldig ZIP med ulikt innhold og kontroller AVVIST ved hash-avvik. Velg originalen igjen og kontroller OK. Behold alle journalfiler for senere tester.
+
+## 231. Devpatch 0122 – sammenlign v2-journaloperasjoner med valgt backup
+
+**230 ✅ for gjennomførte kontroller (negativ test med annen ZIP ❗️ ikke utført). 231 ❗️ – avventer brukerens test.**
+
+Ny knapp **Kontroller journaloperasjoner mot backup (kun lokalt)** leser v2-journalen og valgt, validert ZIP uten å endre filer. Kontrollerer SHA-256, at alle operasjons-ID-er finnes i backupen, at alle underposter for valgte tekstiler er med, at underposter ikke er inkludert uten sin eier, og at backupen ikke inneholder dupliserte ID-er innen posttype. Ekstra operasjon og utelatt underpost simuleres kun i minnet. Kontrollen beviser **ikke** at alle tekstiler som er nye relativt til CloudKit er inkludert: Dette krever ny serverlesing og vurdering av samtidighet i senere tester. Ingen CloudKit-skriving.
+
+1. Installer devpatch 0122 på komplett eksport 0079, bygg i Xcode 27.
+2. Velg **samme ZIP-backup som i test 230**, åpne Roadmap 7, og trykk **Kontroller journaloperasjoner mot backup (kun lokalt)**. Ingen ny samlet importkontroll er nødvendig.
+3. Kontroller **Journaloperasjoner mot valgt backup: OK**, journal-ID, operasjonstall, SHA-256 og **Skriving til CloudKit: SPERRET**. Negativtester skal vise at ekstra operasjon er avvist og, dersom underposter finnes, at utelatt underpost avvises.
+4. Avslutt og start appen, velg samme backup og gjenta kontrollen. Bekreft uendret journal-ID og bibliotek. Test 231 markeres først ✅ etter brukerbekreftelse.

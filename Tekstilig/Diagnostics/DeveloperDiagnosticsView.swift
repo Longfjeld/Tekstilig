@@ -40,6 +40,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var importJournalRecoveryReport: String?
     @State private var backupBindingReport: String?
     @State private var atomicJournalReport: String?
+    @State private var journalOperationAuditReport: String?
     @State private var emptyJournalCleanupReport: String?
     @State private var showEmptyJournalCleanupConfirmation = false
     @State private var isCheckingCombinedPreflight = false
@@ -325,6 +326,13 @@ struct DeveloperDiagnosticsView: View {
                             createBoundReadOnlyJournal()
                         }
                         .disabled(approvedDiagnosticOperations == nil || validatedZIPData == nil || isCheckingCombinedPreflight || isReadingBackup || backupDiagnostic.isRunning)
+                        Button("Kontroller journaloperasjoner mot backup (kun lokalt)") {
+                            auditBoundJournalOperations()
+                        }
+                        .disabled(validatedZIPData == nil || importResult == nil || isReadingBackup || backupDiagnostic.isRunning)
+                        if let journalOperationAuditReport {
+                            Text(journalOperationAuditReport).font(.callout)
+                        }
                         Button("Kontroller ny journal og backupbinding (kun lokalt)") {
                             verifyBoundReadOnlyJournal()
                         }
@@ -1216,6 +1224,94 @@ struct DeveloperDiagnosticsView: View {
                 "Ingen CloudKit-skriving. Dette er ikke en gjenopptakbar import. CloudKit: SPERRET."
         } catch {
             atomicJournalReport = "AVVIST: Ny journal mangler eller kan ikke leses: \(error.localizedDescription). CloudKit: SPERRET."
+        }
+    }
+
+    // Test 231: compare the persisted operation plan to the selected backup.
+    // The journal is never changed. This does not recheck the live CloudKit snapshot.
+    private func journalOperationIssues(_ operations: [String], backup: TekstiligBackupDocument) -> [String] {
+        var issues: [String] = []
+        var allKeys = Set<String>()
+        var childrenByOwner: [String: [String]] = [:]
+        var textileKeys = Set<String>()
+        for textile in backup.textiles {
+            let owner = textile.textileID
+            let textileKey = "Textile:\(owner)"
+            if !allKeys.insert(textileKey).inserted { issues.append("Duplisert tekstil-ID i backup") }
+            textileKeys.insert(textileKey)
+            let children =
+                textile.pieces.map { "Piece:\($0.pieceID)" } +
+                textile.materials.map { "TextileMaterial:\($0.materialID)" } +
+                textile.colors.map { "TextileColor:\($0.colorID)" } +
+                textile.images.map { "TextileImage:\($0.imageID)" }
+            childrenByOwner[textileKey] = children
+            for key in children {
+                if !allKeys.insert(key).inserted { issues.append("Duplisert underpost-ID i backup: \(key)") }
+            }
+        }
+        let operationSet = Set(operations)
+        for key in operations where !allKeys.contains(key) {
+            issues.append("Operasjon mangler i valgt backup: \(key)")
+        }
+        let selectedTextiles = operationSet.intersection(textileKeys)
+        for textileKey in selectedTextiles {
+            for child in childrenByOwner[textileKey] ?? [] where !operationSet.contains(child) {
+                issues.append("Underpost mangler for valgt tekstil: \(child)")
+            }
+        }
+        for (textileKey, children) in childrenByOwner where !selectedTextiles.contains(textileKey) {
+            for child in children where operationSet.contains(child) {
+                issues.append("Underpost uten valgt eier: \(child)")
+            }
+        }
+        if selectedTextiles.isEmpty { issues.append("Ingen Textile-operasjon i journalen") }
+        return issues
+    }
+
+    @MainActor
+    private func auditBoundJournalOperations() {
+        guard let zip = validatedZIPData, let backup = importResult?.document else {
+            journalOperationAuditReport = "AVVIST: Velg og valider ZIP-backup. CloudKit: SPERRET."
+            return
+        }
+        do {
+            let journal = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
+                from: Data(contentsOf: boundReadOnlyJournalURL()))
+            guard validBoundReadOnlyJournal(journal) else {
+                journalOperationAuditReport = "AVVIST: Ugyldig v2-journal. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            guard journal.zipSHA256 == zipDigest(zip) else {
+                journalOperationAuditReport = "AVVIST: ZIP-hash avviker fra journal. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            let issues = journalOperationIssues(journal.operationIDs, backup: backup)
+            guard issues.isEmpty else {
+                journalOperationAuditReport = "AVVIST: Journaloperasjoner samsvarer ikke med backup: " +
+                    issues.prefix(5).joined(separator: "; ") + ". CloudKit: SPERRET."
+                return
+            }
+            // Negative tests mutate only in-memory arrays, never the stored journal.
+            let invented = journal.operationIDs + ["Piece:nonexistent-diagnostic-id"]
+            let childIndex = journal.operationIDs.firstIndex { !$0.hasPrefix("Textile:") }
+            let removed = childIndex.map { index in
+                journal.operationIDs.enumerated().compactMap { $0.offset == index ? nil : $0.element }
+            }
+            guard !journalOperationIssues(invented, backup: backup).isEmpty,
+                  removed == nil || !journalOperationIssues(removed!, backup: backup).isEmpty else {
+                journalOperationAuditReport = "AVVIST: Negativtest av endret operasjonsliste feilet. CloudKit: SPERRET."
+                return
+            }
+            journalOperationAuditReport = "Journaloperasjoner mot valgt backup: OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString). Operasjoner: \(journal.operationIDs.count).\n" +
+                "Alle operasjoner finnes i backup: OK. Underposter og eierskap: OK.\n" +
+                "Ekstra operasjon avvist i minnet: OK. " +
+                (removed == nil ? "Manglende underpost: ikke relevant (ingen underposter). " : "Manglende underpost avvist i minnet: OK. ") +
+                "SHA-256 samsvarer: OK.\n" +
+                "Begrensning: Dette bekrefter ikke at alle nye tekstiler i CloudKit-øyeblikksbildet ble valgt; " +
+                "CloudKit er ikke lest på nytt. Skriving til CloudKit: SPERRET."
+        } catch {
+            journalOperationAuditReport = "AVVIST: Kunne ikke lese journal: \(error.localizedDescription). CloudKit: SPERRET."
         }
     }
 
