@@ -4367,6 +4367,8 @@ Eksisterende journal fra test 228 bevares uendret. Ny lokal sidefil `read-only-i
 
 **230 ❗️ – avventer validering. 229 ✅ validert OK av bruker.**
 
+**Minimal rettelse 2026-11-01 – implementert, ikke brukervalidert:** `verifyBoundReadOnlyJournal()` bruker nå `existingIdentityDiagnosticURL("read-only-import-plan-v2.json")` med `create: false`, i stedet for URL-kjeden som kunne opprette Application Support-katalogen. Manglende katalog/journal gir eksisterende kontrollerte AVVIST-melding. Hashkontroll, godkjennings-/avvisningsmeldinger, journalformat og øvrige URL-kallere er uendret. Verifikasjonen leser ikke baseline og utfører ingen CloudKit-operasjoner. Ved gjenstående negativtest skal eksisterende grunnlag bevares; bruk bare «Velg ZIP-backup …» og «Kontroller ny journal og backupbinding (kun lokalt)». Ikke gjenta historikkens journalopprettelse. Alternativ ZIP må være en eksisterende gyldig backup med forskjellig SHA-256. Restpunktet forblir ❗️ til begge utfall er bekreftet av brukeren.
+
 Ny, separat `read-only-import-plan-v2.json` lagrer journal-ID, planlagte operasjoner og SHA-256 av de validerte ZIP-bytene **i samme atomiske filskriving**. Krever konfliktfri samlet CloudKit-forhåndskontroll og minst én operasjon. Eksisterende v1-journal og binding fra test 229 beholdes uendret. Eksisterende v2-journal overskrives aldri. Kontroll leser v2-filen, validerer format og sammenligner hash med valgt ZIP; endret ZIP avvises i minnet. Ingen CloudKit-skriving. V2 er fortsatt kun diagnostikk og kan ikke gjenoppta reell import.
 
 1. Installer devpatch 0121 på full eksport 0078, bygg med Xcode 27. Stopp ved feil.

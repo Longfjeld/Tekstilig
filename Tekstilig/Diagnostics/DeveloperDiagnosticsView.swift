@@ -639,7 +639,7 @@ struct DeveloperDiagnosticsView: View {
         }
     }
 
-    // Test 238 has its own URL lookup: the older helpers request create: true.
+    // Tests 230 verification and 238 only look up existing paths; older helpers request create: true.
     private func existingIdentityDiagnosticURL(_ name: String) throws -> URL {
         try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
             appropriateFor: nil, create: false)
@@ -1431,7 +1431,7 @@ struct DeveloperDiagnosticsView: View {
         }
         do {
             let journal = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
-                from: Data(contentsOf: boundReadOnlyJournalURL()))
+                from: Data(contentsOf: existingIdentityDiagnosticURL("read-only-import-plan-v2.json")))
             guard validBoundReadOnlyJournal(journal) else {
                 atomicJournalReport = "AVVIST: Ny journal er ugyldig. Filen beholdes. CloudKit: SPERRET."
                 return

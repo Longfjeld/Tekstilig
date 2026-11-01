@@ -29,6 +29,7 @@ Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.m
 ## Åpne problemer og uavklarte tester
 
 - **Test 230 ❗️, avgrenset restpunkt:** negativtest med en annen gyldig ZIP med ulikt innhold/hash er fortsatt uavklart. Tidligere validerte kontroller beholdes som validert; restpunktet lukkes ikke gjennom test 237.
+- Minimal rettelse for test 230 er implementert: journalverifikasjonen bruker eksisterende URL-lesesti med `create: false`, slik at den ikke oppretter kataloger. Eksisterende skrivefunksjoner og journaldata er urørt. Rettelsen og negativtesten avventer brukervalidering; en alternativ, eksisterende gyldig ZIP med ulik SHA-256 er fortsatt ikke identifisert.
 - Duplikatvern, samtidighet og bevaring av eksisterende recordnavn må avklares før reell import. Ikke-atomiske CloudKit-lesinger og lokale simuleringer gir ingen garanti mot endringer før en eventuell skriving.
 - Eldre dokumenter har statusetterslep: rotens `README.md` beskriver devpatch 0051, `docs/README.md` beskriver devpatch 0009, og `CLOUDKIT-OPPSETT.md` har en gammel PoC-status. Bruk dem for relevant kontekst, ikke dagens neste steg.
 - Eldre metodikk og beslutning B-016 omtaler opplastet ZIP som autoritativ kilde og viser commit/push som normal arbeidsflyt. For Codex-arbeid her gjelder Git som autoritativ kilde og eksplisitt tillatelse før commit/push, jf. `AGENTS.md`.

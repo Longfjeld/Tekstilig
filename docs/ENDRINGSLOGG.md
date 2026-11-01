@@ -1,5 +1,11 @@
 # Endringslogg
 
+## Test 230 – skrivefri journalverifikasjon – 2026-11-01
+
+- Rotårsak: `verifyBoundReadOnlyJournal()` nådde `FileManager.url(... create: true)` via de eldre URL-hjelperne, med mulig opprettelse av Application Support-katalogen.
+- Verifikasjonen gjenbruker nå `existingIdentityDiagnosticURL("read-only-import-plan-v2.json")` med `create: false`. Manglende katalog/journal håndteres av eksisterende feilrapportering. ZIP-hashkontroll, meldinger og journalformat er uendret; øvrige kallere og skrivefunksjoner er urørt.
+- Ingen ZIP, journal eller baseline endres; verifikasjonen leser ikke baseline og gjør ingen CloudKit-oppslag. Test 230-restpunktet er fortsatt ❗️ inntil brukeren har bekreftet avvisning av en annen gyldig ZIP med ulik hash og godkjenning av originalen.
+
 ## Test 238 – skrivebeskyttet identitetsrapport – 2026-11-01
 
 - Godkjent mengdeutvidelse: `reconcileImportIdentities()` viser sorterte forskjeller i begge retninger mellom allerede innleste versjons- og identitetsposter. Per-type-antall, baseline-tilhørighet og eksakte PoC-filtertreff forklarer forventet filtrering og skiller den fra uavklarte forskjeller. Ingen nye oppslag eller skriveoperasjoner. Utvidelsen er eksplisitt brukervalidert på macOS 27.2; **238 ✅ fullført** innenfor skrivebeskyttet identitetsavstemming og filterkontroll.
