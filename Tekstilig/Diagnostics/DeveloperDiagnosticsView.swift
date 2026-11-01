@@ -45,6 +45,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var liveJournalRecheckReport: String?
     @State private var concurrencyGateReport: String?
     @State private var liveVersionReport: String?
+    @State private var createOnlyPolicyReport: String?
     @State private var writeGateReport: String?
     @State private var isCheckingWriteGate = false
     @State private var versionBaselineReport: String?
@@ -386,6 +387,13 @@ struct DeveloperDiagnosticsView: View {
                         }
                         if let writeGateReport {
                             Text(writeGateReport).font(.callout)
+                        }
+                        Button("Simuler create-only og duplikatvern (ingen skriving)") {
+                            testCreateOnlyPolicy()
+                        }
+                        .disabled(validatedZIPData == nil || importResult == nil || isReadingBackup)
+                        if let createOnlyPolicyReport {
+                            Text(createOnlyPolicyReport).font(.callout)
                         }
                         Button("Kontroller journaloperasjoner mot backup (kun lokalt)") {
                             auditBoundJournalOperations()
@@ -1803,6 +1811,77 @@ struct DeveloperDiagnosticsView: View {
         } catch {
             writeGateReport = "AVVIST: \(error.localizedDescription). " +
                 "Journal og baseline beholdes. Ingen skriveoperasjon utført. CloudKit: SPERRET."
+        }
+    }
+
+    // Test 237: pure decision-model test, NOT a CloudKit write or a uniqueness guarantee.
+    // CloudKit's record identity is recordName, not a separate logical ID field.
+    // A create-only save with a stable recordName can reject a second writer for
+    // the SAME recordName. It cannot prevent duplicates when recordNames differ.
+    private enum SimulatedCreateResult {
+        case created, rejectedExistingRecord
+    }
+
+    private func simulateCreateOnly(recordName: String, existing: inout Set<String>) -> SimulatedCreateResult {
+        guard !existing.contains(recordName) else { return .rejectedExistingRecord }
+        existing.insert(recordName)
+        return .created
+    }
+
+    private func testCreateOnlyPolicy() {
+        createOnlyPolicyReport = nil
+        do {
+            guard let zip = validatedZIPData, importResult != nil else {
+                throw NSError(domain: "TekstiligCreateOnly", code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Velg og valider ZIP-backup først"])
+            }
+            let journal = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
+                from: Data(contentsOf: boundReadOnlyJournalURL()))
+            guard validBoundReadOnlyJournal(journal), journal.zipSHA256 == zipDigest(zip) else {
+                throw NSError(domain: "TekstiligCreateOnly", code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "Journal eller ZIP-binding er ugyldig"])
+            }
+            // All five types use the same policy, but different record namespaces.
+            let types = ["Textile", "Piece", "TextileMaterial", "TextileColor", "TextileImage"]
+            let allTypes = Set(types)
+            guard journal.operationIDs.allSatisfy({ item in
+                let parts = item.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+                return parts.count == 2 && allTypes.contains(String(parts[0])) && !parts[1].isEmpty
+            }) else {
+                throw NSError(domain: "TekstiligCreateOnly", code: 3,
+                    userInfo: [NSLocalizedDescriptionKey: "Ugyldige operasjonsidentiteter"])
+            }
+            var store = Set<String>()
+            let key = "Textile:stable-logical-id"
+            let first = simulateCreateOnly(recordName: key, existing: &store)
+            let second = simulateCreateOnly(recordName: key, existing: &store)
+            let sameNameProtected = first == .created && second == .rejectedExistingRecord && store.count == 1
+
+            // Counterexample: two generated recordNames for one logical ID both succeed.
+            var generatedStore = Set<String>()
+            let generatedA = simulateCreateOnly(recordName: "Textile:random-a", existing: &generatedStore)
+            let generatedB = simulateCreateOnly(recordName: "Textile:random-b", existing: &generatedStore)
+            let randomNamesUnsafe = generatedA == .created && generatedB == .created && generatedStore.count == 2
+
+            // Each type must have its own identity namespace.
+            var namespacedStore = Set<String>()
+            let separateTypes = types.allSatisfy { type in
+                simulateCreateOnly(recordName: "\(type):same-logical-id", existing: &namespacedStore) == .created
+            } && namespacedStore.count == types.count
+            guard sameNameProtected && randomNamesUnsafe && separateTypes else {
+                throw NSError(domain: "TekstiligCreateOnly", code: 4,
+                    userInfo: [NSLocalizedDescriptionKey: "Minnekontroll for create-only feilet"])
+            }
+            createOnlyPolicyReport = "Create-only og duplikatvern (kun simulering): OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString). Operasjoner: \(journal.operationIDs.count).\n" +
+                "To skrivere med identisk recordName: nummer to avvist i minnet: OK.\n" +
+                "Ulike genererte recordName med samme logiske ID: begge slapp gjennom (RISIKO PÅVIST): OK.\n" +
+                "Fem posttyper med separate identitetsrom: OK.\n" +
+                "KONKLUSJON: Create-only alene garanterer IKKE unik logisk ID i dagens repository-modell. " +
+                "Krever egen identitetsstrategi og faktisk CloudKit-konflikttest før import. " +
+                "Ingen CKRecord lagret. CloudKit: SPERRET."
+        } catch {
+            createOnlyPolicyReport = "AVVIST: \(error.localizedDescription). Ingen CloudKit-skriving. CloudKit: SPERRET."
         }
     }
 

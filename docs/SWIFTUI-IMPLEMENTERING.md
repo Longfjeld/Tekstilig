@@ -4452,3 +4452,16 @@ Ny knapp **Test skriveport mot CloudKit-baseline (ingen skriving)** leser v2-jou
 3. Trykk **Test skriveport mot CloudKit-baseline (ingen skriving)**. Forvent **KONTROLL OK – IKKE SKRIVEKLAR**, uendret journal-ID, antall poster, negative minnetester OK og **CloudKit: SPERRET**. Ved AVVIST: send rapporten, ikke slett journal eller baseline.
 4. Avslutt appen helt, start igjen, velg samme ZIP og gjenta kontrollen. Bekreft samme journal-ID og OK.
 5. Bekreft uendret bibliotek og behold alle journaler, baseline og backup. Negativtesten med annen ZIP fra test 230 er fortsatt ❗️.
+
+
+## 237. Devpatch 0128 – create-only identitet og duplikatvern (kun simulering)
+
+**236 ✅ validert OK av bruker. 237 ❗️ avventer validering.**
+
+Ny knapp **Simuler create-only og duplikatvern (ingen skriving)** validerer v2-journal og SHA-256 mot valgt ZIP og kjører en ren minnemodell. To skrivere med identisk recordName avvises for forsøk nummer to; to ulike genererte recordName for samme logiske ID tillates begge, og denne **reelle designrisikoen skal vises eksplisitt**. Alle fem posttyper testes med egne identitetsrom. **Ingen CKRecord lagres; dette beviser ikke atomisk CloudKit-atferd eller unikhet for logiske ID-er.** Vi må velge og teste en konkret identitetsstrategi før faktisk import.
+
+1. Installer devpatch 0128 på full eksport 0085. Bygg i Xcode 27; stopp ved feil.
+2. Åpne Utvikling → Diagnostikk → Roadmap 7 og velg samme ZIP som er bundet til v2-journalen.
+3. Trykk **Simuler create-only og duplikatvern (ingen skriving)**. Kontroller **Create-only og duplikatvern (kun simulering): OK**, journal-ID og operasjonstall, avvist andre skriver med samme recordName, **RISIKO PÅVIST** for ulike genererte recordName og fem identitetsrom. Kontroller **CloudKit: SPERRET**.
+4. Avslutt og start appen igjen, velg samme ZIP og gjenta. Kontroller samme journal-ID og resultat.
+5. Kontroller uendret bibliotek. Behold journal, baseline og ZIP. Negativtest med annen ZIP fra 230 er fortsatt ❗️.
