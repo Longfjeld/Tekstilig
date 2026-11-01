@@ -4,6 +4,8 @@
 **Mål:** Ferdigstille, kvalitetssikre og publisere Tekstilig 1.0.  
 **Arbeidsprinsipp:** Vi arbeider sekvensielt fra punkt 1 til punkt 12. Et hovedpunkt avsluttes og valideres før vi går videre til neste.
 
+**Gjeldende status 2026-11-01:** Se [PROSJEKTSTATUS.md](PROSJEKTSTATUS.md). Kodegrunnlag `SwiftUIActualApp0086` / `d3a0a62`; test 237 ✅, test 238 ❗️ neste og ikke gjennomført. Import/restore-skriving til CloudKit er fortsatt sperret. Miljø: Xcode 27.2 · iOS/iPadOS/macOS 27.2. Innledende plan og eldre statusnotater nedenfor beholdes som historikk; løpende status er oppdatert separat.
+
 ## Overordnet mål for Tekstilig 1.0
 
 Tekstilig 1.0 skal være en stabil, forståelig og visuelt helhetlig app for registrering, administrasjon og gjenfinning av tekstiler.
@@ -103,8 +105,9 @@ Deretter fastsetter vi de viktigste arbeidsflytene på hver plattform før vi g�
 |3. Rask registrering|✅ Fullført og validert etter devpatch 0063 på autoritativ kilde 0035. Hurtigregistrering, hovedbilde og kamera på eksisterende tekstil er validert OK.|
 |4. Ufullstendige registreringer|✅ Fullført og validert på iPhone, iPad og native macOS etter devpatch 0068. «Kan kompletteres», filter og detaljforklaring fungerer på alle tre plattformer.|
 |5. iCloud-/CloudKit-robusthet|✅ Fullført. Punkt 187–197 er validert. Nettverksfeil, manglende iCloud-konto, detaljlasting og gjenoppretting har forståelige tilstander; avslått iCloud Drive-synk alene blokkerer ikke CloudKit.|
-|6. Eksport og backup|❗️ Pågår. Punkt 198 fastsetter et versjonert, menneskelesbart ZIP + JSON + bilder-format før eksportkode implementeres.|
-|7–12|❗️ Ikke startet.|
+|6. Eksport og backup|✅ Validert. Test 198–204 er validert på iPhone, iPad og macOS; ZIP med `backup.json` og `images/` kan eksporteres.|
+|7. Import og restore|❗️ Pågår som diagnostikk og sikkerhetsavklaring. Test 237 er validert; 238 er neste og ikke gjennomført. Faktisk restore er ikke klar, og CloudKit-skriving er sperret. Negativtest med annen gyldig ZIP fra test 230 er fortsatt uavklart.|
+|8–12|❗️ Ikke startet som egne hovedblokker. Kamera og grunnleggende JPEG-optimalisering er allerede implementert under rask registrering; dette lukker ikke hele bildeblokken.|
 
 ### Statusnotat – roadmap punkt 3
 
@@ -171,9 +174,13 @@ Etter validering av denne blokken skal neste blokk eksplisitt dekke reell iCloud
 
 ### Roadmap punkt 6 – Eksport og backup
 
+**Statuskorrigering 2026-11-01:** Test 198–204 er validert på alle tre plattformer. Avsnittet nedenfor beskriver oppstarten av punkt 6, ikke gjeldende eksportstatus.
+
 Punkt 198 starter med å fastsette backupkontrakten før kode implementeres. Foreslått v1-format er én komplett snapshot-ZIP med `backup.json` og en `images/`-mappe. JSON-filen er versjonert og inneholder Textile med alle tilhørende Piece-, Material-, Color- og Image-metadata. Bilder lagres som egne filer. Tekstilig-ID-er brukes som applikasjonens restore-identitet; CloudKit record names skal ikke være nødvendig for gjenoppretting. Beslutningen må godkjennes før eksportimplementasjonen starter.
 
 
 ### Eksport og backup – devpatch 0085
+
+**Historisk delstatus ved devpatch 0085:** Senere avløst av validert ZIP-eksport i test 203–204.
 
 198–201 er validert. 202 ❗️ tester kun midlertidig filskriving og verifisering av `backup.json` og bilder. ZIP og brukerinitiert eksport kommer i neste blokk etter validering.

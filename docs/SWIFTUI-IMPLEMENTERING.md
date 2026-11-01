@@ -1,11 +1,13 @@
 # SwiftUI – videre implementering
 
-**Status:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper 68–77 ✅ · første søk/grunnfilter 78–86 ✅ · utvidede grunnfiltre fra 87 ❗️  
+**Gjeldende status 2026-11-01:** Kodegrunnlag `SwiftUIActualApp0086`, Git-commit `d3a0a62`. Test 237 ✅ validert OK av prosjekteieren. Test 238 ❗️ er neste og ikke gjennomført. Negativtest med en annen gyldig ZIP fra test 230 er fortsatt uavklart. CloudKit-skriving under import/restore er fortsatt sperret. Se [PROSJEKTSTATUS.md](PROSJEKTSTATUS.md) for samlet status.
+
+**Historisk delstatus før utvidede grunnfiltre:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper 68–77 ✅ · første søk/grunnfilter 78–86 ✅ · utvidede grunnfiltre fra 87 ❗️
 
 > **Fast arbeidsmetodikk:** Les `ARBEIDSMETODIKK.md` før nye kodeendringer. `SWIFTUI-IMPLEMENTERING.md` er hovedsporet. Nye/ikke-validerte punkter markeres ❗️ og endres først til ✅ etter brukerens validering. Ved konkrete feil kan hovedsporet midlertidig erstattes av målrettet ad-hoc feilisolering; når feilen er løst fortsetter arbeidet fra neste ufullførte nummererte punkt.
-**Miljø:** Development · Xcode 27 · iOS/iPadOS 27
+**Miljø:** Development · Xcode 27.2 · iOS/iPadOS/macOS 27.2. Versjon 27 i eldre testinstruksjoner beholdes som historikk.
 
-> **Aktuell status 2026-10-11:** Roadmap-punkt 3 **Rask registrering** er lukket ✅. Devpatch 0064 og test 179–183 er validert ✅, og punkt 184 er validert på iPad ✅. Første native macOS-build er fortsatt blokkert i **punkt 185**. Devpatch 0066 fjernet første UIKit-blokkering i `PieceEditorView`; neste build avdekket flere iOS-spesifikke SwiftUI-modifikatorer. Devpatch 0067 retter denne plattformkompatibiliteten uten å endre forretningslogikk. Arbeidet fortsetter strengt sekvensielt fra **punkt 185**. Se også `LEVERANSE-OG-TESTMETODIKK.md` for fast leveranse-, rsync-, test-, Git- og snapshot-arbeidsflyt.
+> **Historisk status 2026-10-11 (avløst av senere validering av punkt 185–186):** Roadmap-punkt 3 **Rask registrering** er lukket ✅. Devpatch 0064 og test 179–183 er validert ✅, og punkt 184 er validert på iPad ✅. Første native macOS-build er fortsatt blokkert i **punkt 185**. Devpatch 0066 fjernet første UIKit-blokkering i `PieceEditorView`; neste build avdekket flere iOS-spesifikke SwiftUI-modifikatorer. Devpatch 0067 retter denne plattformkompatibiliteten uten å endre forretningslogikk. Arbeidet fortsetter strengt sekvensielt fra **punkt 185**. Se også `LEVERANSE-OG-TESTMETODIKK.md` for fast leveranse-, rsync-, test-, Git- og snapshot-arbeidsflyt.
 
 Denne veiledningen fortsetter etter fullført `SWIFTUI-OPPSTART.md`. Følg punktene strengt i nummerrekkefølge. Handling kommer før kontroll og stoppunkt.
 
@@ -4361,6 +4363,8 @@ Eksisterende journal fra test 228 bevares uendret. Ny lokal sidefil `read-only-i
 
 ## 230. Devpatch 0121 – SHA-256 i journalen ved opprettelse (kun lokalt)
 
+**Statuspresisering 2026-11-01:** Gjennomførte kontroller er tidligere validert, jf. punkt 231. Negativtest med en annen gyldig ZIP med ulikt innhold/hash er fortsatt ❗️ uavklart. Delstatusen nedenfor og testprosedyren beholdes som historikk.
+
 **230 ❗️ – avventer validering. 229 ✅ validert OK av bruker.**
 
 Ny, separat `read-only-import-plan-v2.json` lagrer journal-ID, planlagte operasjoner og SHA-256 av de validerte ZIP-bytene **i samme atomiske filskriving**. Krever konfliktfri samlet CloudKit-forhåndskontroll og minst én operasjon. Eksisterende v1-journal og binding fra test 229 beholdes uendret. Eksisterende v2-journal overskrives aldri. Kontroll leser v2-filen, validerer format og sammenligner hash med valgt ZIP; endret ZIP avvises i minnet. Ingen CloudKit-skriving. V2 er fortsatt kun diagnostikk og kan ikke gjenoppta reell import.
@@ -4456,7 +4460,7 @@ Ny knapp **Test skriveport mot CloudKit-baseline (ingen skriving)** leser v2-jou
 
 ## 237. Devpatch 0128 – create-only identitet og duplikatvern (kun simulering)
 
-**236 ✅ validert OK av bruker. 237 ❗️ avventer validering.**
+**236 ✅ validert OK av bruker. 237 ✅ validert OK av prosjekteieren; status korrigert 2026-11-01 etter uttrykkelig bekreftelse.**
 
 Ny knapp **Simuler create-only og duplikatvern (ingen skriving)** validerer v2-journal og SHA-256 mot valgt ZIP og kjører en ren minnemodell. To skrivere med identisk recordName avvises for forsøk nummer to; to ulike genererte recordName for samme logiske ID tillates begge, og denne **reelle designrisikoen skal vises eksplisitt**. Alle fem posttyper testes med egne identitetsrom. **Ingen CKRecord lagres; dette beviser ikke atomisk CloudKit-atferd eller unikhet for logiske ID-er.** Vi må velge og teste en konkret identitetsstrategi før faktisk import.
 
@@ -4465,3 +4469,7 @@ Ny knapp **Simuler create-only og duplikatvern (ingen skriving)** validerer v2-j
 3. Trykk **Simuler create-only og duplikatvern (ingen skriving)**. Kontroller **Create-only og duplikatvern (kun simulering): OK**, journal-ID og operasjonstall, avvist andre skriver med samme recordName, **RISIKO PÅVIST** for ulike genererte recordName og fem identitetsrom. Kontroller **CloudKit: SPERRET**.
 4. Avslutt og start appen igjen, velg samme ZIP og gjenta. Kontroller samme journal-ID og resultat.
 5. Kontroller uendret bibliotek. Behold journal, baseline og ZIP. Negativtest med annen ZIP fra 230 er fortsatt ❗️.
+
+## 238. Planlagt avklaring av identitetsstrategi ved import
+
+**238 ❗️ – neste test, ikke gjennomført.** Videre arbeid skal avklare duplikatvern og bevaring av eksisterende automatisk genererte CloudKit-recordnavn, jf. kartleggingen i test 222 og risikoen vist i simulering 237. Ingen ny identitetsstrategi, implementering eller detaljert testprosedyre er vedtatt i denne statusoppdateringen. Testen er ikke startet. CloudKit-skriving under import/restore er fortsatt sperret, og negativtesten med annen gyldig ZIP fra test 230 er fortsatt uavklart.
