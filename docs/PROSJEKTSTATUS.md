@@ -12,13 +12,19 @@
 
 ## Siste validerte test
 
-**237 ✅ – validert OK av prosjekteieren.** Devpatch 0128 tester create-only-identitet og duplikatvern i en minnesimulering. Godkjenningen dokumenterer testresultatet, ikke faktisk CloudKit-skriveatferd eller ferdig import.
+**238 ✅ fullført – eksplisitt godkjent av prosjekteieren 2026-11-01 på macOS 27.2.** Testen omfatter skrivebeskyttet identitetsavstemming mellom valgt ZIP, v2-journal, baseline og CloudKit, samt verifisering av diagnostikkens filtrering. Alle fire bindinger/avstemminger er OK.
+
+Versjonslesingen viser 43 unike poster, identitetslesingen 40. Differansen er nøyaktig `Textile:swiftui-poc-textile-v1`, `Piece:swiftui-poc-piece-v1` og `TextileImage:swiftui-poc-textile-image-v1`: alle finnes i verifisert baseline og treffer eksakte eksisterende PoC-filtre. Motsatt differanse er 0; ingen uventede mengdedifferanser er observert. Fire backup-poster svarer til fire planlagte journaloperasjoner; ingen operasjoner er utført.
+
+Bildepost `IMG-204AB741-6904-42E7-85C9-5A0AD15F44DC` med eier `T0001` beholdes uendret som sannsynlig historisk rest. Faktisk foreldreløshet er ikke fullstendig verifisert.
+
+Godkjenningen omfatter ikke faktisk import/restore, CloudKit-skriving eller -sletting, endelig valg eller implementering av identitetsstrategi, atomisk konsistens mellom separate lesinger eller fullstendig verifikasjon av historisk eierskap og bildeinnhold. Ingen brukervalidering på iOS/iPadOS er dokumentert for test 238.
 
 ## Neste test
 
-**238 ❗️ – neste test, ikke gjennomført.** Videre avklaring av identitetsstrategi ved import, særlig duplikatvern og bevaring av eksisterende automatisk genererte CloudKit-recordnavn (omtalt som servergenererte i implementeringsloggen).
+Neste nummererte test er ikke fastlagt. Test 238 er avsluttet; videre arbeid må avgrenses og godkjennes før oppstart. Restpunktet fra test 230 er fortsatt åpent.
 
-Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md): logiske ID-er er egne felt; normale save-metoder bruker eksisterende `cloudRecordName` ved oppdatering og `CKRecord(recordType:)` ved ny post. Test 237 viser risiko for to ulike recordnavn med samme logiske ID. Ingen konkret ny identitetsstrategi eller detaljert testprosedyre for 238 er vedtatt her.
+Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md): logiske ID-er er egne felt; normale save-metoder bruker eksisterende `cloudRecordName` ved oppdatering og `CKRecord(recordType:)` ved ny post. Test 237 viser risiko for to ulike recordnavn med samme logiske ID. Rapporten bruker bare den allerede eksisterende diagnostikkformelen for hypotetiske kandidatnavn; ingen ny identitetsstrategi er vedtatt.
 
 ## Åpne problemer og uavklarte tester
 
@@ -36,7 +42,7 @@ Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.m
 
 ## Neste planlagte arbeid
 
-Fortsett fra test 238 når videre arbeid er bestilt: avklar identitetsstrategien mot eksisterende repositories og dokumenterte funn før eventuell implementering og sekvensiell validering. Følg opp restpunktet fra test 230 eksplisitt. Denne dokumentasjonsoppdateringen starter ingen tester og åpner ingen skrivesperrer.
+Etter godkjent test 238 er neste steg å avklare omfanget av videre identitetsstrategi mot eksisterende repositories og rapporterte funn, før eventuell implementering. Følg opp restpunktet fra test 230 eksplisitt. Rapporten åpner ingen skrivesperrer.
 
 ## Historiske referansedokumenter
 

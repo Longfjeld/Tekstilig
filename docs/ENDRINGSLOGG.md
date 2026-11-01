@@ -1,5 +1,17 @@
 # Endringslogg
 
+## Test 238 – skrivebeskyttet identitetsrapport – 2026-11-01
+
+- Godkjent mengdeutvidelse: `reconcileImportIdentities()` viser sorterte forskjeller i begge retninger mellom allerede innleste versjons- og identitetsposter. Per-type-antall, baseline-tilhørighet og eksakte PoC-filtertreff forklarer forventet filtrering og skiller den fra uavklarte forskjeller. Ingen nye oppslag eller skriveoperasjoner. Utvidelsen er eksplisitt brukervalidert på macOS 27.2; **238 ✅ fullført** innenfor skrivebeskyttet identitetsavstemming og filterkontroll.
+
+- Ny rapport i `DeveloperDiagnosticsView` viser type/logisk ID, forventet/faktisk tekstileier, alle matchende recordnavn og beregnede kandidatnavn for alle fem posttyper, også underposter til eksisterende tekstiler.
+- `ImportIdentityReport` sammenligner og sorterer data kun i minnet. ZIP/v2-journal/baseline leses og avstemmes uten lokal fil- eller katalogopprettelse fra den nye lesestien. Ingen normal lagring eller CloudKit-skriving endres.
+- `PROSJEKTSTATUS.md` og test 238 i implementeringsloggen beskriver faktisk implementert diagnostikk, begrensninger og sekvensiell brukertest. **238 ✅ fullført etter uttrykkelig brukergodkjenning 2026-11-01.**
+
+- Brukervalidering: ZIP ↔ v2-journal, journaloperasjoner ↔ backup, ZIP/journal ↔ baseline og baseline ↔ ny versjonslesing er OK. 43 unike versjonsposter mot 40 identitetsposter forklares av nøyaktig tre eksakte filtertreff, alle i verifisert baseline: `Textile:swiftui-poc-textile-v1`, `Piece:swiftui-poc-piece-v1`, `TextileImage:swiftui-poc-textile-image-v1`. Motsatt differanse er 0; ingen uventede mengdedifferanser.
+- Fire backup-poster svarer til fire planlagte journaloperasjoner; ingen operasjoner er utført. Bildepost `IMG-204AB741-6904-42E7-85C9-5A0AD15F44DC` med eier `T0001` beholdes uendret som sannsynlig historisk rest.
+- Godkjenningen omfatter ikke import/restore, CloudKit-skriving/-sletting, endelig valg eller implementering av identitetsstrategi, atomisk konsistens mellom separate CloudKit-lesinger eller fullstendig verifikasjon av historisk eierskap/bildeinnhold. Skrivesperrene og restpunktet i test 230 består.
+
 ## Dokumentasjon 0001 – 2026-09-13
 
 Første dokumentasjonspakke for Tekstilig.

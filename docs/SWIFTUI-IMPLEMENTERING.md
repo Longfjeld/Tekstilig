@@ -1,6 +1,6 @@
 # SwiftUI – videre implementering
 
-**Gjeldende status 2026-11-01:** Kodegrunnlag `SwiftUIActualApp0086`, Git-commit `d3a0a62`. Test 237 ✅ validert OK av prosjekteieren. Test 238 ❗️ er neste og ikke gjennomført. Negativtest med en annen gyldig ZIP fra test 230 er fortsatt uavklart. CloudKit-skriving under import/restore er fortsatt sperret. Se [PROSJEKTSTATUS.md](PROSJEKTSTATUS.md) for samlet status.
+**Gjeldende status 2026-11-01:** Kodegrunnlag `SwiftUIActualApp0086`, Git-commit `d3a0a62`. Test 237 ✅ validert OK av prosjekteieren. Test 238 ✅ fullført etter prosjekteierens uttrykkelige godkjenning av skrivebeskyttet identitetsavstemming og diagnostikkens filtrering på macOS 27.2. Dette godkjenner ikke import/restore eller CloudKit-skriving/-sletting. Negativtest med en annen gyldig ZIP fra test 230 er fortsatt uavklart. CloudKit-skriving under import/restore er fortsatt sperret. Se [PROSJEKTSTATUS.md](PROSJEKTSTATUS.md) for samlet status.
 
 **Historisk delstatus før utvidede grunnfiltre:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper 68–77 ✅ · første søk/grunnfilter 78–86 ✅ · utvidede grunnfiltre fra 87 ❗️
 
@@ -4470,6 +4470,46 @@ Ny knapp **Simuler create-only og duplikatvern (ingen skriving)** validerer v2-j
 4. Avslutt og start appen igjen, velg samme ZIP og gjenta. Kontroller samme journal-ID og resultat.
 5. Kontroller uendret bibliotek. Behold journal, baseline og ZIP. Negativtest med annen ZIP fra 230 er fortsatt ❗️.
 
-## 238. Planlagt avklaring av identitetsstrategi ved import
+## 238. Skrivebeskyttet identitetsrapport ved import
 
-**238 ❗️ – neste test, ikke gjennomført.** Videre arbeid skal avklare duplikatvern og bevaring av eksisterende automatisk genererte CloudKit-recordnavn, jf. kartleggingen i test 222 og risikoen vist i simulering 237. Ingen ny identitetsstrategi, implementering eller detaljert testprosedyre er vedtatt i denne statusoppdateringen. Testen er ikke startet. CloudKit-skriving under import/restore er fortsatt sperret, og negativtesten med annen gyldig ZIP fra test 230 er fortsatt uavklart.
+**238 ✅ fullført – eksplisitt brukervalidert 2026-11-01 på macOS 27.2, innenfor skrivebeskyttet identitetsavstemming og verifisering av diagnostikkens filtrering.**
+
+Historisk oppstart: Punktet var først avgrenset til videre avklaring av identitetsstrategi etter test 222 og simulering 237, uten implementering eller detaljert testprosedyre. Oppfølgende analyse viste behov for en etterprøvbar rapport i appen før videre vurdering.
+
+Knappen **Vis identitetsavstemming (test 238, kun lesing)** leser eksisterende repository-data for alle fem posttyper og viser deterministisk sorterte identitetsrader i diagnostikkvisningen. Alle backup-underposter er med, også når tekstilet finnes i CloudKit. For hver type/logisk ID vises forventede eiere fra backup, alle observerte eiere/recordnavn, hypotetisk kandidatnavn, journaltilhørighet og tilgjengelige baseline-/versjonstagger. Duplikater, eieravvik, manglende underposter og kandidatnavnkollisjoner oppgis konkret. CloudKit-poster som ikke finnes i backupen vises også. Kjente Textile/Piece/Image-diagnostikkposter utelates av repositoryene.
+
+Valgt ZIP kontrolleres mot eksisterende v2-journals SHA-256, journaloperasjonene mot backupen, og baseline mot journal-ID/ZIP-hash og en ny versjonslesing. Manglende/ugyldige bindinger merkes **IKKE VERIFISERT**, men identitetsradene vises hvis identitetslesingen lykkes. Ved feil i et identitetsoppslag vises **UFULLSTENDIG**, ikke et godkjent delresultat. Ingen lesesti oppretter kataloger. Rapporten er bare i minnet/UI; ingen journal, baseline, ZIP eller backup endres. Ingen importbeslutninger eller ny identitetsstrategi er implementert.
+
+### Sekvensiell brukertest 238 – gjennomført testprosedyre
+
+**Mengdeutvidelse – implementert og brukervalidert innenfor testomfanget:** Rapporten viser nå begge mengdedifferanser mellom allerede innleste versjonsposter og identitetsposter, med nøkkel `posttype + recordName`. Alle differanser listes sortert med posttype, recordnavn, tilhørighet til verifisert baseline og eksakt treff mot de tre eksisterende PoC-filterparene. Bare poster i versjonslesingen som treffer et slikt filterpar merkes **FORVENTET FILTRERING**; øvrige differanser merkes **UVENTET DIFFERANSE – årsak UAVKLART**. Filtertreff verifiserer filterregelen, ikke postens historiske opprinnelse. Antall vises per posttype. Ingen nye CloudKit-oppslag eller filoperasjoner er lagt til. **238 ✅.**
+
+Forutsetninger: Bruk eksisterende ZIP, v2-journal og baseline fra tidligere tester på samme enhet. Ikke opprett eller erstatt grunnlaget. Ha fungerende iCloud/Development-tilgang og unngå samtidige bibliotekendringer. Mangler grunnlaget, stopp og rapporter dette. Ikke bruk gamle opprett-/lagre-/slett-knapper i denne testen.
+
+1. Bygg appen i Xcode 27.2 på valgt målplattform. Stopp ved byggefeil. Åpne **Utvikling → Diagnostikk → Roadmap 7**.
+2. Velg den eksisterende ZIP-backupen og vent på vellykket ZIP-validering. Stopp ved feil. Trykk deretter **Vis identitetsavstemming (test 238, kun lesing)** og vent til indikator er borte.
+3. Kontroller SHA-256, journal-ID, journaloperasjoner og baselinebinding. Forvent binding OK og uendret baseline dersom biblioteket ikke er endret. Ved **IKKE VERIFISERT**, **AVVIK** eller **UFULLSTENDIG**: behold grunnlaget, rapporter hele avviket og stopp valideringen. Ikke lag ny baseline for å få grønt resultat.
+4. Kontroller antall per type og konkrete rader for tilgjengelige Textile-, Piece-, Material-, Color- og Image-poster mot kjent backup/bibliotek. Forvent at underposter til eksisterende tekstiler er med, og at alle matchende faktiske recordnavn og eiere vises. Ikke forvent at eksisterende recordnavn samsvarer med beregnet kandidatnavn. Rapporter typer uten testdata som manglende praktisk dekning; ikke opprett data for denne testen.
+5. Kontroller at faktiske avvik forklares konkret. Manglende post for et nytt tekstil beskriver fravær, ikke en beslutning om import. Duplikater, feil eier, manglende underpost under eksisterende tekstil eller navnekollisjon skal rapporteres for vurdering; ikke korriger data i denne testen. Uventet eller uforklarlig rapportresultat er stoppbetingelse. Negative scenarioer som ikke finnes i datasettet rapporteres som ikke praktisk testet.
+6. Kontroller de konkrete listene **bare i versjonslesing** og **bare i identitetslesing**, per-type-antall og baseline-tilhørighet. Hypotesen om 43 mot 40 er bekreftet bare dersom de tre faktiske differansene er `Textile:swiftui-poc-textile-v1`, `Piece:swiftui-poc-piece-v1` og `TextileImage:swiftui-poc-textile-image-v1`, og motsatt differanse er tom. Andre resultater skal rapporteres som uavklarte; stopp før godkjenning, uten å endre data eller baseline. De to tidligere uendrede kjøringene på macOS 27.2 bekreftet den opprinnelige rapporten; mengdeutvidelsen ble deretter særskilt brukervalidert, jf. resultatet nedenfor.
+7. Trykk rapportknappen igjen uten å endre grunnlaget. Forvent identisk sortert rapport når serverdata er uendret. Kontroller at biblioteket er uendret og at **CloudKit: SPERRET** står i rapporten. Bekreft resultat og faktisk plattform-/scenariodekning til prosjekteieren før 238 eventuelt markeres ✅.
+
+### Brukervalidert resultat – 2026-11-01
+
+Prosjekteieren har uttrykkelig godkjent test 238 som ✅ bestått på macOS 27.2. ZIP ↔ v2-journal, journaloperasjoner ↔ backup, ZIP/journal ↔ baseline og baseline ↔ ny CloudKit-versjonslesing er alle OK.
+
+Versjonslesingen inneholder 43 unike poster og identitetslesingen 40 unike poster. De tre postene som bare finnes i versjonslesingen, finnes alle i verifisert baseline og treffer de eksakte eksisterende PoC-filtrene:
+
+| Posttype | RecordName |
+| --- | --- |
+| Textile | `swiftui-poc-textile-v1` |
+| Piece | `swiftui-poc-piece-v1` |
+| TextileImage | `swiftui-poc-textile-image-v1` |
+
+Dette er forventet filtrering. Motsatt differanse er 0, og ingen uventede mengdedifferanser er observert. Filtertreffene bekrefter filterkriteriene, ikke postenes historiske opprinnelse.
+
+Fire poster finnes bare i backupen og svarer til de fire planlagte journaloperasjonene. Ingen operasjoner er utført. Bildepost `IMG-204AB741-6904-42E7-85C9-5A0AD15F44DC`, eier `T0001`, recordName `74B85BA7-9EBF-48FD-A04A-828329F9B237`, beholdes uendret som en sannsynlig historisk rest; faktisk foreldreløshet er ikke fullstendig verifisert.
+
+Godkjenningen gjelder skrivebeskyttet identitetsavstemming og verifisering av diagnostikkens filtrering. Den godkjenner ikke faktisk import/restore, CloudKit-skriving eller -sletting, endelig valg eller implementering av identitetsstrategi, atomisk konsistens mellom separate CloudKit-lesinger eller fullstendig verifikasjon av historisk eierskap og bildeinnhold. Brukervalideringen gjelder macOS 27.2; den dokumenterer ikke en gjennomført brukertest på iOS/iPadOS eller negative scenarioer som ikke inngikk i datasettet.
+
+Begrensning: Identiteter og versjonstagger leses i separate, ikke-atomiske oppslag. Baseline inneholder ikke logisk ID eller eier. Rapporten dokumenterer observerte identiteter og avstemte bindinger, ikke historisk eierskap, CKAsset-innhold, atomisitet, idempotens eller trygg import. Negative minnetester erstatter ikke praktisk CloudKit-testing. CloudKit-skriving under import/restore er fortsatt sperret. Negativtesten med annen gyldig ZIP fra test 230 er fortsatt ❗️ uavklart.

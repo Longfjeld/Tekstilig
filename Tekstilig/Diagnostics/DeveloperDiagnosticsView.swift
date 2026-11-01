@@ -46,6 +46,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var concurrencyGateReport: String?
     @State private var liveVersionReport: String?
     @State private var createOnlyPolicyReport: String?
+    @State private var identityReconciliationReport: String?
+    @State private var isReconcilingIdentities = false
     @State private var writeGateReport: String?
     @State private var isCheckingWriteGate = false
     @State private var versionBaselineReport: String?
@@ -395,6 +397,7 @@ struct DeveloperDiagnosticsView: View {
                         if let createOnlyPolicyReport {
                             Text(createOnlyPolicyReport).font(.callout)
                         }
+                        identityReconciliationControls
                         Button("Kontroller journaloperasjoner mot backup (kun lokalt)") {
                             auditBoundJournalOperations()
                         }
@@ -566,6 +569,7 @@ struct DeveloperDiagnosticsView: View {
             .fileImporter(isPresented: $showBackupImporter, allowedContentTypes: [.zip]) { result in
                 guard !isReadingBackup else { return }
                 importResult = nil
+                identityReconciliationReport = nil
                 approvedDiagnosticOperations = nil
                 combinedPreflightReport = nil
                 importJournalPlanReport = nil
@@ -615,6 +619,159 @@ struct DeveloperDiagnosticsView: View {
                     await loadSelectedPhoto(newItem)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var identityReconciliationControls: some View {
+        Button("Vis identitetsavstemming (test 238, kun lesing)") {
+            Task { await reconcileImportIdentities() }
+        }
+        .disabled(isReconcilingIdentities || isReadingBackup || validatedZIPData == nil || importResult == nil || backupDiagnostic.isRunning)
+        if isReconcilingIdentities {
+            BackupActivityLabel("Avstemmer backup og CloudKit-identiteter …")
+        }
+        if let identityReconciliationReport {
+            Text(identityReconciliationReport)
+                .font(.callout.monospaced())
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // Test 238 has its own URL lookup: the older helpers request create: true.
+    private func existingIdentityDiagnosticURL(_ name: String) throws -> URL {
+        try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
+            appropriateFor: nil, create: false)
+            .appendingPathComponent("TekstiligImportDiagnostics", isDirectory: true)
+            .appendingPathComponent(name)
+    }
+
+    @MainActor
+    private func reconcileImportIdentities() async {
+        guard !isReconcilingIdentities, let zip = validatedZIPData,
+              let backup = importResult?.document else { return }
+        isReconcilingIdentities = true
+        identityReconciliationReport = nil
+        defer { isReconcilingIdentities = false }
+        let digest = zipDigest(zip)
+        var binding = ["Valgt ZIP SHA-256: \(digest)"]
+        var journal: BoundReadOnlyImportJournal?
+        var baseline: CloudKitVersionBaseline?
+        var operations: Set<String>?
+        var baselineTags: [String: String]?
+        var currentTags: [String: String]?
+        do {
+            let stored = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
+                from: Data(contentsOf: existingIdentityDiagnosticURL("read-only-import-plan-v2.json")))
+            guard validBoundReadOnlyJournal(stored), stored.zipSHA256 == digest else {
+                throw NSError(domain: "TekstiligIdentityReport", code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Ugyldig v2-journal eller ZIP-hash avviker"])
+            }
+            journal = stored
+            operations = Set(stored.operationIDs)
+            binding.append("ZIP ↔ v2-journal: format/hash OK. Journal-ID: \(stored.journalID.uuidString); fullførte: \(stored.completedOperationCount).")
+            let issues = journalOperationIssues(stored.operationIDs, backup: backup).sorted()
+            binding.append("Journaloperasjoner ↔ backup: " + (issues.isEmpty ? "OK" : "AVVIK – " + issues.joined(separator: "; ")))
+        } catch {
+            binding.append("ZIP ↔ v2-journal: IKKE VERIFISERT – \(error.localizedDescription)")
+        }
+        do {
+            let stored = try JSONDecoder().decode(CloudKitVersionBaseline.self,
+                from: Data(contentsOf: existingIdentityDiagnosticURL("read-only-cloudkit-versions-v1.json")))
+            guard let journal, stored.schemaVersion == 1,
+                  stored.journalID == journal.journalID, stored.zipSHA256 == digest,
+                  baselineMatches(stored.entries, stored.entries) else {
+                throw NSError(domain: "TekstiligIdentityReport", code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "Baseline er ugyldig eller binding til valgt ZIP/journal kan ikke verifiseres"])
+            }
+            baseline = stored
+            baselineTags = Dictionary(uniqueKeysWithValues: stored.entries.map {
+                ("\($0.recordType):\($0.recordName)", $0.changeTag)
+            })
+            binding.append("ZIP/journal ↔ lagret baseline: binding OK (\(stored.entries.count) poster).")
+        } catch {
+            binding.append("ZIP/journal ↔ baseline: IKKE VERIFISERT – \(error.localizedDescription)")
+        }
+        do {
+            // Existing read-only repository paths; no normal save method is called.
+            let textiles = try await CloudKitTextileRepository().fetchTextiles()
+            let pieces = try await CloudKitPieceRepository().fetchAllPieces()
+            let materials = try await CloudKitTextileMaterialRepository().fetchAllMaterials()
+            let colors = try await CloudKitTextileColorRepository().fetchAllColors()
+            let images = try await CloudKitTextileImageRepository().fetchImageIdentitiesForImportCheck()
+            let live: [ImportIdentityReport.Entry] =
+                textiles.map { .init(type: "Textile", logicalID: $0.textileID, owner: $0.textileID, recordName: $0.cloudRecordName ?? "") } +
+                pieces.map { .init(type: "Piece", logicalID: $0.pieceID, owner: $0.textileID, recordName: $0.cloudRecordName ?? "") } +
+                materials.map { .init(type: "TextileMaterial", logicalID: $0.materialID, owner: $0.textileID, recordName: $0.cloudRecordName ?? "") } +
+                colors.map { .init(type: "TextileColor", logicalID: $0.colorID, owner: $0.textileID, recordName: $0.cloudRecordName ?? "") } +
+                images.map { .init(type: "TextileImage", logicalID: $0.imageID, owner: $0.textileID, recordName: $0.recordName) }
+            do {
+                let current = try await readCloudKitVersionEntries()
+                currentTags = Dictionary(uniqueKeysWithValues: current.map {
+                    ("\($0.recordType):\($0.recordName)", $0.changeTag)
+                })
+                // Compare already-read data only. These exact type/name pairs mirror
+                // the private filters in the Textile, Piece and Image repositories.
+                let pocFilterKeys: Set<String> = [
+                    "Textile:swiftui-poc-textile-v1",
+                    "Piece:swiftui-poc-piece-v1",
+                    "TextileImage:swiftui-poc-textile-image-v1"
+                ]
+                let versionKeys = Set(current.map { "\($0.recordType):\($0.recordName)" })
+                let identityKeys = Set(live.map { "\($0.type):\($0.recordName)" })
+                let versionOnly = versionKeys.subtracting(identityKeys).sorted()
+                let identityOnly = identityKeys.subtracting(versionKeys).sorted()
+                let baselineKeys = baseline.map { saved in
+                    Set(saved.entries.map { "\($0.recordType):\($0.recordName)" })
+                }
+                binding.append("Mengdedifferanse (posttype + recordName): versjonslesing \(current.count) poster / \(versionKeys.count) unike; identitetslesing \(live.count) poster / \(identityKeys.count) unike.")
+                for type in ImportIdentityReport.types {
+                    let prefix = "\(type):"
+                    binding.append("\(type): bare i versjonslesing \(versionOnly.filter { $0.hasPrefix(prefix) }.count); bare i identitetslesing \(identityOnly.filter { $0.hasPrefix(prefix) }.count).")
+                }
+                for (direction, keys) in [("bare i versjonslesing", versionOnly), ("bare i identitetslesing", identityOnly)] {
+                    binding.append("\(direction): \(keys.count) poster.")
+                    for key in keys {
+                        let parts = key.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+                        let filterMatch = pocFilterKeys.contains(key)
+                        let expected = direction == "bare i versjonslesing" && filterMatch
+                        let membership = baselineKeys.map { $0.contains(key) ? "ja" : "nei" } ?? "ikke verifisert"
+                        binding.append("  Posttype: \(parts[0]); recordName: \(String(parts[1]).debugDescription); i verifisert baseline: \(membership); eksakt PoC-filtertreff: \(filterMatch ? "ja" : "nei"). " +
+                            (expected ? "FORVENTET FILTRERING etter eksisterende filterregel." : "UVENTET DIFFERANSE – årsak UAVKLART."))
+                    }
+                }
+                binding.append("Filtertreff gjelder eksakt posttype og recordName, ikke antall eller navnemønster. Postinnhold/opprinnelse er ikke verifisert som PoC. Separate lesinger kan gi tidsavvik; baseline-tilhørighet beviser ikke årsaken til en differanse.")
+                if let baseline {
+                    let before = Set(baseline.entries.map { "\($0.recordType):\($0.recordName):\($0.changeTag)" })
+                    let after = Set(current.map { "\($0.recordType):\($0.recordName):\($0.changeTag)" })
+                    binding.append("Lagret baseline ↔ ny versjonslesing: " + (baselineMatches(baseline.entries, current) ? "OK" : "AVVIK"))
+                    binding += before.subtracting(after).sorted().map { "Baseline-versjon ikke gjenfunnet: \($0)" }
+                    binding += after.subtracting(before).sorted().map { "Ny/endret observert versjon: \($0)" }
+                } else {
+                    binding.append("Live versjoner lest; sammenligning med baseline IKKE VERIFISERT.")
+                }
+            } catch {
+                binding.append("Live versjoner/baseline: IKKE VERIFISERT – \(error.localizedDescription)")
+            }
+            // Selecting another ZIP invalidates this result, including during an await.
+            guard validatedZIPData == zip else { return }
+            identityReconciliationReport = ([
+                "Test 238 – observerte identiteter, ingen importbeslutninger.",
+                "Alle fem posttyper; også underposter til eksisterende tekstiler. Kjente Textile/Piece/Image-diagnostikkposter utelates av repositoryene.",
+                "Identiteter og versjoner er lest separat og ikke atomisk. En tag på en rad kommer fra den separate versjonslesingen, ikke fra identitetslesingen.",
+                "Kandidatnavn er kun beregnet med eksisterende diagnostikkformel; de erstatter aldri observerte recordnavn. Fravær/avvik er ikke en importbeslutning.",
+                "Baseline har ikke logisk ID/eier. Rapporten kan ikke bevise historisk eierskap, CKAsset-innhold, samtidighetsvern eller trygg import.",
+                "Ingen lokale filer eller kataloger opprettet/endret/slettet. CloudKit: SPERRET."
+            ] + binding + [ImportIdentityReport.render(backup: ImportIdentityReport.backupEntries(backup),
+                live: live, journalOperations: operations, baselineTags: baselineTags, currentTags: currentTags)])
+                .joined(separator: "\n")
+        } catch {
+            guard validatedZIPData == zip else { return }
+            identityReconciliationReport = (binding + [
+                "UFULLSTENDIG: CloudKit-identitetslesing feilet: \(error.localizedDescription). Ingen delvis identitetsrapport godkjennes.",
+                "Ingen lokale filer endret. CloudKit: SPERRET."
+            ]).joined(separator: "\n")
         }
     }
 
