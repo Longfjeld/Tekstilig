@@ -1,10 +1,27 @@
 # Endringslogg
 
+## Test 230 – fullstendig brukervalidert – 2026-11-06
+
+**230 ✅ fullstendig brukervalidert 2026-11-06.** Prosjekteieren har bekreftet den nye skrivebeskyttede diagnostikkfunksjonen i appen, korrekt avvisning av `Tekstilig-backup2.zip` ved avvikende SHA-256 og korrekt godkjenning av `Tekstilig-backup.zip` ved samsvar. Etterkontrollen viste uendret journal-ID, ZIP-binding og operasjonstall:
+
+- Journal-ID: `3EC77AF2-223E-4556-AAFB-98376557CE47`.
+- Lagret ZIP SHA-256: `004ced842dd8da950c7d3552d149bb1ca9af02e72d2491219e2ad376374bf963`.
+- Planlagte operasjoner: 4. Fullførte operasjoner: 0.
+- Alternativ ZIP SHA-256: `f34f8804d9ce1789e28eb71d5d476653add318a7ca30a13eebeb98249bd860b9`.
+
+Ingen faktisk import, restore eller CloudKit-skriving ble utført. Godkjenningen gjelder journalbinding og skrivebeskyttet diagnostikk; CloudKit-skriving/-sletting under import/restore er fortsatt sperret. Test 238 er fortsatt ✅ fullført. Tidligere ❗️-statuser for test 230 nedenfor og i senere testbeskrivelser er historikk fra før denne godkjenningen.
+
+
+## Test 230 – vis eksisterende v2-journalbinding – 2026-11-06
+
+- Ny knapp «Vis eksisterende v2-journalbinding (kun lesing)» i Roadmap 7 er tilgjengelig uten valgt backup. `inspectExistingV2JournalBinding()` leser eksisterende journal med `create: false`, validerer eksisterende format og viser full journal-ID, lagret ZIP SHA-256 og operasjonstall som markerbar tekst.
+- Manglende/ugyldig journal gir kontrollert AVVIST-melding. Ingen filer/kataloger opprettes eller endres; ingen ZIP, baseline eller CloudKit leses. Hash-/identitetslogikk er uendret. Funksjonen er brukervalidert i appen; hele test 230 er ✅, jf. valideringsoppføringen ovenfor.
+
 ## Test 230 – skrivefri journalverifikasjon – 2026-11-01
 
 - Rotårsak: `verifyBoundReadOnlyJournal()` nådde `FileManager.url(... create: true)` via de eldre URL-hjelperne, med mulig opprettelse av Application Support-katalogen.
 - Verifikasjonen gjenbruker nå `existingIdentityDiagnosticURL("read-only-import-plan-v2.json")` med `create: false`. Manglende katalog/journal håndteres av eksisterende feilrapportering. ZIP-hashkontroll, meldinger og journalformat er uendret; øvrige kallere og skrivefunksjoner er urørt.
-- Ingen ZIP, journal eller baseline endres; verifikasjonen leser ikke baseline og gjør ingen CloudKit-oppslag. Test 230-restpunktet er fortsatt ❗️ inntil brukeren har bekreftet avvisning av en annen gyldig ZIP med ulik hash og godkjenning av originalen.
+- Ingen ZIP, journal eller baseline endres; verifikasjonen leser ikke baseline og gjør ingen CloudKit-oppslag. Ved denne leveransen stod test 230-restpunktet ❗️; det ble senere fullstendig godkjent 2026-11-06, jf. oppføringen ovenfor.
 
 ## Test 238 – skrivebeskyttet identitetsrapport – 2026-11-01
 

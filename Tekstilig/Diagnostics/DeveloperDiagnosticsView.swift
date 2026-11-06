@@ -41,6 +41,7 @@ struct DeveloperDiagnosticsView: View {
     @State private var importJournalRecoveryReport: String?
     @State private var backupBindingReport: String?
     @State private var atomicJournalReport: String?
+    @State private var existingV2JournalBindingReport: String?
     @State private var journalOperationAuditReport: String?
     @State private var liveJournalRecheckReport: String?
     @State private var concurrencyGateReport: String?
@@ -469,6 +470,15 @@ struct DeveloperDiagnosticsView: View {
                         }
                     }
                     // These checks do not need a selected backup and must stay visible.
+                    Button("Vis eksisterende v2-journalbinding (kun lesing)") {
+                        inspectExistingV2JournalBinding()
+                    }
+                    .disabled(isReadingBackup || backupDiagnostic.isRunning)
+                    if let existingV2JournalBindingReport {
+                        Text(existingV2JournalBindingReport)
+                            .font(.callout.monospaced())
+                            .textSelection(.enabled)
+                    }
                     Button("Vis faktisk CKRecord.ID-strategi (kun kontroll)") {
                         inspectRepositoryIdentityStrategy()
                     }
@@ -1420,6 +1430,25 @@ struct DeveloperDiagnosticsView: View {
                 "Eldre journal og binding er uendret. Skriving til CloudKit: SPERRET."
         } catch {
             atomicJournalReport = "AVVIST: Lokal journalfeil: \(error.localizedDescription). CloudKit: SPERRET."
+        }
+    }
+
+    @MainActor
+    private func inspectExistingV2JournalBinding() {
+        do {
+            let journal = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
+                from: Data(contentsOf: existingIdentityDiagnosticURL("read-only-import-plan-v2.json")))
+            guard validBoundReadOnlyJournal(journal) else {
+                existingV2JournalBindingReport = "AVVIST: Eksisterende v2-journal er ugyldig. Filen beholdes. CloudKit: SPERRET."
+                return
+            }
+            existingV2JournalBindingReport = "Eksisterende v2-journalbinding lest og validert: OK.\n" +
+                "Journal-ID: \(journal.journalID.uuidString).\n" +
+                "Lagret ZIP SHA-256: \(journal.zipSHA256)\n" +
+                "Planlagte operasjoner: \(journal.operationIDs.count). Fullførte: \(journal.completedOperationCount).\n" +
+                "Ingen ZIP valgt eller kontrollert av denne handlingen. Journalen er uendret. CloudKit: SPERRET."
+        } catch {
+            existingV2JournalBindingReport = "AVVIST: Kan ikke lese/dekode eksisterende v2-journal: \(error.localizedDescription). Ingen filer opprettet eller endret. CloudKit: SPERRET."
         }
     }
 

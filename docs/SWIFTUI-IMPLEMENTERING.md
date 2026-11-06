@@ -1,6 +1,6 @@
 # SwiftUI – videre implementering
 
-**Gjeldende status 2026-11-01:** Kodegrunnlag `SwiftUIActualApp0086`, Git-commit `d3a0a62`. Test 237 ✅ validert OK av prosjekteieren. Test 238 ✅ fullført etter prosjekteierens uttrykkelige godkjenning av skrivebeskyttet identitetsavstemming og diagnostikkens filtrering på macOS 27.2. Dette godkjenner ikke import/restore eller CloudKit-skriving/-sletting. Negativtest med en annen gyldig ZIP fra test 230 er fortsatt uavklart. CloudKit-skriving under import/restore er fortsatt sperret. Se [PROSJEKTSTATUS.md](PROSJEKTSTATUS.md) for samlet status.
+**Gjeldende status 2026-11-01:** Kodegrunnlag `SwiftUIActualApp0086`, Git-commit `d3a0a62`. Test 237 ✅ validert OK av prosjekteieren. Test 238 ✅ fullført etter prosjekteierens uttrykkelige godkjenning av skrivebeskyttet identitetsavstemming og diagnostikkens filtrering på macOS 27.2. Dette godkjenner ikke import/restore eller CloudKit-skriving/-sletting. Hele test 230 er ✅ brukervalidert 2026-11-06, inkludert negativtesten med en annen gyldig ZIP og etterkontroll av uendret journalbinding. CloudKit-skriving under import/restore er fortsatt sperret. Se [PROSJEKTSTATUS.md](PROSJEKTSTATUS.md) for samlet status.
 
 **Historisk delstatus før utvidede grunnfiltre:** Textile 1–9 ✅ · Piece 10–18 ✅ · hovedbilde 20–29 ✅ · materiale/farge 30–39 ✅ · plassering 43–53 ✅ · vedlikehold/query 54–67 ✅ · fysiske egenskaper 68–77 ✅ · første søk/grunnfilter 78–86 ✅ · utvidede grunnfiltre fra 87 ❗️
 
@@ -4363,11 +4363,24 @@ Eksisterende journal fra test 228 bevares uendret. Ny lokal sidefil `read-only-i
 
 ## 230. Devpatch 0121 – SHA-256 i journalen ved opprettelse (kun lokalt)
 
+**230 ✅ fullstendig brukervalidert 2026-11-06.** Prosjekteieren har bekreftet den nye skrivebeskyttede diagnostikkfunksjonen i appen, korrekt avvisning av `Tekstilig-backup2.zip` ved avvikende SHA-256 og korrekt godkjenning av `Tekstilig-backup.zip` ved samsvar. Etterkontrollen viste uendret journal-ID, ZIP-binding og operasjonstall:
+
+- Journal-ID: `3EC77AF2-223E-4556-AAFB-98376557CE47`.
+- Lagret ZIP SHA-256: `004ced842dd8da950c7d3552d149bb1ca9af02e72d2491219e2ad376374bf963`.
+- Planlagte operasjoner: 4. Fullførte operasjoner: 0.
+- Alternativ ZIP SHA-256: `f34f8804d9ce1789e28eb71d5d476653add318a7ca30a13eebeb98249bd860b9`.
+
+Ingen faktisk import, restore eller CloudKit-skriving ble utført. Godkjenningen gjelder journalbinding og skrivebeskyttet diagnostikk; CloudKit-skriving/-sletting under import/restore er fortsatt sperret. Test 238 er fortsatt ✅ fullført. Tidligere ❗️-statuser for test 230 nedenfor og i senere testbeskrivelser er historikk fra før denne godkjenningen.
+
+### Historikk og gjennomført testprosedyre
+
 **Statuspresisering 2026-11-01:** Gjennomførte kontroller er tidligere validert, jf. punkt 231. Negativtest med en annen gyldig ZIP med ulikt innhold/hash er fortsatt ❗️ uavklart. Delstatusen nedenfor og testprosedyren beholdes som historikk.
 
 **230 ❗️ – avventer validering. 229 ✅ validert OK av bruker.**
 
 **Minimal rettelse 2026-11-01 – implementert, ikke brukervalidert:** `verifyBoundReadOnlyJournal()` bruker nå `existingIdentityDiagnosticURL("read-only-import-plan-v2.json")` med `create: false`, i stedet for URL-kjeden som kunne opprette Application Support-katalogen. Manglende katalog/journal gir eksisterende kontrollerte AVVIST-melding. Hashkontroll, godkjennings-/avvisningsmeldinger, journalformat og øvrige URL-kallere er uendret. Verifikasjonen leser ikke baseline og utfører ingen CloudKit-operasjoner. Ved gjenstående negativtest skal eksisterende grunnlag bevares; bruk bare «Velg ZIP-backup …» og «Kontroller ny journal og backupbinding (kun lokalt)». Ikke gjenta historikkens journalopprettelse. Alternativ ZIP må være en eksisterende gyldig backup med forskjellig SHA-256. Restpunktet forblir ❗️ til begge utfall er bekreftet av brukeren.
+
+**Diagnostikkutvidelse 2026-11-06 – implementert, ikke brukervalidert:** I **Utvikling → Diagnostikk → Roadmap 7: les backup (kun kontroll)** finnes nå «Vis eksisterende v2-journalbinding (kun lesing)», uten krav om valgt ZIP. Knappen ligger før «Vis faktisk CKRecord.ID-strategi (kun kontroll)». Den leser bare eksisterende v2-journal gjennom URL-hjelperen med `create: false`, bruker eksisterende validator og viser full journal-ID, lagret ZIP SHA-256 og planlagt operasjonstall. Manglende eller ugyldig journal gir AVVIST; ikke opprett eller erstatt journalen. Ingen ZIP-/baseline-lesing eller CloudKit-operasjoner. Sammenlign hele lagrede hashverdien mot de to kontrollerte backupene før negativtesten. Funksjonen er ikke kjørt mot brukerens journal; test 230-restpunktet forblir ❗️.
 
 Ny, separat `read-only-import-plan-v2.json` lagrer journal-ID, planlagte operasjoner og SHA-256 av de validerte ZIP-bytene **i samme atomiske filskriving**. Krever konfliktfri samlet CloudKit-forhåndskontroll og minst én operasjon. Eksisterende v1-journal og binding fra test 229 beholdes uendret. Eksisterende v2-journal overskrives aldri. Kontroll leser v2-filen, validerer format og sammenligner hash med valgt ZIP; endret ZIP avvises i minnet. Ingen CloudKit-skriving. V2 er fortsatt kun diagnostikk og kan ikke gjenoppta reell import.
 
