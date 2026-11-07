@@ -929,3 +929,35 @@ Test 104–122 viste at funksjonene er korrekte, men avdekket tre gjentakende UX
 - numeriske søkefelt unngår `FormatStyle`-binding under fokus og valideres før søk
 - Piece-rader og dimensjonsrader får større/helrad trykkflate
 - CloudKit-schemaet endres ikke
+
+
+## B-050 – Identitetsbeslutninger før import og restore
+
+**Dato:** 2026-11-06
+**Status:** Besluttet – arkitektur og testomfang godkjent; Swift-implementering er ikke godkjent
+
+### Beslutning
+
+1. Eksisterende CloudKit `recordName` skal bevares og gjenbrukes ved entydig samsvar mellom posttype, permanent logisk ID og tekstileier. Logisk nøkkel er posttype + logisk ID; eier kontrolleres separat. En underposts forelder må være entydig. Eksisterende recordidentitet og systemmetadata skal bevares.
+2. For nye poster skal beslutningsmodellen beregne deterministiske kandidatnavn etter en eksplisitt versjonert algoritme. Kandidatnavnet skal aldri erstatte et eksisterende recordnavn. Den konkrete algoritmen er **ikke godkjent som permanent produksjonsformat**; diagnostikkformelen fra test 238 er fortsatt en hypotese. Ugyldig identitetsgrunnlag eller kandidatnavn utenfor tillatte grenser skal gi stopp, uten stille normalisering eller trunkering.
+3. Gjenbruk av identitet gir ingen tillatelse til å oppdatere eller overskrive eksisterende innhold. En identitetsbeslutning betyr aldri alene at en CloudKit-skriving er trygg.
+4. Første fremtidige import begrenses til nye tekstiler med tilhørende underposter. Komplettering av eksisterende tekstiler krever egen beslutning. Modellen kan klassifisere eksisterende identiteter for avstemming uten å legge dem til en skriveplan.
+5. Dupliserte identiteter i backup eller CloudKit, eierkonflikter, tvetydige foreldre, opptatte kandidat-recordnavn, ufullstendig lesing, endret baseline og uavklarte tidligere operasjoner skal gi eksplisitt stopp. Kollisjon vurderes mot faktisk recordadresse i aktuell database/zone, også på tvers av posttyper. Deterministiske navn gir ikke fullstendig vern mot duplikater eller samtidige klienter.
+6. Test 239 skal ved senere, særskilt godkjent implementering validere en ren Swift-beslutningsmodell i minnet med syntetiske data for alle fem posttyper. Modellen skal kunne klassifisere gjenbruk, ny opprettelseskandidat, identitetskonflikt og ugyldig/manglende grunnlag. Den skal ikke ha filsystemtilgang eller CloudKit-operasjoner. Den validerte observasjonsdiagnostikken fra test 238 beholdes; strukturerte observasjoner kan senere tilpasses gjennom en separat adapter.
+
+### Begrunnelse
+
+Test 230 og 238 er fullført, brukervalidert og publisert på GitHub. Avstemmingen skiller permanente logiske ID-er fra faktiske CloudKit-recordnavn. Test 237 viste i simulering at ulike recordnavn kan representere samme logiske ID. Eksisterende identiteter må derfor bevares, mens konflikter og utilstrekkelig bevisgrunnlag må stoppe videre behandling før en eventuell fremtidig skriveoperasjon.
+
+### Konsekvens
+
+- Test 239 er planlagt ❗️, ikke implementert eller validert. Denne beslutningen gir ingen tillatelse til Swift-implementering, faktisk import/restore eller oppheving av CloudKit-skrivesperren.
+- Ikke-atomiske identitets- og versjonslesinger gir ingen garanti mot senere endringer. Baseline inneholder ikke alle identitets-/eieropplysninger. Lik baseline er ingen skrivetillatelse.
+- Fremtidig utførelsesjournal, gjenopptakingsmodell, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Eksisterende v2-journal er bare en diagnostisk plan og skal ikke omskrives til utførelsesjournal.
+- Eksisterende CloudKit-poster skal ikke slettes, omdøpes eller migreres automatisk. ZIP, journal og baseline skal bevares.
+- De eksakte filterparene `Textile:swiftui-poc-textile-v1`, `Piece:swiftui-poc-piece-v1` og `TextileImage:swiftui-poc-textile-image-v1` skal fortsatt inngå i kollisjonsvurderingen av recordnavn. Filtrering gjør ikke navnene ledige. Manglende identitets-/eieropplysninger må uttrykkes som ufullstendig grunnlag der de er nødvendige; filtertreff beviser ikke historisk opprinnelse.
+- Den historiske bildeposten `IMG-204AB741-6904-42E7-85C9-5A0AD15F44DC`, eier `T0001`, recordName `74B85BA7-9EBF-48FD-A04A-828329F9B237`, skal forbli urørt. Den er en sannsynlig historisk rest, ikke fullstendig verifisert som foreldreløs. En fremtidig operasjon som avhenger av en uavklart eierrelasjon skal stoppes.
+- Journal `3EC77AF2-223E-4556-AAFB-98376557CE47` har fortsatt fire planlagte og null fullførte operasjoner. Godkjent identitetsstrategi endrer ikke journalen eller utfører operasjonene.
+- Test 239 kan bevise klassifisering av gitte syntetiske inndata, men ikke CloudKit-atomisitet, faktisk idempotens eller trygg produksjonsimport.
+
+Se test 239 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md) og [gjeldende prosjektstatus](PROSJEKTSTATUS.md).

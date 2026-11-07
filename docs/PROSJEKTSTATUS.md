@@ -5,7 +5,9 @@
 ## Gjeldende status
 
 - Autoritativ kilde for kode og versjonert dokumentasjon: Git-repositoriet, jf. [AGENTS.md](../AGENTS.md).
-- Siste bekreftede kodegrunnlag: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
+- Siste bekreftede komplette snapshot: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
+- Publisert Git-grunnlag før dette dokumentasjonsarbeidet: `40594e07b0b2234b7cf3e24fd48e2e9a566d9be0` på synkronisert `main`/`origin/main`. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
+- Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). Godkjenningen gjelder arkitektur og testomfang; ingen Swift-implementering eller importskriving er godkjent.
 - Aktiv klient: native SwiftUI for iOS, iPadOS og macOS. Miljø: Xcode 27.2 og OS 27.2; CloudKit Development.
 - Roadmap-punkt 1–5 er dokumentert fullført. Eksport/backup, test 198–204, er validert på iPhone, iPad og macOS. Roadmap-punkt 7, import/restore, pågår som diagnostikk og sikkerhetsavklaring; faktisk restore er ikke klar.
 - Xcode-prosjektet angir fortsatt minimumsversjon 27.0 for iOS og macOS. Dette er en annen innstilling enn gjeldende miljø 27.2; prosjektinnstillingene er ikke endret i denne dokumentasjonsoppdateringen.
@@ -31,13 +33,13 @@ Ingen faktisk import, restore eller CloudKit-skriving ble utført. Godkjenningen
 
 ## Neste test
 
-Neste nummererte test er ikke fastlagt. Test 238 er avsluttet; videre arbeid må avgrenses og godkjennes før oppstart. Test 230 er nå fullstendig godkjent, og test 238 er fortsatt fullført.
+**239 ❗️ – Identitetsbeslutninger i minnet – ingen skriving.** Planlagt i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md#239-identitetsbeslutninger-i-minnet--ingen-skriving), ikke implementert eller validert. Neste steg er gjennomgang av dokumentasjonen og særskilt godkjenning før Swift-implementering. Test 230 og 238 er fortsatt fullført.
 
-Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md): logiske ID-er er egne felt; normale save-metoder bruker eksisterende `cloudRecordName` ved oppdatering og `CKRecord(recordType:)` ved ny post. Test 237 viser risiko for to ulike recordnavn med samme logiske ID. Rapporten bruker bare den allerede eksisterende diagnostikkformelen for hypotetiske kandidatnavn; ingen ny identitetsstrategi er vedtatt.
+Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md): logiske ID-er er egne felt; normale save-metoder bruker eksisterende `cloudRecordName` ved oppdatering og `CKRecord(recordType:)` ved ny post. Test 237 viser risiko for to ulike recordnavn med samme logiske ID. Test 238 bruker fortsatt eksisterende diagnostikkformel for hypotetiske kandidatnavn. B-050 fastsetter gjenbruk av entydige eksisterende identiteter og versjonerte deterministiske kandidater for nye poster; konkret navnealgoritme er ikke godkjent som permanent produksjonsformat.
 
 ## Åpne problemer og uavklarte tester
 
-- Duplikatvern, samtidighet og bevaring av eksisterende recordnavn må avklares før reell import. Ikke-atomiske CloudKit-lesinger og lokale simuleringer gir ingen garanti mot endringer før en eventuell skriving.
+- B-050 fastsetter identitetsreglene; implementering av duplikatvern og faktisk samtidighetskontroll må fortsatt avklares og testes før reell import. Ikke-atomiske CloudKit-lesinger og lokale simuleringer gir ingen garanti mot endringer før en eventuell skriving.
 - Eldre dokumenter har statusetterslep: rotens `README.md` beskriver devpatch 0051, `docs/README.md` beskriver devpatch 0009, og `CLOUDKIT-OPPSETT.md` har en gammel PoC-status. Bruk dem for relevant kontekst, ikke dagens neste steg.
 - Eldre metodikk og beslutning B-016 omtaler opplastet ZIP som autoritativ kilde og viser commit/push som normal arbeidsflyt. For Codex-arbeid her gjelder Git som autoritativ kilde og eksplisitt tillatelse før commit/push, jf. `AGENTS.md`.
 - Eldre eksporteksempler i `ARKITEKTUR.md` og `DATAMODELL.md` bruker `tekstiler.json`/`bilder/`. Gjeldende backupkontrakt er ZIP med `backup.json` og `images/`, jf. test 198–204 og eksisterende backupkode. En full lokal database/cache er behovsdrevet arbeid etter 1.0 ifølge roadmapet, ikke dokumentert ferdig funksjonalitet.
@@ -50,7 +52,7 @@ Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.m
 
 ## Neste planlagte arbeid
 
-Etter godkjent test 238 er neste steg å avklare omfanget av videre identitetsstrategi mot eksisterende repositories og rapporterte funn, før eventuell implementering. Test 230-restpunktet er avsluttet etter uttrykkelig brukergodkjenning. Rapporten åpner ingen skrivesperrer.
+Gjennomgå B-050 og den planlagte test 239 før særskilt godkjenning av Swift-implementering. Første fremtidige importomfang er nye tekstiler med underposter; komplettering av eksisterende tekstiler, utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Test 230-restpunktet er avsluttet. Ingen skrivesperrer åpnes.
 
 ## Historiske referansedokumenter
 

@@ -1,5 +1,12 @@
 # Endringslogg
 
+## B-050 og planlagt test 239 – 2026-11-06
+
+- Dokumentert seks godkjente arkitekturbeslutninger: bevar entydige eksisterende identiteter, bruk versjonerte deterministiske kandidatnavn for nye poster, skill identitetsgjenbruk fra innholdsoppdatering, avgrens første fremtidige import til nye tekstiler med barn, stopp eksplisitt ved konflikt/utilstrekkelig grunnlag, og planlegg en ren beslutningsmodell i minnet. Konkret navnealgoritme er ikke godkjent som permanent produksjonsformat.
+- Test 239 er etablert som en sekvensiell plan med syntetiske tilfeller, forventede resultater og stoppkriterier. Alle punkter står ❗️; ingen Swift-implementering eller testkjøring er gjennomført eller godkjent i denne leveransen.
+- Prosjektstatus og roadmap angir test 230 og 238 som fullført og publisert på GitHub. Godkjent strategi åpner ingen CloudKit-skrivesperrer og gir ingen garanti for atomisitet, faktisk idempotens eller trygg import. PoC-recordnavn inngår fortsatt i kollisjonsvurdering; T0001-bildeposten og fire planlagte, ikke utførte journaloperasjoner bevares.
+- Bare dokumentasjon er endret. Utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester.
+
 ## Test 230 – fullstendig brukervalidert – 2026-11-06
 
 **230 ✅ fullstendig brukervalidert 2026-11-06.** Prosjekteieren har bekreftet den nye skrivebeskyttede diagnostikkfunksjonen i appen, korrekt avvisning av `Tekstilig-backup2.zip` ved avvikende SHA-256 og korrekt godkjenning av `Tekstilig-backup.zip` ved samsvar. Etterkontrollen viste uendret journal-ID, ZIP-binding og operasjonstall:
