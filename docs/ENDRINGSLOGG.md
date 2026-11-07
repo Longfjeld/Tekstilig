@@ -1,5 +1,29 @@
 # Endringslogg
 
+## Test 239 – fullført og brukervalidert – 2026-11-07
+
+**239 ✅ fullført og uttrykkelig brukervalidert 2026-11-07.** Prosjekteieren har godkjent alle punktene 239.1–239.11 og testen samlet etter sekvensiell gjennomgang. Sluttresultatet er **38 syntetiske tester bestått, 0 feilet**, exitkode 0, vellykkede macOS- og iOS/iPadOS-bygg med Xcode 27.2 og gjennomført skrivefri etterkontroll uten avvik. Tidligere resultater ble gjenbrukt der de var tilstrekkelige.
+
+Godkjenningen gjelder bare den isolerte Swift-beslutningsmodellen og det syntetiske testoppsettet. Den godkjenner ikke faktisk CloudKit-import/restore, faktisk idempotens, atomisitet mellom lesinger, produksjonsformat for kandidatnavn eller CloudKit-skriving/-sletting. `permitsCloudKitWriting` og kandidatenes `approvedForProduction` er fortsatt `false`. Faktisk testkjøring er utført isolert på Mac; iOS/iPadOS-dekningen omfatter bygg, ikke funksjonskjøring på fysisk iPhone/iPad.
+
+Etterkontrollen bekreftet IO-fri modellkallkjede, uendrede inndata, manglende skriveautorisasjon og urørt eksisterende diagnostikk, repositories og dataformater. Modellen har ikke lest eller endret faktiske ZIP-er, journaler, baseline eller CloudKit-poster. Xcodes lokale brukerfil er bevart utenfor oppgaveendringene. Ingen modellkobling til import/restore eller reelle data er implementert. Endringene for test 239 er fortsatt lokale og ikke committet eller publisert.
+
+Tidligere oppføringer nedenfor bevarer status ved implementering, automatisert testing og kodegjennomgang; deres åpne testmarkeringer er historikk fra før denne uttrykkelige godkjenningen.
+
+## Test 239 – rettelser av P1/P2 – 2026-11-07
+
+- P1: `evaluate(_:)` avstemmer inventar og identitetsobservasjoner begge veier. Manglende identitet gir `unexplainedInventoryRecord`; eksakte PoC-filterpar gir `unresolvedFilteredIdentity`. Begge stopper rapporten, uten kandidater eller antakelse om at navn er ledige.
+- P2: testene krever komplett forventet nøkkelsett, radantall, beslutningsvariant og riktige stoppnøkler/adresser. Alle 26 opprinnelige scenarioer er beholdt; 12 nye regresjons-/orakelkontroller omfatter de fem etterspurte feilsituasjonene og avviser tomme/feilplasserte resultater.
+- Faktisk resultat: 38 bestått, 0 feilet, i isolert `swiftc`-oppsett med nettverk, filskriving og brukermappelesing blokkert. Begge appbygg lyktes; kun AppIntents-metadataadvarsel. `git diff --check` og statisk sikkerhetskontroll er utført. Test 239 og alle elleve punkter forblir ❗️.
+- B-050, eksisterende diagnostikk, repositories, prosjektstruktur og dataformater er urørt. Ingen faktisk import/restore, reell datatilgang eller CloudKit-operasjoner. Komplett dekning er fortsatt et inputkrav; ikke-atomiske lesinger og modellbeslutninger gir ingen skriveautorisasjon.
+
+## Test 239 – ren modell og isolert testprogram – 2026-11-07
+
+- Implementert `ImportIdentityDecisionModel` med immutable syntetiske verdier, typet identitetsnøkkel, separate eiere, strukturerte/sorterte beslutninger og stoppgrunner. Eksisterende identiteter bevares, og nye kandidater bruker foreløpig versjonert test 238-formel. Ingen IO, framework-imports eller skriveautorisasjon i modellen.
+- Isolert `Tests/ImportIdentityDecisionModelTests.swift` kompilerer samme modellfil med `swiftc`, uten Xcode-target-/prosjektendring. 26 syntetiske tilfeller bestod, 0 feilet, i ekstra sandkasse uten nettverk/filskriving/brukermappelesing. Eksakte PoC-navn testes direkte mot den felles kollisjonsregelen; end-to-end-kollisjoner testes med beregnede kandidatnavn.
+- macOS- og iOS/iPadOS-appbygg lyktes uten signering eller appkjøring. Eksplisitt `nonisolated` håndterer prosjektets standard actor-isolasjon; endelige bygg har kun AppIntents-metadataadvarsel. Statisk kontroll og `git diff --check` er utført.
+- Test 239 og alle elleve punkter forblir ❗️ til brukervalidering. B-050, test 230/238-diagnostikk, backupformat, repositories og prosjektstruktur er urørt. Ingen reelle data leses, ingen import/restore utføres og CloudKit-skrivesperrene består. Se implementeringsloggen for kommando, dekning og begrensninger.
+
 ## B-050 og planlagt test 239 – 2026-11-06
 
 - Dokumentert seks godkjente arkitekturbeslutninger: bevar entydige eksisterende identiteter, bruk versjonerte deterministiske kandidatnavn for nye poster, skill identitetsgjenbruk fra innholdsoppdatering, avgrens første fremtidige import til nye tekstiler med barn, stopp eksplisitt ved konflikt/utilstrekkelig grunnlag, og planlegg en ren beslutningsmodell i minnet. Konkret navnealgoritme er ikke godkjent som permanent produksjonsformat.

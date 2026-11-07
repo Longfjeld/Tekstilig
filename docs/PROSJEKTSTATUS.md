@@ -1,13 +1,13 @@
 # Gjeldende prosjektstatus – Tekstilig
 
-**Oppdatert:** 2026-11-06. Status og testbekreftelser nedenfor er oppgitt av prosjekteieren; commit er kontrollert i lokal Git-historikk. Dette er inngangen til gjeldende progresjon, ikke en ny funksjonsvalidering.
+**Oppdatert:** 2026-11-07. Status og testbekreftelser nedenfor er oppgitt av prosjekteieren; commit er kontrollert i lokal Git-historikk. Dette er inngangen til gjeldende progresjon, ikke en ny funksjonsvalidering.
 
 ## Gjeldende status
 
 - Autoritativ kilde for kode og versjonert dokumentasjon: Git-repositoriet, jf. [AGENTS.md](../AGENTS.md).
 - Siste bekreftede komplette snapshot: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
 - Publisert Git-grunnlag før dette dokumentasjonsarbeidet: `40594e07b0b2234b7cf3e24fd48e2e9a566d9be0` på synkronisert `main`/`origin/main`. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
-- Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). Godkjenningen gjelder arkitektur og testomfang; ingen Swift-implementering eller importskriving er godkjent.
+- Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). B-050 gjelder arkitektur og testomfang. Særskilt godkjenning 2026-11-07 omfatter ren modell og isolert testprogram; importskriving er fortsatt sperret.
 - Aktiv klient: native SwiftUI for iOS, iPadOS og macOS. Miljø: Xcode 27.2 og OS 27.2; CloudKit Development.
 - Roadmap-punkt 1–5 er dokumentert fullført. Eksport/backup, test 198–204, er validert på iPhone, iPad og macOS. Roadmap-punkt 7, import/restore, pågår som diagnostikk og sikkerhetsavklaring; faktisk restore er ikke klar.
 - Xcode-prosjektet angir fortsatt minimumsversjon 27.0 for iOS og macOS. Dette er en annen innstilling enn gjeldende miljø 27.2; prosjektinnstillingene er ikke endret i denne dokumentasjonsoppdateringen.
@@ -31,14 +31,21 @@ Godkjenningen omfatter ikke faktisk import/restore, CloudKit-skriving eller -sle
 
 Ingen faktisk import, restore eller CloudKit-skriving ble utført. Godkjenningen gjelder journalbinding og skrivebeskyttet diagnostikk; CloudKit-skriving/-sletting under import/restore er fortsatt sperret. Test 238 er fortsatt ✅ fullført. Tidligere ❗️-statuser for test 230 nedenfor og i senere testbeskrivelser er historikk fra før denne godkjenningen.
 
+**239 ✅ fullført og uttrykkelig brukervalidert 2026-11-07.** Prosjekteieren har godkjent alle punktene 239.1–239.11 og testen samlet etter sekvensiell gjennomgang. Sluttresultatet er **38 syntetiske tester bestått, 0 feilet**, exitkode 0, vellykkede macOS- og iOS/iPadOS-bygg med Xcode 27.2 og gjennomført skrivefri etterkontroll uten avvik. Tidligere resultater ble gjenbrukt der de var tilstrekkelige.
+
+Godkjenningen gjelder bare den isolerte Swift-beslutningsmodellen og det syntetiske testoppsettet. Den godkjenner ikke faktisk CloudKit-import/restore, faktisk idempotens, atomisitet mellom lesinger, produksjonsformat for kandidatnavn eller CloudKit-skriving/-sletting. `permitsCloudKitWriting` og kandidatenes `approvedForProduction` er fortsatt `false`. Faktisk testkjøring er utført isolert på Mac; iOS/iPadOS-dekningen omfatter bygg, ikke funksjonskjøring på fysisk iPhone/iPad.
+
+Etterkontrollen bekreftet IO-fri modellkallkjede, uendrede inndata, manglende skriveautorisasjon og urørt eksisterende diagnostikk, repositories og dataformater. Modellen har ikke lest eller endret faktiske ZIP-er, journaler, baseline eller CloudKit-poster. Xcodes lokale brukerfil er bevart utenfor oppgaveendringene. Ingen modellkobling til import/restore eller reelle data er implementert. Endringene for test 239 er fortsatt lokale og ikke committet eller publisert.
+
 ## Neste test
 
-**239 ❗️ – Identitetsbeslutninger i minnet – ingen skriving.** Planlagt i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md#239-identitetsbeslutninger-i-minnet--ingen-skriving), ikke implementert eller validert. Neste steg er gjennomgang av dokumentasjonen og særskilt godkjenning før Swift-implementering. Test 230 og 238 er fortsatt fullført.
+Neste nummererte test er ikke fastlagt. Test 239 og alle elleve delpunkter er ✅ fullført. Test 230 og 238 er fortsatt fullført og publisert. Videre arbeid må avgrenses og bestilles særskilt; denne godkjenningen starter ikke neste utviklingsfase.
 
 Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md): logiske ID-er er egne felt; normale save-metoder bruker eksisterende `cloudRecordName` ved oppdatering og `CKRecord(recordType:)` ved ny post. Test 237 viser risiko for to ulike recordnavn med samme logiske ID. Test 238 bruker fortsatt eksisterende diagnostikkformel for hypotetiske kandidatnavn. B-050 fastsetter gjenbruk av entydige eksisterende identiteter og versjonerte deterministiske kandidater for nye poster; konkret navnealgoritme er ikke godkjent som permanent produksjonsformat.
 
 ## Åpne problemer og uavklarte tester
 
+- Test 239 avstemmer nå inventar og identiteter begge veier. Uforklarte poster og PoC-filtertreff uten identitetsobservasjon gir eksplisitt grunnlagsstopp; filtrering betyr ikke ledig navn eller verifisert identitet. Ingen adapter til reelle data er implementert.
 - B-050 fastsetter identitetsreglene; implementering av duplikatvern og faktisk samtidighetskontroll må fortsatt avklares og testes før reell import. Ikke-atomiske CloudKit-lesinger og lokale simuleringer gir ingen garanti mot endringer før en eventuell skriving.
 - Eldre dokumenter har statusetterslep: rotens `README.md` beskriver devpatch 0051, `docs/README.md` beskriver devpatch 0009, og `CLOUDKIT-OPPSETT.md` har en gammel PoC-status. Bruk dem for relevant kontekst, ikke dagens neste steg.
 - Eldre metodikk og beslutning B-016 omtaler opplastet ZIP som autoritativ kilde og viser commit/push som normal arbeidsflyt. For Codex-arbeid her gjelder Git som autoritativ kilde og eksplisitt tillatelse før commit/push, jf. `AGENTS.md`.
@@ -52,7 +59,7 @@ Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.m
 
 ## Neste planlagte arbeid
 
-Gjennomgå B-050 og den planlagte test 239 før særskilt godkjenning av Swift-implementering. Første fremtidige importomfang er nye tekstiler med underposter; komplettering av eksisterende tekstiler, utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Test 230-restpunktet er avsluttet. Ingen skrivesperrer åpnes.
+Test 239 er avsluttet etter uttrykkelig godkjenning av alle elleve punkter og testen samlet. Avvent særskilt bestilling av videre arbeid. Ingen modellkobling til eksisterende diagnostikk, import eller restore er implementert. Første fremtidige importomfang er nye tekstiler med underposter; komplettering av eksisterende tekstiler, utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Test 230-restpunktet er avsluttet. Ingen skrivesperrer åpnes.
 
 ## Historiske referansedokumenter
 
