@@ -1,5 +1,28 @@
 # Endringslogg
 
+## Test 241 B.2 – fullført og brukervalidert
+
+**Test 241 B.2 ✅ fullført og uttrykkelig brukervalidert.** Brukeren har bekreftet forventede resultater etter macOS/Debug-signeringsrettelsen: Development gir verifisert lokalt miljø og samsvar; Production som forventning gir korrekt STOPP ved avvik mot observert Development. Alle seks praktiske punkter er godkjent. Dette validerer lokal signatur-/entitlement-kontroll i macOS-appen, ikke en app signert for Production eller kontakt med CloudKit-serveren.
+
+Sluttgrunnlaget omfatter 102 PASS/0 FAIL (38 modell-, 23 adapter- og 41 leser-/miljøtester), signert macOS/Debug-bygg, iOS/iPadOS-bygg uten signering, kontrollert `.xcent`, signert app og provisioningprofil samt sikkerhets-/diffkontroller. Codex har ikke startet appen eller utført CloudKit-operasjoner; praktisk kjøring er utført av brukeren.
+
+**Senere CloudKit-lesetester og øvrig fase B forblir ❗️**, uten tillatelse til nye konto-/recordoppslag. iOS/iPadOS-miljø, historisk baselinebinding og atomisitet er fortsatt uavklart. Ingen import, restore, CloudKit-skriving/-sletting eller produksjonsgodkjenning av kandidatidentiteter er godkjent. Fase A og B.1 beholdes ✅.
+
+Tidligere implementerings- og signeringsoppføringer nedenfor bevarer status før godkjenningen.
+
+## Test 241 B.2 – avgrenset macOS/Debug-signering – 2026-11-07
+
+- ❗️ Brukerens første praktiske forsøk ga korrekt STOPP ved manglende CloudKit-miljøentitlement. Separat `Tekstilig-macOS-Debug.entitlements` bevarer originalens rettigheter og legger bare til `com.apple.developer.icloud-container-environment = Development`. Bare macOS/Debug velger den nye filen; originalfil, øvrige plattformer og Release er uendret.
+- Signert macOS/Debug-bygg bestått. Generert `.xcent`, signert app (`codesign`) og innebygd provisioningprofil viser/tillater Development. Signaturen består streng verifikasjon på disk med tilgang til systemets tillitstjenester. Effektive bygginnstillinger er kontrollert for macOS/iOS, Debug/Release. Ingen profiloppdatering eller appkjøring.
+- iOS/iPadOS-bygg uten signering og ny kompilering/kjøring av 38 modelltester, 23 adaptertester og 41 leser-/miljøtester bestått: **102 PASS, 0 FAIL**. Sikkerhets- og diffkontroll bestått. Ingen endring av verifikator, repositories eller datagrunnlag; ingen CloudKit-oppslag. Alle praktiske B.2-punkter forblir ❗️ til brukervalidering etter rettelsen. Tidligere resultater nedenfor er historikk.
+
+## Test 241 B.2 – isolert lokal miljødiagnostikk – 2026-11-07
+
+- ❗️ Implementert macOS-/DEBUG-oppstartsparameter `--diagnostic-local-cloudkit-environment`. Isolert approt oppretter bare `LocalCloudKitEnvironmentDiagnosticView`, uten bibliotek eller vanlig diagnostikk. Normal oppstartsvei beholdes når parameteren ikke er aktiv; iOS/iPadOS og Release får ingen ny oppstartsmodus.
+- Eksplisitt miljøvalg uten standardverdi og én knapp som bare bruker eksisterende miljøverifikator med systemkilden. Resultat og bevisstatus skiller verifisert miljø, avvik og konkrete STOPP-årsaker; ingen lagring, automatisk kontroll, konto-/recordoppslag eller skrivetillatelse. Miljøbytte nullstiller tidligere resultat.
+- macOS- og iOS/iPadOS-bygg bestått uten signering/appkjøring, deretter 41/41 eksisterende syntetiske leser-/miljøtester PASS, 0 FAIL. Første begrensede macOS-bygg ble hindret av SwiftUI-makroverktøyets tilgang; samme bygg bestod med nødvendig tilgang, uten koderettelse. Statisk sikkerhets- og diffkontroll bestått. Ingen faktisk Security-beviskilde eller CloudKit-transport kjørt.
+- Nummerert Xcode 27.2-prosedyre er dokumentert i implementeringsloggen. B.2 forblir ❗️ frem til brukervalidering; fase A og B.1 beholdes ✅. Eksisterende miljøverifikator, repositories, dataformater, ZIP, journal og baseline er urørt.
+
 ## Test 241 B.1 – fullført og brukergodkjent – 2026-11-07
 
 **Test 241 B.1 ✅ fullført og uttrykkelig brukergodkjent 2026-11-07.** Alle sju B.1-punkter er godkjent innen det syntetiske omfanget. Sluttresultat: 41/41 leser-/miljøtester (15 nye), 38/38 modelltester og 23/23 adaptertester – **102 PASS, 0 FAIL**. macOS- og iOS/iPadOS-bygg samt sikkerhets-/diffkontroller er bestått. Ingen faktisk Security-beviskilde, konto-/identitetslesing, CloudKit-transport eller app er kjørt.

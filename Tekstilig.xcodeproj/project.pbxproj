@@ -253,6 +253,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Tekstilig/Tekstilig.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Tekstilig/Tekstilig-macOS-Debug.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;

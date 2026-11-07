@@ -6,7 +6,7 @@
 
 - Autoritativ kilde for kode og versjonert dokumentasjon: Git-repositoriet, jf. [AGENTS.md](../AGENTS.md).
 - Siste bekreftede komplette snapshot: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
-- Publisert Git-grunnlag før test 241 fase B.1: `e225113fffc4d8845b5d7c86336e0c80e029c758` på synkronisert `main`/`origin/main`. Test 239, 240 og 241 fase A er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
+- Publisert Git-grunnlag før test 241 fase B.2: `2edc002614da0c80c3d432ff8a92e74fe3fb372f` på synkronisert `main`/`origin/main`. Test 239, 240 og 241 fase A/B.1 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
 - Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). B-050 gjelder arkitektur og testomfang. Særskilt godkjenning 2026-11-07 omfatter ren modell og isolert testprogram; importskriving er fortsatt sperret.
 - Aktiv klient: native SwiftUI for iOS, iPadOS og macOS. Miljø: Xcode 27.2 og OS 27.2; CloudKit Development.
 - Roadmap-punkt 1–5 er dokumentert fullført. Eksport/backup, test 198–204, er validert på iPhone, iPad og macOS. Roadmap-punkt 7, import/restore, pågår som diagnostikk og sikkerhetsavklaring; faktisk restore er ikke klar.
@@ -43,7 +43,7 @@ Godkjenningen gjelder bare den isolerte adapteren og den skrivebeskyttede beslut
 
 ## Neste test
 
-Test 240 og alle åtte punkter er ✅ fullført og brukervalidert. Test 239, 230 og 238 er fortsatt fullført og publisert. Test 240 er committet i `671c339`, integrert i `main` og publisert. Test 241 fase A ✅ er fullført og samlet brukergodkjent for isolert leser med falsk transport. Test 241 B.1 ✅ er samlet brukergodkjent for miljøverifikasjon med syntetiske tester. B.2 er fortsatt ❗️. Øvrig fase B og praktiske CloudKit-kontroller er fortsatt ❗️, ikke gjennomført eller godkjent. Ingen faktisk CloudKit-lesing er kjørt eller godkjent i fase A; videre praktisk arbeid krever særskilt bestilling.
+Test 240 og alle åtte punkter er ✅ fullført og brukervalidert. Test 239, 230 og 238 er fortsatt fullført og publisert. Test 240 er committet i `671c339`, integrert i `main` og publisert. Test 241 fase A ✅ er fullført og samlet brukergodkjent for isolert leser med falsk transport. Test 241 B.1 ✅ er samlet brukergodkjent for miljøverifikasjon med syntetiske tester. B.2 ✅ er brukervalidert for lokal miljøkontroll på macOS etter signeringsrettelsen. Senere CloudKit-lesetester og øvrig fase B er fortsatt ❗️, ikke gjennomført eller godkjent. Ingen faktisk CloudKit-lesing er kjørt eller godkjent i fase A; videre praktisk arbeid krever særskilt bestilling.
 
 Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md): logiske ID-er er egne felt; normale save-metoder bruker eksisterende `cloudRecordName` ved oppdatering og `CKRecord(recordType:)` ved ny post. Test 237 viser risiko for to ulike recordnavn med samme logiske ID. Test 238 bruker fortsatt eksisterende diagnostikkformel for hypotetiske kandidatnavn. B-050 fastsetter gjenbruk av entydige eksisterende identiteter og versjonerte deterministiske kandidater for nye poster; konkret navnealgoritme er ikke godkjent som permanent produksjonsformat.
 
@@ -61,6 +61,22 @@ Miljøverifikasjon er implementert med offentlige macOS-API-er: SecCodeCopySelf 
 
 **B.2 ❗️ og praktisk validering gjenstår**, uten tillatelse til å starte dem. Fase A beholdes ✅. Miljøbevis i en faktisk signert macOS-app er ikke praktisk validert; iOS/iPadOS er fortsatt uverifisert/STOPP. Historisk baselinebinding og manglende atomisitetsgaranti består. Godkjenningen gir ingen import-/restore-, CloudKit-skrive-/slette- eller produksjonstillatelse for kandidatidentiteter.
 
+## Siste validering – test 241 B.2 ✅
+
+**Test 241 B.2 ✅ fullført og uttrykkelig brukervalidert.** Brukeren har bekreftet forventede resultater etter macOS/Debug-signeringsrettelsen: Development gir verifisert lokalt miljø og samsvar; Production som forventning gir korrekt STOPP ved avvik mot observert Development. Alle seks praktiske punkter er godkjent. Dette validerer lokal signatur-/entitlement-kontroll i macOS-appen, ikke en app signert for Production eller kontakt med CloudKit-serveren.
+
+Sluttgrunnlaget omfatter 102 PASS/0 FAIL (38 modell-, 23 adapter- og 41 leser-/miljøtester), signert macOS/Debug-bygg, iOS/iPadOS-bygg uten signering, kontrollert `.xcent`, signert app og provisioningprofil samt sikkerhets-/diffkontroller. Codex har ikke startet appen eller utført CloudKit-operasjoner; praktisk kjøring er utført av brukeren.
+
+**Senere CloudKit-lesetester og øvrig fase B forblir ❗️**, uten tillatelse til nye konto-/recordoppslag. iOS/iPadOS-miljø, historisk baselinebinding og atomisitet er fortsatt uavklart. Ingen import, restore, CloudKit-skriving/-sletting eller produksjonsgodkjenning av kandidatidentiteter er godkjent. Fase A og B.1 beholdes ✅.
+
+De følgende implementerings- og kontrollnotatene bevarer historikken før samlet brukergodkjenning.
+
+Isolert lokal miljødiagnostikk er implementert for macOS/DEBUG med oppstartsparameter `--diagnostic-local-cloudkit-environment`. Approten velger en separat visning før `ContentView` opprettes; bibliotek og vanlig diagnostikk inngår ikke i isolert modus. Én knapp kaller bare eksisterende `evaluate(source:expected:)` med systemkilden. Forventet miljø har ingen standardverdi; resultat, bevisstatus og konkrete STOPP-årsaker vises bare i minnet. Ingen CloudKit-transport eller filskriving er koblet til.
+
+Teknisk kontroll: macOS- og iOS/iPadOS-bygg bestått uten signering/appkjøring, deretter 41/41 eksisterende syntetiske leser-/miljøtester bestått. Sikkerhetsetterkontroll og diffkontroll bestått. Ingen faktisk app, systembeviskilde eller CloudKit-operasjon er kjørt. Praktisk kontroll i signert macOS-app gjenstår etter den nummererte B.2-prosedyren i implementeringsloggen; **B.2 forblir ❗️**. Fase A og B.1 beholdes ✅. iOS/iPadOS-miljø, historisk baselinebinding og atomisitet er fortsatt uavklart.
+
+**B.2-signering rettet, fortsatt ❗️:** Brukerens første praktiske forsøk stoppet korrekt fordi CloudKit-miljøentitlement manglet. Separat `Tekstilig-macOS-Debug.entitlements` og Debug-/macOS-avgrenset `CODE_SIGN_ENTITLEMENTS` angir nå eksplisitt Development med alle eksisterende rettigheter bevart. Øvrige plattformer og Release bruker originalfilen. Signert macOS/Debug-bygg, `.xcent`, signert app og innebygd profil er kontrollert: Development er til stede og tillatt; signaturen består verifikasjon på disk. iOS/iPadOS-regresjonsbygg og 102/102 syntetiske tester bestått. Effektive bygginnstillinger bekrefter avgrensningen. Ingen appkjøring, faktisk miljøverifikator eller CloudKit-oppslag er utført av Codex. Ny praktisk B.2-kjøring etter rettelsen gjenstår; alle seks punkter forblir ❗️. Miljøvalget gjelder hele macOS/Debug-appen, men autoriserer ingen datatilgang.
+
 ## Åpne problemer og uavklarte tester
 
 - Test 239 avstemmer nå inventar og identiteter begge veier. Uforklarte poster og PoC-filtertreff uten identitetsobservasjon gir eksplisitt grunnlagsstopp; filtrering betyr ikke ledig navn eller verifisert identitet. Test 240 tilpasser bare allerede innleste strukturerte diagnostikkverdier; uverifisert kontekst/råverdier og manglende PoC-identiteter gir fortsatt stopp.
@@ -77,7 +93,7 @@ Miljøverifikasjon er implementert med offentlige macOS-API-er: SecCodeCopySelf 
 
 ## Neste planlagte arbeid
 
-Test 240 er avsluttet etter samlet brukergodkjenning, inkludert praktisk UI-test etter én særskilt godkjent, skrivebeskyttet test 238-kjøring. Forventet STOPP ved uverifisert CloudKit-kontekst og manglende recordkontekst ble bekreftet. Grunnlagsmanglene er ikke reparert eller omgått. Test 241 fase A ✅ er fullført og samlet brukergodkjent innen isolert omfang. Strukturert leseresultat kobles til eksisterende adapter/rapport uten UI-start av faktisk transport. B.1 er samlet brukergodkjent ✅ for syntetisk miljøverifikasjon. B.2 og senere praktisk kontekst-/serverlesing forblir ❗️ og krever særskilt bestilling/godkjenning. iOS/iPadOS gir STOPP før CloudKit-kall fordi miljøbevis ikke er etablert; legacy-baseline får ikke tilordnet dagens kontekst. Ingen modellkobling til import eller restore er implementert. Første fremtidige importomfang er nye tekstiler med underposter; komplettering av eksisterende tekstiler, utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Test 230-restpunktet er avsluttet. Ingen skrivesperrer åpnes.
+Test 240 er avsluttet etter samlet brukergodkjenning, inkludert praktisk UI-test etter én særskilt godkjent, skrivebeskyttet test 238-kjøring. Forventet STOPP ved uverifisert CloudKit-kontekst og manglende recordkontekst ble bekreftet. Grunnlagsmanglene er ikke reparert eller omgått. Test 241 fase A ✅ er fullført og samlet brukergodkjent innen isolert omfang. Strukturert leseresultat kobles til eksisterende adapter/rapport uten UI-start av faktisk transport. B.1 er samlet brukergodkjent ✅ for syntetisk miljøverifikasjon. B.2 ✅ er fullført og brukervalidert for isolert lokal miljødiagnostikk etter macOS/Debug-signeringsrettelsen. Senere kontekst-/serverlesing krever særskilt bestilling/godkjenning; B.2 åpner ikke for CloudKit-oppslag. iOS/iPadOS gir STOPP før CloudKit-kall fordi miljøbevis ikke er etablert; legacy-baseline får ikke tilordnet dagens kontekst. Ingen modellkobling til import eller restore er implementert. Første fremtidige importomfang er nye tekstiler med underposter; komplettering av eksisterende tekstiler, utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Test 230-restpunktet er avsluttet. Ingen skrivesperrer åpnes.
 
 ## Historiske referansedokumenter
 
