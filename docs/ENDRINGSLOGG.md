@@ -1,5 +1,20 @@
 # Endringslogg
 
+## Test 241 B.1 – fullført og brukergodkjent – 2026-11-07
+
+**Test 241 B.1 ✅ fullført og uttrykkelig brukergodkjent 2026-11-07.** Alle sju B.1-punkter er godkjent innen det syntetiske omfanget. Sluttresultat: 41/41 leser-/miljøtester (15 nye), 38/38 modelltester og 23/23 adaptertester – **102 PASS, 0 FAIL**. macOS- og iOS/iPadOS-bygg samt sikkerhets-/diffkontroller er bestått. Ingen faktisk Security-beviskilde, konto-/identitetslesing, CloudKit-transport eller app er kjørt.
+
+**B.2 ❗️ og praktisk validering gjenstår**, uten tillatelse til å starte dem. Fase A beholdes ✅. Miljøbevis i en faktisk signert macOS-app er ikke praktisk validert; iOS/iPadOS er fortsatt uverifisert/STOPP. Historisk baselinebinding og manglende atomisitetsgaranti består. Godkjenningen gir ingen import-/restore-, CloudKit-skrive-/slette- eller produksjonstillatelse for kandidatidentiteter.
+
+Implementeringsoppføringen nedenfor bevarer status før samlet brukergodkjenning.
+
+## Test 241 fase B.1 – sikker miljøverifikasjon – 2026-11-07
+
+- ❗️ Ny injiserbar miljøkontroll med typede resultater for verifisert Development/Production, uverifisert grunnlag og forventningsavvik. Ingen automatisk miljøstandard. macOS bruker offentlig API-kjede SecCodeCopySelf → SecCodeCheckValidity → SecTaskCreateFromSelf → SecTaskCopyValueForEntitlement; bare CloudKit-miljøentitlement leses etter gyldig signatur. iOS/iPadOS forblir uverifisert/STOPP.
+- Faktisk transport krever miljøkontrollen før konto-/identitetslesing, og recordlesing er sperret frem til vellykket kontekst. Eksplisitt forventet miljø er lagt til transport og diagnostikkontekst. Ingen repository-, import-/restore- eller lagringsendring.
+- Isolert testprogram er utvidet fra 26 til 41 tilfeller med eksplisitte forventninger i tidligere fixtures og 15 nye miljøtilfeller. Ingen faktisk Security-beviskilde, CloudKit-transport eller app er kjørt. Fase A beholdes ✅; alle nye punkter er ❗️ frem til samlet brukergodkjenning. Lokalt signeringsbevis er ikke CloudKit-serverkontakt eller skrivetillatelse.
+- Faktisk sekvensiell kontroll: 41 leser-/miljøtester, 38 modelltester og 23 adaptertester bestått (102 PASS/0 FAIL), deretter macOS- og iOS/iPadOS-bygg vellykket. Bare AppIntents-metadataadvarsel. Statisk sikkerhetsetterkontroll og diffkontroller bestått. Ingen faktiske Security-/CloudKit-kall; praktisk validering gjenstår.
+
 ## Test 241 fase A – fullført og brukergodkjent – 2026-11-07
 
 **Test 241 fase A ✅ fullført og uttrykkelig brukergodkjent 2026-11-07.** Godkjenningen gjelder den isolerte, skrivebeskyttede identitetsleseren, syntetisk transport og beslutningsbroen. Sluttresultatet er **26/26 nye lesertester PASS, 38/38 modelltester PASS og 23/23 adaptertester PASS – totalt 87 PASS, 0 FAIL**, samt vellykkede macOS- og iOS/iPadOS-bygg med Xcode 27.2. Sikkerhetsetterkontrollen er bestått. Ingen faktisk CloudKit-transport, signerings-/kontooppslag eller appkjøring er utført.

@@ -1,8 +1,5 @@
 import CloudKit
 import Foundation
-#if os(macOS)
-import Security
-#endif
 
 // No instance is created or invoked by phase A's UI/tests. No save/delete capability.
 @MainActor
@@ -11,48 +8,38 @@ final class CloudKitIdentityDiagnosticTransport: ImportIdentityReadTransport {
     private let container: CKContainer
     private let database: CKDatabase
     private let zoneID: CKRecordZone.ID
+    private let expectedEnvironment: CloudKitEnvironmentVerification.Environment?
+    private var environmentAccepted = false
     private var cursors: [String: (ImportIdentityDecisionModel.RecordType, CKQueryOperation.Cursor)] = [:]
 
-    init(container: CKContainer, zoneID: CKRecordZone.ID) {
+    init(container: CKContainer, zoneID: CKRecordZone.ID, expectedEnvironment: CloudKitEnvironmentVerification.Environment?) {
         self.container = container
         self.database = container.privateCloudDatabase
         self.zoneID = zoneID
+        self.expectedEnvironment = expectedEnvironment
     }
 
     enum ReadError: Error { case unverifiedEnvironment, unavailableAccount, missingContainer, invalidCursor }
 
     func context() async throws -> D.Context {
-        // DEBUG and APS entitlements are deliberately not environment evidence.
-        guard let environment = Self.signedEnvironment() else { throw ReadError.unverifiedEnvironment }
-        guard let identifier = container.containerIdentifier else { throw ReadError.missingContainer }
-        guard try await container.accountStatus() == .available else { throw ReadError.unavailableAccount }
-        let userID = try await container.userRecordID()
-        return D.Context(scope: .init(container: identifier, environment: environment, account: userID.recordName,
-            database: database.databaseScope == .private ? "private" : "unsupported",
-            zone: zoneID.zoneName, zoneOwner: zoneID.ownerName), environmentSource: .signedApplicationEntitlement)
-    }
-
-    private static func signedEnvironment() -> String? {
-        #if os(macOS)
-        var code: SecCode?
-        guard SecCodeCopySelf(SecCSFlags(rawValue: 0), &code) == errSecSuccess, let code else { return nil }
-        var staticCode: SecStaticCode?
-        guard SecCodeCopyStaticCode(code, SecCSFlags(rawValue: 0), &staticCode) == errSecSuccess, let staticCode else { return nil }
-        var information: CFDictionary?
-        guard SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &information) == errSecSuccess,
-              let info = information as? [String: Any],
-              let entitlements = info[kSecCodeInfoEntitlementsDict as String] as? [String: Any],
-              let value = entitlements["com.apple.developer.icloud-container-environment"] as? String,
-              ["Development", "Production"].contains(value) else { return nil }
-        return value
-        #else
-        // No supported iOS entitlement reader is established in this phase. Fail closed.
-        return nil
-        #endif
+        environmentAccepted = false
+        let context = try await CloudKitEnvironmentVerification.withVerifiedEnvironment(
+            source: SystemCloudKitEnvironmentEvidenceSource(), expected: expectedEnvironment) { environment in
+                guard let identifier = container.containerIdentifier else { throw ReadError.missingContainer }
+                guard try await container.accountStatus() == .available else { throw ReadError.unavailableAccount }
+                let userID = try await container.userRecordID()
+                return D.Context(scope: .init(container: identifier, environment: environment.rawValue, account: userID.recordName,
+                    database: database.databaseScope == .private ? "private" : "unsupported",
+                    zone: zoneID.zoneName, zoneOwner: zoneID.ownerName), environmentSource: .signedApplicationEntitlement,
+                    expectedEnvironment: expectedEnvironment)
+            }
+        environmentAccepted = true
+        return context
     }
 
     func page(type: ImportIdentityDecisionModel.RecordType, after cursor: String?) async throws -> D.Page {
         try Task.checkCancellation()
+        guard environmentAccepted else { throw ReadError.unverifiedEnvironment }
         let response: (matchResults: [(CKRecord.ID, Result<CKRecord, any Error>)], queryCursor: CKQueryOperation.Cursor?)
         if let cursor {
             guard let stored = cursors.removeValue(forKey: cursor), stored.0 == type else { throw ReadError.invalidCursor }

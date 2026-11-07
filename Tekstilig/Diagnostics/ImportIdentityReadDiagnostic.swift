@@ -37,6 +37,7 @@ enum ImportIdentityReadDiagnostic {
     struct Context: Equatable {
         let scope: M.Scope
         let environmentSource: EnvironmentSource
+        let expectedEnvironment: CloudKitEnvironmentVerification.Environment?
     }
     struct Page {
         let observations: [Observation]
@@ -105,7 +106,7 @@ enum ImportIdentityReadDiagnostic {
     static func valid(_ value: Context) -> Bool {
         let s = value.scope
         return value.environmentSource == .signedApplicationEntitlement &&
-            ["Development", "Production"].contains(s.environment) && s.database == "private" &&
+            value.expectedEnvironment?.rawValue == s.environment && s.database == "private" &&
             [s.container, s.account, s.zone, s.zoneOwner].allSatisfy(token)
     }
     private static func ordered(_ values: [Observation]) -> [Observation] {
