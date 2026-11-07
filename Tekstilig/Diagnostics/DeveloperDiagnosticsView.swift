@@ -48,6 +48,8 @@ struct DeveloperDiagnosticsView: View {
     @State private var liveVersionReport: String?
     @State private var createOnlyPolicyReport: String?
     @State private var identityReconciliationReport: String?
+    @State private var identityDecisionSnapshot: ImportIdentityDiagnosticAdapter.Snapshot?
+    @State private var identityDecisionReport: String?
     @State private var isReconcilingIdentities = false
     @State private var writeGateReport: String?
     @State private var isCheckingWriteGate = false
@@ -580,6 +582,8 @@ struct DeveloperDiagnosticsView: View {
                 guard !isReadingBackup else { return }
                 importResult = nil
                 identityReconciliationReport = nil
+                identityDecisionSnapshot = nil
+                identityDecisionReport = nil
                 approvedDiagnosticOperations = nil
                 combinedPreflightReport = nil
                 importJournalPlanReport = nil
@@ -647,6 +651,18 @@ struct DeveloperDiagnosticsView: View {
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        Button("Vis identitetsbeslutninger (test 240, kun minnegrunnlag)") {
+            if let snapshot = identityDecisionSnapshot {
+                identityDecisionReport = ImportIdentityDiagnosticAdapter.render(snapshot)
+            }
+        }
+        .disabled(identityDecisionSnapshot == nil || isReconcilingIdentities || isReadingBackup)
+        Text("Test 240 gjenbruker bare strukturerte data fra test 238 i denne kjøreøkten. Knappen starter ingen fil- eller CloudKit-lesing. Uverifisert kontekst og filtrerte identiteter gir stopp.")
+            .font(.callout)
+        if let identityDecisionReport {
+            Text(identityDecisionReport).font(.callout.monospaced())
+                .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     // Tests 230 verification and 238 only look up existing paths; older helpers request create: true.
@@ -663,7 +679,40 @@ struct DeveloperDiagnosticsView: View {
               let backup = importResult?.document else { return }
         isReconcilingIdentities = true
         identityReconciliationReport = nil
+        identityDecisionSnapshot = nil
+        identityDecisionReport = nil
         defer { isReconcilingIdentities = false }
+        // Capture values already read by test 238. Never infer missing scope or raw identities.
+        var sourceJournal: BoundReadOnlyImportJournal?
+        var sourceBaseline: CloudKitVersionBaseline?
+        var sourceCurrent: [CloudKitVersionEntry]?
+        var sourceLive: [ImportIdentityReport.Entry] = []
+        var identitiesComplete = false
+        var sourceErrors: [String] = []
+        defer {
+            if validatedZIPData == zip {
+                typealias A = ImportIdentityDiagnosticAdapter
+                func identity(_ value: ImportIdentityReport.Entry) -> A.IdentityRecord {
+                    A.IdentityRecord(type: value.type, logicalID: value.logicalID,
+                        owner: value.owner, recordName: value.recordName)
+                }
+                func version(_ value: CloudKitVersionEntry) -> A.VersionRecord {
+                    A.VersionRecord(type: value.recordType, recordName: value.recordName, changeTag: value.changeTag)
+                }
+                identityDecisionSnapshot = A.Snapshot(scope: nil,
+                    backup: ImportIdentityReport.backupEntries(backup).map(identity), observed: sourceLive.map(identity),
+                    current: sourceCurrent.map { $0.map(version) },
+                    baseline: sourceBaseline.map { A.Baseline(schemaVersion: $0.schemaVersion,
+                        journalID: $0.journalID.uuidString, zipSHA256: $0.zipSHA256, entries: $0.entries.map(version)) },
+                    journal: sourceJournal.map { A.Journal(schemaVersion: $0.schemaVersion, journalID: $0.journalID.uuidString,
+                        state: $0.state, operationIDs: $0.operationIDs,
+                        completedOperationCount: $0.completedOperationCount, zipSHA256: $0.zipSHA256) },
+                    selectedZIPHash: zipDigest(zip),
+                    coverage: .init(verifiedIdentityTypes: identitiesComplete ? Set(ImportIdentityDecisionModel.RecordType.allCases) : [],
+                        completeNameInventory: sourceCurrent != nil, completeVersions: sourceCurrent != nil, readErrors: sourceErrors),
+                    rawIdentitiesVerified: false)
+            }
+        }
         let digest = zipDigest(zip)
         var binding = ["Valgt ZIP SHA-256: \(digest)"]
         var journal: BoundReadOnlyImportJournal?
@@ -674,6 +723,7 @@ struct DeveloperDiagnosticsView: View {
         do {
             let stored = try JSONDecoder().decode(BoundReadOnlyImportJournal.self,
                 from: Data(contentsOf: existingIdentityDiagnosticURL("read-only-import-plan-v2.json")))
+            sourceJournal = stored
             guard validBoundReadOnlyJournal(stored), stored.zipSHA256 == digest else {
                 throw NSError(domain: "TekstiligIdentityReport", code: 1,
                     userInfo: [NSLocalizedDescriptionKey: "Ugyldig v2-journal eller ZIP-hash avviker"])
@@ -682,13 +732,16 @@ struct DeveloperDiagnosticsView: View {
             operations = Set(stored.operationIDs)
             binding.append("ZIP ↔ v2-journal: format/hash OK. Journal-ID: \(stored.journalID.uuidString); fullførte: \(stored.completedOperationCount).")
             let issues = journalOperationIssues(stored.operationIDs, backup: backup).sorted()
+            sourceErrors += issues
             binding.append("Journaloperasjoner ↔ backup: " + (issues.isEmpty ? "OK" : "AVVIK – " + issues.joined(separator: "; ")))
         } catch {
+            sourceErrors.append("Journalbinding: \(error.localizedDescription)")
             binding.append("ZIP ↔ v2-journal: IKKE VERIFISERT – \(error.localizedDescription)")
         }
         do {
             let stored = try JSONDecoder().decode(CloudKitVersionBaseline.self,
                 from: Data(contentsOf: existingIdentityDiagnosticURL("read-only-cloudkit-versions-v1.json")))
+            sourceBaseline = stored
             guard let journal, stored.schemaVersion == 1,
                   stored.journalID == journal.journalID, stored.zipSHA256 == digest,
                   baselineMatches(stored.entries, stored.entries) else {
@@ -701,6 +754,7 @@ struct DeveloperDiagnosticsView: View {
             })
             binding.append("ZIP/journal ↔ lagret baseline: binding OK (\(stored.entries.count) poster).")
         } catch {
+            sourceErrors.append("Baselinebinding: \(error.localizedDescription)")
             binding.append("ZIP/journal ↔ baseline: IKKE VERIFISERT – \(error.localizedDescription)")
         }
         do {
@@ -716,8 +770,11 @@ struct DeveloperDiagnosticsView: View {
                 materials.map { .init(type: "TextileMaterial", logicalID: $0.materialID, owner: $0.textileID, recordName: $0.cloudRecordName ?? "") } +
                 colors.map { .init(type: "TextileColor", logicalID: $0.colorID, owner: $0.textileID, recordName: $0.cloudRecordName ?? "") } +
                 images.map { .init(type: "TextileImage", logicalID: $0.imageID, owner: $0.textileID, recordName: $0.recordName) }
+            sourceLive = live
+            identitiesComplete = true
             do {
                 let current = try await readCloudKitVersionEntries()
+                sourceCurrent = current
                 currentTags = Dictionary(uniqueKeysWithValues: current.map {
                     ("\($0.recordType):\($0.recordName)", $0.changeTag)
                 })
@@ -762,6 +819,7 @@ struct DeveloperDiagnosticsView: View {
                     binding.append("Live versjoner lest; sammenligning med baseline IKKE VERIFISERT.")
                 }
             } catch {
+                sourceErrors.append("Versjonslesing: \(error.localizedDescription)")
                 binding.append("Live versjoner/baseline: IKKE VERIFISERT – \(error.localizedDescription)")
             }
             // Selecting another ZIP invalidates this result, including during an await.
@@ -777,6 +835,7 @@ struct DeveloperDiagnosticsView: View {
                 live: live, journalOperations: operations, baselineTags: baselineTags, currentTags: currentTags)])
                 .joined(separator: "\n")
         } catch {
+            sourceErrors.append("Identitetslesing: \(error.localizedDescription)")
             guard validatedZIPData == zip else { return }
             identityReconciliationReport = (binding + [
                 "UFULLSTENDIG: CloudKit-identitetslesing feilet: \(error.localizedDescription). Ingen delvis identitetsrapport godkjennes.",

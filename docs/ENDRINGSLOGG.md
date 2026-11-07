@@ -1,12 +1,28 @@
 # Endringslogg
 
+## Test 240 – fullført og brukervalidert – 2026-11-07
+
+**240 ✅ fullført og uttrykkelig brukervalidert 2026-11-07.** Prosjekteieren har godkjent alle åtte testpunkter og testen samlet. Sluttresultat: **38/38 eksisterende modelltester og 23/23 adaptertester bestått**, 0 feil, samt vellykkede macOS- og iOS/iPadOS-bygg med Xcode 27.2. Brukeren har gjennomført praktisk UI-test etter én særskilt godkjent, skrivebeskyttet test 238-kjøring i samme kjøreøkt. Test 240-rapporten gjenbrukte minnegrunnlaget og viste forventet `STOPP` ved uverifisert CloudKit-kontekst og manglende recordkontekst.
+
+Godkjenningen gjelder bare den isolerte adapteren og den skrivebeskyttede beslutningsrapporten. Den godkjenner ikke faktisk import, restore, CloudKit-skriving/-sletting, produksjonsbruk av kandidatidentiteter, faktisk idempotens eller atomisk konsistens. `permitsCloudKitWriting` og kandidatenes `approvedForProduction` er fortsatt `false`. Den særskilte godkjenningen gjaldt én lesekjøring; den gir ingen generell tillatelse til nye CloudKit-oppslag. Ingen ny testkjøring eller datalesing er utført ved denne dokumentasjonsoppdateringen.
+
+Tidligere implementeringsoppføring nedenfor bevarer status før brukerens samlede godkjenning.
+
+## Test 240 – isolert adapter og beslutningsrapport – 2026-11-07
+
+- ❗️ Implementert `ImportIdentityDiagnosticAdapter` uten imports/IO: strukturerte verdier til beslutningsmodell og deterministisk rapport. Duplikater/råverdier beholdes; ukjent kontekst, manglende identiteter og ugyldig grunnlag stopper modellen uten reparasjon.
+- Ny DEBUG-knapp under test 238 bruker bare fanget minnegrunnlag fra eksisterende lesing. ZIP-valg/ny avstemming nullstiller grunnlag og rapport. Ingen nye fil-/CloudKit-oppslag fra knappen. Repositoryenes filtre og save/delete-metoder er urørt.
+- Dagens datagrunnlag mangler verifisert scope og råverdibevis; tre PoC-identiteter filtreres fortsatt. Rapporten forventes derfor å stoppe. Ingen kontekst/identitet diktes opp; historiske poster og fire planlagte operasjoner forblir urørt.
+- macOS- og iOS/iPadOS-bygg bestått med Xcode 27.2. Deretter 38 eksisterende modelltester og 23 adaptertester bestått sekvensielt, 0 FAIL, isolert uten nettverk/filskriving/brukermappelesing. Statisk kallkjedekontroll og diffkontroll bestått. Ingen appkjøring eller faktisk datalesing. Test 240 avventer brukervalidering; eventuell praktisk CloudKit-lesing krever separat godkjenning.
+- Korrigert feilaktig Git-status for test 239: committet, integrert og publisert i `ae16a30`. Test 239, 230 og 238 forblir ✅. Ingen skrivetillatelse, faktisk import/restore, produksjonsnavneformat eller CloudKit-idempotens er godkjent.
+
 ## Test 239 – fullført og brukervalidert – 2026-11-07
 
 **239 ✅ fullført og uttrykkelig brukervalidert 2026-11-07.** Prosjekteieren har godkjent alle punktene 239.1–239.11 og testen samlet etter sekvensiell gjennomgang. Sluttresultatet er **38 syntetiske tester bestått, 0 feilet**, exitkode 0, vellykkede macOS- og iOS/iPadOS-bygg med Xcode 27.2 og gjennomført skrivefri etterkontroll uten avvik. Tidligere resultater ble gjenbrukt der de var tilstrekkelige.
 
 Godkjenningen gjelder bare den isolerte Swift-beslutningsmodellen og det syntetiske testoppsettet. Den godkjenner ikke faktisk CloudKit-import/restore, faktisk idempotens, atomisitet mellom lesinger, produksjonsformat for kandidatnavn eller CloudKit-skriving/-sletting. `permitsCloudKitWriting` og kandidatenes `approvedForProduction` er fortsatt `false`. Faktisk testkjøring er utført isolert på Mac; iOS/iPadOS-dekningen omfatter bygg, ikke funksjonskjøring på fysisk iPhone/iPad.
 
-Etterkontrollen bekreftet IO-fri modellkallkjede, uendrede inndata, manglende skriveautorisasjon og urørt eksisterende diagnostikk, repositories og dataformater. Modellen har ikke lest eller endret faktiske ZIP-er, journaler, baseline eller CloudKit-poster. Xcodes lokale brukerfil er bevart utenfor oppgaveendringene. Ingen modellkobling til import/restore eller reelle data er implementert. Endringene for test 239 er fortsatt lokale og ikke committet eller publisert.
+Etterkontrollen bekreftet IO-fri modellkallkjede, uendrede inndata, manglende skriveautorisasjon og urørt eksisterende diagnostikk, repositories og dataformater. Modellen har ikke lest eller endret faktiske ZIP-er, journaler, baseline eller CloudKit-poster. Xcodes lokale brukerfil er bevart utenfor oppgaveendringene. Ingen modellkobling til import/restore eller reelle data er implementert. Git-status korrigert 2026-11-07: Test 239 er committet i `ae16a30`, integrert i `main` og publisert på GitHub.
 
 Tidligere oppføringer nedenfor bevarer status ved implementering, automatisert testing og kodegjennomgang; deres åpne testmarkeringer er historikk fra før denne uttrykkelige godkjenningen.
 
