@@ -1,5 +1,21 @@
 # Endringslogg
 
+## Test 241 fase A – fullført og brukergodkjent – 2026-11-07
+
+**Test 241 fase A ✅ fullført og uttrykkelig brukergodkjent 2026-11-07.** Godkjenningen gjelder den isolerte, skrivebeskyttede identitetsleseren, syntetisk transport og beslutningsbroen. Sluttresultatet er **26/26 nye lesertester PASS, 38/38 modelltester PASS og 23/23 adaptertester PASS – totalt 87 PASS, 0 FAIL**, samt vellykkede macOS- og iOS/iPadOS-bygg med Xcode 27.2. Sikkerhetsetterkontrollen er bestått. Ingen faktisk CloudKit-transport, signerings-/kontooppslag eller appkjøring er utført.
+
+**Fase B og alle praktiske CloudKit-kontroller forblir ❗️**, ikke gjennomført eller godkjent. iOS/iPadOS-miljøet er fortsatt uverifisert og gir STOPP; historisk baselinebinding er uavklart, og to like lesepasseringer gir ingen atomisitetsgaranti. Godkjenningen åpner ikke for import, restore, CloudKit-skriving/-sletting eller produksjonsgodkjenning av kandidatidentiteter. Eksisterende ZIP, journal, baseline, PoC-poster og historiske data skal bevares.
+
+Implementeringsoppføringen nedenfor bevarer status før den samlede brukergodkjenningen.
+
+## Test 241 fase A – isolert identitetsleser – 2026-11-07
+
+- ❗️ Ny `ImportIdentityReadDiagnostic` med injisert transport, to passeringer, komplette råobservasjoner også ved feil og eksplisitt STOPP ved ugyldig/ufullstendig eller endret grunnlag. Ny `CloudKitIdentityDiagnosticTransport` leser minimale ID-/eierfelt og metadata fra samme CKRecord, uten PoC-filtrering, assetinnhold eller skriveruter. Ingen instans av faktisk transport er opprettet/kjørt fra UI eller testene.
+- Verdibasert bro til eksisterende adapter og rapport; historisk journal/baseline beholdes og får ikke antatt kontekst. Manglende miljøbevis stopper; iOS/iPadOS mangler etablert miljøleser og stopper før CloudKit-kall. Like passeringer betyr ikke atomisitet, idempotens eller skrivetillatelse.
+- To diagnostiserte kompileringsavvik er rettet målrettet: SecCode → SecStaticCode via SDK-API, og eksplisitt MainActor på de to rapport-/adaptermetodene. Ingen global concurrency-innstilling eller eksisterende modell/repository er endret. Test 241 er ikke brukervalidert.
+- Faktisk sluttkontroll: 26 lesertester, begge plattformbygg og deretter 38 modelltester/23 adaptertester bestått, totalt 87 PASS og 0 FAIL. Isolert uten nettverk/filskriving/brukermappelesing. Begge nye appfiler inngår i begge bygg; bare AppIntents-metadataadvarsel. Statisk sikkerhetsetterkontroll og diffkontroll gjennomført. Ingen faktisk CloudKit-transport, signeringsoppslag eller app er kjørt. Alle testpunkter for 241 forblir ❗️.
+- Korrigert publiseringsstatus for test 240: committet i `671c339`, integrert i main og publisert. Ingen tidligere testresultater endres.
+
 ## Test 240 – fullført og brukervalidert – 2026-11-07
 
 **240 ✅ fullført og uttrykkelig brukervalidert 2026-11-07.** Prosjekteieren har godkjent alle åtte testpunkter og testen samlet. Sluttresultat: **38/38 eksisterende modelltester og 23/23 adaptertester bestått**, 0 feil, samt vellykkede macOS- og iOS/iPadOS-bygg med Xcode 27.2. Brukeren har gjennomført praktisk UI-test etter én særskilt godkjent, skrivebeskyttet test 238-kjøring i samme kjøreøkt. Test 240-rapporten gjenbrukte minnegrunnlaget og viste forventet `STOPP` ved uverifisert CloudKit-kontekst og manglende recordkontekst.

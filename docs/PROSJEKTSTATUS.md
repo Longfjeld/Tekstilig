@@ -6,7 +6,7 @@
 
 - Autoritativ kilde for kode og versjonert dokumentasjon: Git-repositoriet, jf. [AGENTS.md](../AGENTS.md).
 - Siste bekreftede komplette snapshot: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
-- Publisert Git-grunnlag før test 240: `ae16a30dfabc6305f061a136b6c254fb0241bfc8` på synkronisert `main`/`origin/main`. Test 239 er også publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
+- Publisert Git-grunnlag før test 241 fase A: `671c339acda138714917fbebf536e763ff8f40fe` på synkronisert `main`/`origin/main`. Test 239 og 240 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
 - Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). B-050 gjelder arkitektur og testomfang. Særskilt godkjenning 2026-11-07 omfatter ren modell og isolert testprogram; importskriving er fortsatt sperret.
 - Aktiv klient: native SwiftUI for iOS, iPadOS og macOS. Miljø: Xcode 27.2 og OS 27.2; CloudKit Development.
 - Roadmap-punkt 1–5 er dokumentert fullført. Eksport/backup, test 198–204, er validert på iPhone, iPad og macOS. Roadmap-punkt 7, import/restore, pågår som diagnostikk og sikkerhetsavklaring; faktisk restore er ikke klar.
@@ -43,9 +43,15 @@ Godkjenningen gjelder bare den isolerte adapteren og den skrivebeskyttede beslut
 
 ## Neste test
 
-Test 240 og alle åtte punkter er ✅ fullført og brukervalidert. Test 239, 230 og 238 er fortsatt fullført og publisert. Test 240-endringene er lokale, ikke committet eller publisert. Neste nummererte test er ikke fastlagt; videre arbeid krever særskilt bestilling.
+Test 240 og alle åtte punkter er ✅ fullført og brukervalidert. Test 239, 230 og 238 er fortsatt fullført og publisert. Test 240 er committet i `671c339`, integrert i `main` og publisert. Test 241 fase A ✅ er fullført og samlet brukergodkjent for isolert leser med falsk transport. Fase B og praktiske CloudKit-kontroller er fortsatt ❗️, ikke gjennomført eller godkjent. Ingen faktisk CloudKit-lesing er kjørt eller godkjent i fase A; videre praktisk arbeid krever særskilt bestilling.
 
 Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.md): logiske ID-er er egne felt; normale save-metoder bruker eksisterende `cloudRecordName` ved oppdatering og `CKRecord(recordType:)` ved ny post. Test 237 viser risiko for to ulike recordnavn med samme logiske ID. Test 238 bruker fortsatt eksisterende diagnostikkformel for hypotetiske kandidatnavn. B-050 fastsetter gjenbruk av entydige eksisterende identiteter og versjonerte deterministiske kandidater for nye poster; konkret navnealgoritme er ikke godkjent som permanent produksjonsformat.
+
+## Siste validering – test 241 fase A ✅
+
+**Test 241 fase A ✅ fullført og uttrykkelig brukergodkjent 2026-11-07.** Godkjenningen gjelder den isolerte, skrivebeskyttede identitetsleseren, syntetisk transport og beslutningsbroen. Sluttresultatet er **26/26 nye lesertester PASS, 38/38 modelltester PASS og 23/23 adaptertester PASS – totalt 87 PASS, 0 FAIL**, samt vellykkede macOS- og iOS/iPadOS-bygg med Xcode 27.2. Sikkerhetsetterkontrollen er bestått. Ingen faktisk CloudKit-transport, signerings-/kontooppslag eller appkjøring er utført.
+
+**Fase B og alle praktiske CloudKit-kontroller forblir ❗️**, ikke gjennomført eller godkjent. iOS/iPadOS-miljøet er fortsatt uverifisert og gir STOPP; historisk baselinebinding er uavklart, og to like lesepasseringer gir ingen atomisitetsgaranti. Godkjenningen åpner ikke for import, restore, CloudKit-skriving/-sletting eller produksjonsgodkjenning av kandidatidentiteter. Eksisterende ZIP, journal, baseline, PoC-poster og historiske data skal bevares.
 
 ## Åpne problemer og uavklarte tester
 
@@ -63,7 +69,7 @@ Grunnlaget er test 222 og 237 i [implementeringsloggen](SWIFTUI-IMPLEMENTERING.m
 
 ## Neste planlagte arbeid
 
-Test 240 er avsluttet etter samlet brukergodkjenning, inkludert praktisk UI-test etter én særskilt godkjent, skrivebeskyttet test 238-kjøring. Forventet STOPP ved uverifisert CloudKit-kontekst og manglende recordkontekst ble bekreftet. Grunnlagsmanglene er ikke reparert eller omgått. Ingen videre implementering eller nye CloudKit-oppslag er godkjent. Ingen modellkobling til import eller restore er implementert. Første fremtidige importomfang er nye tekstiler med underposter; komplettering av eksisterende tekstiler, utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Test 230-restpunktet er avsluttet. Ingen skrivesperrer åpnes.
+Test 240 er avsluttet etter samlet brukergodkjenning, inkludert praktisk UI-test etter én særskilt godkjent, skrivebeskyttet test 238-kjøring. Forventet STOPP ved uverifisert CloudKit-kontekst og manglende recordkontekst ble bekreftet. Grunnlagsmanglene er ikke reparert eller omgått. Test 241 fase A ✅ er fullført og samlet brukergodkjent innen isolert omfang. Strukturert leseresultat kobles til eksisterende adapter/rapport uten UI-start av faktisk transport. Fase B og senere praktisk kontekst-/serverlesing forblir ❗️ og krever særskilt bestilling/godkjenning. iOS/iPadOS gir STOPP før CloudKit-kall fordi miljøbevis ikke er etablert; legacy-baseline får ikke tilordnet dagens kontekst. Ingen modellkobling til import eller restore er implementert. Første fremtidige importomfang er nye tekstiler med underposter; komplettering av eksisterende tekstiler, utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Test 230-restpunktet er avsluttet. Ingen skrivesperrer åpnes.
 
 ## Historiske referansedokumenter
 
