@@ -6,7 +6,7 @@
 
 - Autoritativ kilde for kode og versjonert dokumentasjon: Git-repositoriet, jf. [AGENTS.md](../AGENTS.md).
 - Siste bekreftede komplette snapshot: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
-- Publisert Git-grunnlag før test 242.3: `b5d259876d106f6fec1e3b02c58cab8c5ade9ee5` på synkronisert `main`/`origin/main`. Test 239, 240, 241 fase A/B.1/B.2/B.3 og 242.1–242.2 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
+- Publisert Git-grunnlag før test 242.4: `65af8394e9bfe858d69326f0e1d47e8229e1939c` på synkronisert `main`/`origin/main`. Test 239, 240, 241 fase A/B.1/B.2/B.3 og 242.1–242.3 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
 - Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). B-050 gjelder arkitektur og testomfang. Særskilt godkjenning 2026-11-07 omfatter ren modell og isolert testprogram; importskriving er fortsatt sperret.
 - Aktiv klient: native SwiftUI for iOS, iPadOS og macOS. Miljø: Xcode 27.2 og OS 27.2; CloudKit Development.
 - Roadmap-punkt 1–5 er dokumentert fullført. Eksport/backup, test 198–204, er validert på iPhone, iPad og macOS. Roadmap-punkt 7, import/restore, pågår som diagnostikk og sikkerhetsavklaring; faktisk restore er ikke klar.
@@ -138,6 +138,28 @@ Følgende oppføring bevarer implementeringsstatus før samlet godkjenning.
 Isolert `BaselineEvidenceModel` er implementert i minnet på `codex/test-242-3-baseline-evidence`. Den skiller dokumentert ZIP-/journalbinding, rå posttype/recordName/changeTag-observasjoner og eksplisitte historiske kontekstpåstander med kilde. Eksisterende v1-baseline mangler historisk kontekst og forblir uavklart/STOPP selv om binding og postobservasjoner samsvarer. Dagens kontekst er kun bevart input, aldri historisk bevis. Ingen leser-/UI-/importintegrasjon eller endring av eksisterende dataformat.
 
 Teknisk resultat 2026-11-08: macOS- og iOS/iPadOS-bygg bestått uten signering/appkjøring; **23 nye baselinetester + 25 relasjonsmodelltester + 15 rapporttester = 63 PASS, 0 FAIL** i isolasjon. Råverdier, motstridende påstander og duplikater beholdes; import- og skrivetillatelse er alltid false. «Documented» betyr konsistente, innsendte påstander, ikke autentisert kilde, serverbevis eller atomisitet. Historisk kontekst er ikke etablert for faktiske data. Alle fem valideringspunkter og 242.3 samlet står ❗️ frem til brukergodkjenning; tidligere godkjenninger beholdes. Ingen CloudKit-/app-/dataoperasjoner utført.
+
+## Siste validering – test 242.4 ✅
+
+**242.4 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter direkte bruk av strukturert ReadResult, separate relasjonsrapporter for begge passeringer, bevarte råverdier/duplikater/lesefeil og eksplisitt ufullstendig dekning ved avbrudd, feil eller motstrid. T0001 gir ingen historisk slettingskonklusjon; skrivetillatelse er ubetinget false.
+
+Sluttgrunnlag: **21 adaptertester + 41 leser-/miljøtester + 25 relasjonsmodelltester + 15 rapporttester = 102 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg og bestått sikkerhets-/diffkontroll. Ny kompilering og kjøring bekreftet de 21 adaptertestene under samlet validering; tidligere regresjons- og byggresultater ble gjenbrukt på uendrede kilder.
+
+Godkjenningen gjelder bare den isolerte adapteren fra allerede innsendte observasjoner. Ingen UI-/leserintegrasjon, ny CloudKit-lesing, importbeslutning, import/restore, baselineendring eller skrivetillatelse følger av godkjenningen. Faktisk CloudKit-dekning, atomisitet og historisk kontekst er ikke bevist. Test 242 samlet og senere deltester er ikke dermed fullført. Tidligere delstatuser beholdes som historikk.
+
+Følgende oppføringer bevarer historikken før samlet brukergodkjenning.
+
+**Teknisk fortsettelse 2026-11-08 – fortsatt ❗️:** Actor-feilen er rettet kun i `TextileRelationshipReadAdapterTests.swift`. Fixturestandardene evalueres nå inne i de MainActor-isolerte `record`-/`source`-hjelperne. Standardargumentene er nil/litteraler; eksplisitt manglende kontekst representeres med `.some(nil)`, mens tomme observasjons-/typesett fortsatt beholdes som tomme. Ingen testkriterier, produksjonskode, actor-isolasjon eller compilerinnstillinger er endret.
+
+Ny isolert kompilering består uten advarsler. Sekvensiell kjøring gir **21/21 adaptertester, 41/41 leser-/miljøtester, 25/25 relasjonsmodelltester og 15/15 rapporttester PASS – totalt 102 PASS, 0 FAIL**, exitkode 0. Kjøringene blokkerte nettverk, filskriving og lesing av brukermappen. Ingen faktisk transport, systembeviskilde eller app ble kjørt. Tidligere vellykkede macOS-/iOS-/iPadOS-bygg gjenbrukes på uendrede produksjonskilder; ingen nye appbygg var nødvendig for testhjelperrettelsen.
+
+Sikkerhets-/diffkontroll bestått: kun verdikall fra adapteren til kontekstvalidering og relasjonsmodell/-rapport, ingen lesestart, transport, repositories, URL-/kataloghjelpere eller lagring. Rågrunnlag, feil og passeringer bevares; ufullstendighet/avbrudd gir ikke komplett dekning. Skrivetillatelse er alltid false. Ingen eksisterende baseline, journal eller ZIP er åpnet eller endret. Alle fem valideringspunkter og 242.4 samlet forblir ❗️ frem til brukergodkjenning. Den tidligere kompileringsfeilen og stoppstatusen nedenfor er historikk.
+
+Følgende oppføring bevarer den opprinnelige implementerings-/stoppstatusen.
+
+Isolert `TextileRelationshipReadAdapter` er implementert fra strukturert `ReadResult` til separate relasjonsrapporter for hver passering. Råverdier, duplikater, lesefeil og dekning bevares; ingen ny lesing eller endring av eksisterende modeller. Full dekning krever begge passeringer komplette, konsistente og uten feil. Skrivetillatelse er alltid false.
+
+Begge plattformbygg bestått uten signering/appkjøring. Testsekvensen stoppet ved actor-isolasjonsfeil i nye testhjelperes standardargumenter (`family`; også advarsler for `scope`, `context`, `types`). 21 syntetiske tilfeller er skrevet, **ingen kjørt**; regresjonstester og samlet validering gjenstår. Ingen rettingsforsøk utført. Alle fem punkter og 242.4 samlet står ❗️. Ingen CloudKit-operasjoner, appkjøring eller endring av faktisk baseline/journal/ZIP. Se implementeringsloggen for rotårsak og minste foreslåtte rettelse.
 
 ## Åpne problemer og uavklarte tester
 

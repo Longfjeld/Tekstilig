@@ -5085,3 +5085,59 @@ Oppføringen nedenfor bevarer teknisk status før brukergodkjenningen; sluttstat
 Sluttgrunnlag: **23 baselinetester + 25 relasjonsmodelltester + 15 rapporttester = 63 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg uten appkjøring og bestått sikkerhets-/diffkontroll. Ny kompilering og sekvensiell syntetisk kjøring bekreftet resultatene under samlet validering; eksisterende byggresultater ble gjenbrukt på uendrede kilder.
 
 Godkjenningen gjelder bare den isolerte baselinebevismodellen. Innsendte historiske kilder autentiseres ikke; faktisk historisk CloudKit-kontekst er fortsatt uavklart. Ingen faktisk baseline-/journal-/ZIP-endring, UI-/leserintegrasjon, import, restore, CloudKit-operasjon eller skrivetillatelse følger av godkjenningen. Test 242 samlet og senere deltester er ikke dermed fullført. Tidligere delstatuser beholdes som historikk.
+
+
+## 242.4 – isolert adapter fra ReadResult til relasjonsrapport
+
+**242.4 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08; alle fem valideringspunkter ✅.** Grunnlag: publisert `65af839`; gren `codex/test-242-4-relationship-adapter`. 242.1–242.3 beholdes ✅.
+
+### Implementert kontrakt
+
+Ny `TextileRelationshipReadAdapter.adapt(_:)` mottar eksisterende `ImportIdentityReadDiagnostic.ReadResult` direkte. Ingen rapporttekst parses, transport opprettes eller lesing startes. Hele råresultatet beholdes, med kontekst/beviskilde, begge passeringer, typedekningssett, råfelt, recordnavn, zone/zoneOwner, changeTag og dupliserte feiltekster. Hver passering gir eget `TextileRelationshipModel.Input` og egen `TextileRelationshipReport`; passeringene slås ikke sammen til falske duplikater.
+
+Rå identiteter/eierfelt overføres uten trimming, også manglende og feil datatype. Ukjent posttype beholdes i kilden og gir eksplisitt STOPP i adapteren, uten oppdiktet undertype. Recordkontekst bruker innsendt container/miljø/konto/database og postens egne zonefelt. Manglende kontekst gir ingen oppdiktet scope; opprinnelige zonefelt forblir bevart i kilden. Dekningsbevis gis bare for eksplisitt forespurt scope, aldri automatisk for en fremmed zone.
+
+Komplett dekning krever gyldig/verifisert innsendt kontekst, alle fem typer i begge passeringer, like observasjoner med bevart multiplisitet og ingen kilde-/adapterfeil. Manglende dekning, avbrudd, feil, ugyldige metadata, dupliserte adresser/logiske identiteter og motstridende grunnlag stopper. Tomt relasjonsgrunnlag godkjennes ikke. PoC-poster filtreres ikke. Skrivetillatelse er alltid false; ingen importbeslutning eller historisk slutning om T0001.
+
+### Sekvensiell validering – alle fem punkter ✅
+
+1. **✅ Bygg og isolasjon.** Bygg macOS/Debug, deretter iOS/iPadOS/Debug uten appstart. Forvent adapter inkludert i begge mål, ingen ny aktivitet eller endring av eksisterende modeller. STOPP ved feil eller uventet kobling.
+2. **✅ Kompiler og kjør syntetiske adaptertester.** Bruk bare konstruerte `ReadResult`-verdier, uten faktisk transport. Forvent 21 PASS, 0 FAIL etter vellykket kompilering. STOPP ved første kompilatorfeil eller FAIL. Teknisk kompilering og kjøring er nå bestått; tidligere kompileringsstopp er dokumentert nedenfor.
+3. **✅ Råverdier, dekning og relasjoner.** Gjennomgå test 01–12 og 15–20 for fullstendig/ufullstendig grunnlag, duplikater, feiltekster, kontekst, felt og begge passeringers radantall. Forvent ingen tapt observasjon og ingen falsk komplett dekning. STOPP ved normalisering, vilkårlig valg eller bortfiltrerte feil.
+4. **✅ T0001, avbrudd og sikkerhet.** Gjennomgå test 03, 13–14, 19 og 21. Forvent avbrudd/ufullstendighet STOPP, ingen historisk slettingskonklusjon, determinisme og skrivetillatelse false. STOPP ved skriveautorisasjon eller antatt historikk. Kjør deretter relevante eksisterende syntetiske regresjonstester sekvensielt; STOPP ved feil.
+5. **✅ Etterkontroll.** Kontroller hele kallkjeden og Git-diff; forvent ny adapter/test og fire dokumenter, separat fra lokale Xcode-/scheme-filer. Eksisterende importbeslutninger, repositories, transport, baseline, journal og ZIP skal være urørt. STOPP etter rapport og avvent godkjenning; ingen commit/merge/push eller videre fase.
+
+### Teknisk fortsettelse etter godkjent testhjelperrettelse – 2026-11-08
+
+Oppføringen nedenfor bevarer teknisk status før samlet brukergodkjenning; sluttstatus følger nederst.
+
+**Teknisk fortsettelse 2026-11-08 – fortsatt ❗️:** Actor-feilen er rettet kun i `TextileRelationshipReadAdapterTests.swift`. Fixturestandardene evalueres nå inne i de MainActor-isolerte `record`-/`source`-hjelperne. Standardargumentene er nil/litteraler; eksplisitt manglende kontekst representeres med `.some(nil)`, mens tomme observasjons-/typesett fortsatt beholdes som tomme. Ingen testkriterier, produksjonskode, actor-isolasjon eller compilerinnstillinger er endret.
+
+Ny isolert kompilering består uten advarsler. Sekvensiell kjøring gir **21/21 adaptertester, 41/41 leser-/miljøtester, 25/25 relasjonsmodelltester og 15/15 rapporttester PASS – totalt 102 PASS, 0 FAIL**, exitkode 0. Kjøringene blokkerte nettverk, filskriving og lesing av brukermappen. Ingen faktisk transport, systembeviskilde eller app ble kjørt. Tidligere vellykkede macOS-/iOS-/iPadOS-bygg gjenbrukes på uendrede produksjonskilder; ingen nye appbygg var nødvendig for testhjelperrettelsen.
+
+Sikkerhets-/diffkontroll bestått: kun verdikall fra adapteren til kontekstvalidering og relasjonsmodell/-rapport, ingen lesestart, transport, repositories, URL-/kataloghjelpere eller lagring. Rågrunnlag, feil og passeringer bevares; ufullstendighet/avbrudd gir ikke komplett dekning. Skrivetillatelse er alltid false. Ingen eksisterende baseline, journal eller ZIP er åpnet eller endret. Alle fem valideringspunkter og 242.4 samlet forblir ❗️ frem til brukergodkjenning. Den tidligere kompileringsfeilen og stoppstatusen nedenfor er historikk.
+
+### Historiske tekniske resultater og blokkering – 2026-11-08
+
+macOS/Debug og generisk iOS/iPadOS/Debug med Xcode 27.2 og `CODE_SIGNING_ALLOWED=NO`: **BUILD SUCCEEDED**, uten appkjøring. Kun kjent AppIntents-metadataadvarsel. Adapteren kompilerer i appmålet.
+
+Deretter feilet kompilering av `Tests/TextileRelationshipReadAdapterTests.swift`: standardargumentet `family` i `source(...)` refererer til en MainActor-isolert statisk egenskap fra ikke-isolert standardargumentkontekst. Tilsvarende referanser til `scope`, `context` og `types` gir actor-advarsler. Feilen gjelder de nye testhjelperne, ikke den bygde adapteren. Ingen rettingsforsøk er utført; testsekvensen er stoppet. **0 nye testtilfeller kjørt; regresjonstester gjenstår.**
+
+Minste foreslåtte rettelse er å flytte evaluering av fixturestandarder inn i actor-isolerte testhjelperfunksjoner og bruke standardargumenter uten slike referanser. Ingen endring av produksjonskode, global actor-konfigurasjon eller bruk av isolasjonsomgåelser er nødvendig. Rettelsen er ikke utført i denne stoppede sekvensen.
+
+Kompileringskommandoen som avdekket feilen:
+
+```sh
+xcrun swiftc -module-cache-path /private/tmp/tekstilig-test241-b1/module-cache -framework Security Tekstilig/Diagnostics/ImportIdentityDecisionModel.swift Tekstilig/Diagnostics/ImportIdentityDiagnosticAdapter.swift Tekstilig/Diagnostics/CloudKitEnvironmentVerification.swift Tekstilig/Diagnostics/ImportIdentityReadDiagnostic.swift Tekstilig/Diagnostics/TextileRelationshipModel.swift Tekstilig/Diagnostics/TextileRelationshipReport.swift Tekstilig/Diagnostics/TextileRelationshipReadAdapter.swift Tests/TextileRelationshipReadAdapterTests.swift -o /private/tmp/tekstilig-test242-4/adapter-tests
+```
+
+Statisk kallkjedekontroll viser kun minneoperasjoner: `adapt` → `valid`/råfelt- og metadatakontroller → `TextileRelationshipReport.make` → uendret `TextileRelationshipModel.evaluate`. Ingen kall til `read(using:)`, transport, Security-beviskilde, repositories, URL-/kataloghjelpere eller filskriving. Syntetisk kjørevalidering og samlet etterkontroll av testresultater gjenstår. Ingen faktiske data eller app er brukt. Alle punkter og 242.4 samlet forblir ❗️.
+
+
+### Sluttresultat og brukergodkjenning – 242.4 – 2026-11-08
+
+**242.4 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter direkte bruk av strukturert ReadResult, separate relasjonsrapporter for begge passeringer, bevarte råverdier/duplikater/lesefeil og eksplisitt ufullstendig dekning ved avbrudd, feil eller motstrid. T0001 gir ingen historisk slettingskonklusjon; skrivetillatelse er ubetinget false.
+
+Sluttgrunnlag: **21 adaptertester + 41 leser-/miljøtester + 25 relasjonsmodelltester + 15 rapporttester = 102 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg og bestått sikkerhets-/diffkontroll. Ny kompilering og kjøring bekreftet de 21 adaptertestene under samlet validering; tidligere regresjons- og byggresultater ble gjenbrukt på uendrede kilder.
+
+Godkjenningen gjelder bare den isolerte adapteren fra allerede innsendte observasjoner. Ingen UI-/leserintegrasjon, ny CloudKit-lesing, importbeslutning, import/restore, baselineendring eller skrivetillatelse følger av godkjenningen. Faktisk CloudKit-dekning, atomisitet og historisk kontekst er ikke bevist. Test 242 samlet og senere deltester er ikke dermed fullført. Tidligere delstatuser beholdes som historikk.

@@ -1,5 +1,11 @@
 # Tekstilig – roadmap frem mot versjon 1.0
 
+**Tillegg 2026-11-08 – 242.4 ✅ fullført og samlet brukergodkjent, alle fem punkter ✅.** 102 syntetiske tester PASS, begge plattformbygg og etterkontroll bestått. Godkjenningen gjelder bare isolert adapter fra innsendt ReadResult til relasjonsrapport. Ingen ny datalesing, importbeslutning eller skrivetillatelse; test 242 samlet er ikke dermed fullført.
+
+**Historisk teknisk fortsettelse før brukergodkjenning – 242.4 ❗️:** Testhjelpernes actor-feil er rettet uten produksjonsendring. 21 adaptertester + 41 leser-/miljøtester + 25 modelltester + 15 rapporttester = 102 PASS, 0 FAIL. Begge tidligere plattformbygg gjenbrukes på uendrede kilder; sikkerhets-/diffkontroll bestått. Alle fem punkter avventer fortsatt brukergodkjenning. Ingen app-/CloudKit-kjøring eller skrivetillatelse.
+
+**Historisk oppstart 2026-11-08 – 242.4 ❗️:** Isolert adapter fra allerede innlest ReadResult til relasjonsmodell/-rapport er påbegynt. Begge plattformbygg består, men testkompilering stopper på actor-isolerte fixturestandardargumenter. Ingen nye syntetiske tester eller regresjonstester er kjørt. Alle fem punkter avventer videre teknisk kontroll og brukergodkjenning. 242.1–242.3 er ✅ og publisert; ingen CloudKit-/appkjøring eller import-/skrivetillatelse.
+
 **Tillegg 2026-11-08 – 242.3 ✅ fullført og samlet brukergodkjent, alle fem punkter ✅.** 63 syntetiske tester PASS, begge plattformbygg og etterkontroll bestått. Godkjenningen gjelder bare isolert baselinebevismodell; faktisk historisk kontekst forblir uavklart og import-/skrivetillatelse false. Ingen integrasjon eller fullføring av test 242 samlet følger av dette.
 
 **Historisk implementeringsstatus før brukergodkjenningen – 242.3 ❗️:** Isolert baselinebevismodell er implementert med separate vurderinger av ZIP-/journalbinding, rå recordName/changeTag og eksplisitt historisk kontekst. Dagens CloudKit-kontekst brukes aldri til å fylle historiske hull; eksisterende v1-baseline forblir historisk uavklart. 23 nye tester og 40 relasjonsregresjonstester PASS, begge plattformbygg bestått; fem valideringspunkter avventer brukergodkjenning. Ingen faktisk datalesing, baselineendring, UI-/importintegrasjon eller skrivetillatelse. 242.1–242.2 er ✅ og publisert; test 242 samlet er ikke fullført.

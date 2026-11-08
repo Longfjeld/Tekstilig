@@ -1,5 +1,28 @@
 # Endringslogg
 
+## Test 242.4 – fullført og brukergodkjent – 2026-11-08
+
+**242.4 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter direkte bruk av strukturert ReadResult, separate relasjonsrapporter for begge passeringer, bevarte råverdier/duplikater/lesefeil og eksplisitt ufullstendig dekning ved avbrudd, feil eller motstrid. T0001 gir ingen historisk slettingskonklusjon; skrivetillatelse er ubetinget false.
+
+Sluttgrunnlag: **21 adaptertester + 41 leser-/miljøtester + 25 relasjonsmodelltester + 15 rapporttester = 102 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg og bestått sikkerhets-/diffkontroll. Ny kompilering og kjøring bekreftet de 21 adaptertestene under samlet validering; tidligere regresjons- og byggresultater ble gjenbrukt på uendrede kilder.
+
+Godkjenningen gjelder bare den isolerte adapteren fra allerede innsendte observasjoner. Ingen UI-/leserintegrasjon, ny CloudKit-lesing, importbeslutning, import/restore, baselineendring eller skrivetillatelse følger av godkjenningen. Faktisk CloudKit-dekning, atomisitet og historisk kontekst er ikke bevist. Test 242 samlet og senere deltester er ikke dermed fullført. Tidligere delstatuser beholdes som historikk.
+
+## Pågående – test 242.4 ❗️
+
+**Teknisk fortsettelse 2026-11-08 – fortsatt ❗️:** Actor-feilen er rettet kun i `TextileRelationshipReadAdapterTests.swift`. Fixturestandardene evalueres nå inne i de MainActor-isolerte `record`-/`source`-hjelperne. Standardargumentene er nil/litteraler; eksplisitt manglende kontekst representeres med `.some(nil)`, mens tomme observasjons-/typesett fortsatt beholdes som tomme. Ingen testkriterier, produksjonskode, actor-isolasjon eller compilerinnstillinger er endret.
+
+Ny isolert kompilering består uten advarsler. Sekvensiell kjøring gir **21/21 adaptertester, 41/41 leser-/miljøtester, 25/25 relasjonsmodelltester og 15/15 rapporttester PASS – totalt 102 PASS, 0 FAIL**, exitkode 0. Kjøringene blokkerte nettverk, filskriving og lesing av brukermappen. Ingen faktisk transport, systembeviskilde eller app ble kjørt. Tidligere vellykkede macOS-/iOS-/iPadOS-bygg gjenbrukes på uendrede produksjonskilder; ingen nye appbygg var nødvendig for testhjelperrettelsen.
+
+Sikkerhets-/diffkontroll bestått: kun verdikall fra adapteren til kontekstvalidering og relasjonsmodell/-rapport, ingen lesestart, transport, repositories, URL-/kataloghjelpere eller lagring. Rågrunnlag, feil og passeringer bevares; ufullstendighet/avbrudd gir ikke komplett dekning. Skrivetillatelse er alltid false. Ingen eksisterende baseline, journal eller ZIP er åpnet eller endret. Alle fem valideringspunkter og 242.4 samlet forblir ❗️ frem til brukergodkjenning. Den tidligere kompileringsfeilen og stoppstatusen nedenfor er historikk.
+
+Følgende oppføring bevarer den opprinnelige implementerings-/stoppstatusen.
+
+Isolert `TextileRelationshipReadAdapter` er implementert fra strukturert `ReadResult` til separate relasjonsrapporter for hver passering. Råverdier, duplikater, lesefeil og dekning bevares; ingen ny lesing eller endring av eksisterende modeller. Full dekning krever begge passeringer komplette, konsistente og uten feil. Skrivetillatelse er alltid false.
+
+Begge plattformbygg bestått uten signering/appkjøring. Testsekvensen stoppet ved actor-isolasjonsfeil i nye testhjelperes standardargumenter (`family`; også advarsler for `scope`, `context`, `types`). 21 syntetiske tilfeller er skrevet, **ingen kjørt**; regresjonstester og samlet validering gjenstår. Ingen rettingsforsøk utført. Alle fem punkter og 242.4 samlet står ❗️. Ingen CloudKit-operasjoner, appkjøring eller endring av faktisk baseline/journal/ZIP. Se implementeringsloggen for rotårsak og minste foreslåtte rettelse.
+
+
 ## Test 242.3 – fullført og brukergodkjent – 2026-11-08
 
 **242.3 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter skillet mellom ZIP-/journalbinding, rå recordName/changeTag og historisk CloudKit-kontekst, eksplisitt STOPP ved manglende, motstridende eller tvetydig grunnlag, bevarte råverdier/duplikater og ubetinget import-/skrivetillatelse false. Dagens kontekst brukes aldri som historisk bevis.
