@@ -4983,3 +4983,54 @@ Oppføringen nedenfor bevarer teknisk status før brukergodkjenningen; sluttstat
 **242.1 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Sluttgrunnlag: **25 syntetiske tester PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg, og samlet kontroll av isolasjon, komplette rapporter, alle fem utfall, kontekst, råverdier/duplikater, T0001 og determinisme. Ny kompilering og kjøring av eksisterende testprogram bekreftet 25 PASS/0 FAIL ved samlet validering; ingen nye testtilfeller ble lagt til.
 
 Godkjenningen gjelder bare den isolerte verdimodellen for relasjoner. Kalleren må fortsatt levere faktisk deknings-/kontekstbevis; modellen beviser ikke CloudKit-dekning, historisk sletting, datakorrupsjon, historisk baselinebinding eller gyldigheten av underpostens egen identitet/versjon. Ingen UI-/leserintegrasjon, importbeslutning, reparasjon eller skrivetillatelse følger av godkjenningen. Eksisterende importmodeller, repositories og baseline er uendret. Test 242 samlet og senere deltester er ikke fullført eller startet. Ingen appkjøring eller CloudKit-operasjon er utført ved denne godkjenningsoppdateringen. Tidligere delstatuser beholdes som historikk.
+
+
+## 242.2 – isolert, deterministisk relasjonsrapport
+
+**242.2 ✅ – fullført og uttrykkelig brukergodkjent 2026-11-08; alle fem valideringspunkter ✅.** Grunnlag: publisert `1c9ab60`; arbeidsgren `codex/test-242-2-relationship-report`. 242.1 beholdes ✅. Ingen UI-, leser- eller importintegrasjon og ingen senere deltest er implementert.
+
+### Kontrakt og sikkerhetsgrenser
+
+Ny `TextileRelationshipReport.make(_:)` tar bare `TextileRelationshipModel.Input` og kaller den uendrede 242.1-modellen. Resultatet inneholder modellens komplette `Report` som grunnlag, én strukturert rad per modell-/underpostobservasjon og en beregnet tekstvisning. Ingen rapporttekst parses. Rapporten har ingen imports, IO eller CloudKit-avhengigheter og kalles ikke fra appflyt eller eksisterende diagnostikk.
+
+Hver rad viser posttype, rå logisk ID/eier med forskjell på manglende/streng/feil datatype, faktisk recordnavn, alle seks kontekstfelter, valgfri changeTag, alle foreldretreff med deres rå identitet/recordnavn/kontekst/tag, modellens uendrede utfall/årsaker og konkret norsk begrunnelse. Strenger vises med escaping slik at kontrolltegn ikke lager ekstra fysiske rader eller skjules ved trimming. Duplikater beholdes både i struktur og tekst. Ingen foreldrekandidat velges ved tvetydighet.
+
+Teksten viser også antall per undertype, totalt radantall og hele foreldre-/dekningsgrunnlaget, inkludert ubrukte, ugyldige, ufullstendige og dupliserte oppføringer/feiltekster. Rekkefølgen kommer fra den deterministiske modellen; ingen selvstendig omklassifisering eller konteksttilordning. Manglende kontekst er eksplisitt, aldri en standardkonto/-zone.
+
+Diagnostisk STOPP vises ved andre relasjonsutfall enn entydig observert forelder, og ved tomt underpostgrunnlag. Entydige rader merkes **OBSERVERT**, ikke skriveklare. Overskriften viser STOPP hvis minst én rad stopper; øvrige rader beholdes. Dette er en rapportstatus, ikke ny importpolitikk eller en utførelsesport. Ekstra grunnlagsoppføringer vises, men relasjonsutfall følger modellens avgrensning til den aktuelle radens kontekst. Ugyldig grunnlag forklares med konkrete modellårsaker (manglende/duplisert dekningsbevis, uverifisert kontekst, ufullstendig Textile-lesing, lesefeil, uavklart foreldreobservasjon eller ugyldig eier/forelder).
+
+`permitsCloudKitWriting` er alltid false, også ved bare entydige rader. Rapporten verifiserer ikke sannheten i caller-levert kontekst/dekning, underpostens egen ID/versjon, historisk baselinebinding eller atomisitet. Den genererer ingen kandidatnavn og reparerer ingenting. T0001 betyr bare den observerte rå eieren; «forelder ikke observert» er ikke bevis for sletting, korrupsjon eller faktisk foreldreløshet.
+
+### Sekvensiell brukervalidering av 242.2 – alle fem punkter godkjent ✅
+
+1. **✅ Bygg og isolasjon.** Gjennomgå rapportens eneste modellkall og rene formattering. Bygg macOS og generisk iOS/iPadOS uten appstart. Forvent inkludering i begge bygg, ingen IO-/CloudKit-avhengigheter og uendret 242.1/importmodell/repositories/baseline. **STOPP** ved byggefeil, datatilgang eller integrasjon utenfor 242.2.
+2. **✅ Kompiler og kjør syntetiske tester.** Bruk oppsettet nedenfor via Codex/Terminal; Xcode GUI brukes til bygg/kildegjennomgang. Forvent **15 PASS, 0 FAIL**, deretter de eksisterende **25 modelltestene PASS, 0 FAIL** i isolasjon. **STOPP** ved kompilatorfeil, FAIL eller skrive-/nettverksbivirkning.
+3. **✅ Radantall, råverdier og fullstendig grunnlag.** Gjennomgå test 01–11: tomt grunnlag gir ikke falsk suksess, alle fire undertyper har forventede rader/antall, dupliserte underposter/foreldre beholdes, alle kontekstfelt/recordmetadata vises og ugyldig/ufullstendig grunnlag gir STOPP med konkret årsak. **STOPP** ved tapt eller ekstra rad, skjult feiltekst, råverdinormalisering eller antatt kontekst.
+4. **✅ Blandede utfall og determinisme.** Test 12 sammenligner eksakt fem ulike utfall/foreldretreff/årsaker på riktige underpostidentiteter i samme rapport. Test 13 sammenligner full struktur og tekst ved gjentakelse/omordnet input. Test 14–15 kontrollerer T0001, uendret input og skrivetillatelse false. **STOPP** ved feilplassert begrunnelse, vilkårlig foreldrevalg, historisk slutning eller import-/skrivegodkjenning.
+5. **✅ Etterkontroll og stopp.** Kontroller diff, nye filer og filutvalg; skill kjente lokale Xcode-/scheme-endringer fra oppgaven. Forvent kun ny rapport/test og relevant dokumentasjon, uten endring av 242.1-modellen, importbeslutninger, repositories eller baseline. **STOPP etter rapporten** og avvent brukergodkjenning. Ingen appkjøring, CloudKit, commit, merge, push eller neste deltest følger av testen.
+
+Isolert testoppsett fra prosjektroten (bruk aktuell brukermappesti i profilen):
+
+```sh
+mkdir -p /private/tmp/tekstilig-test242-2
+xcrun swiftc -module-cache-path /private/tmp/tekstilig-test241-b1/module-cache Tekstilig/Diagnostics/TextileRelationshipModel.swift Tekstilig/Diagnostics/TextileRelationshipReport.swift Tests/TextileRelationshipReportTests.swift -o /private/tmp/tekstilig-test242-2/report-tests
+/usr/bin/sandbox-exec -p '(version 1) (allow default) (deny network*) (deny file-write*) (deny file-read* (subpath "/Users/persteinar"))' /private/tmp/tekstilig-test242-2/report-tests
+```
+
+### Faktiske tekniske resultater – 2026-11-08
+
+Oppføringen nedenfor bevarer teknisk status før samlet brukergodkjenning; sluttstatus følger nederst.
+
+- macOS/Debug og generisk iOS/iPadOS/Debug med Xcode 27.2, uten signering/appkjøring: **BUILD SUCCEEDED**, ny rapport bekreftet i begge SwiftFileList. Bare kjent AppIntents-metadataadvarsel. En hjelpetekst ble presisert fra «nedenfor» til «i dekningsoversikten»; avsluttende bygg og ny kompilering/testkjøring bekrefter gjeldende tekstversjon. Ingen bygge-/testfeil.
+- **15/15 rapporttester PASS, 0 FAIL**, exitkode 0, med komplette rad-/observasjonsforventninger, eksplisitt sorteringsrekkefølge, eksakte blandede utfall og sammenligning av full struktur/tekst. **25/25 eksisterende 242.1-modelltester PASS, 0 FAIL** fra binæren med kontrollerte uendrede modell-/testkilder. Totalt **40 PASS, 0 FAIL**; rapporttesten ble også kjørt på nytt etter tekstpresiseringen. Ingen nye modelltester eller endring av 242.1-resultatet.
+- Testprogrammene kjørte med nettverk, filskriving og brukermappelesing blokkert. Ingen faktisk observasjonskilde, app, CloudKit, bildeinnhold, ZIP, journal eller baseline ble brukt.
+- Statisk sikkerhets-/diffkontroll bestått. Eneste produksjonskilde-tillegg er den isolerte rapporten; eksisterende appflyt, relasjonsmodell, importmodell, repositories, dataformater og signering er urørt. Lokale Xcode-/scheme-endringer er bevart uten staging. **242.2 forblir ❗️**, alle fem punkter avventer brukervalidering; test 242 samlet er ikke fullført.
+
+
+### Sluttresultat og brukergodkjenning – 242.2 – 2026-11-08
+
+**242.2 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter én rad per innsendt underpost, alle fire undertyper, deterministisk struktur/tekst, bevarte råverdier og duplikater, korrekte blandede utfall/foreldretreff, konkrete STOPP-årsaker ved uavklart relasjonsgrunnlag og ubetinget skrivetillatelse false. T0001 gir ingen historisk slettings-/korrupsjonskonklusjon.
+
+Sluttgrunnlag: **15 rapporttester + 25 modelltester = 40 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg uten appkjøring, og bestått sikkerhets-/diffkontroll. Ny kompilering og sekvensiell syntetisk testkjøring bekreftet resultatene under samlet validering. Ingen nye testtilfeller eller kodeendringer ble gjort da eller ved godkjenningsoppdateringen.
+
+Godkjenningen gjelder bare den isolerte relasjonsrapporten på uendret 242.1-modell. Rapporten er ikke koblet til UI, CloudKit-leser, import eller restore. Kalleren må fortsatt levere faktisk kontekst/dekning; historisk baselinebinding, underpostens egen identitet/versjon og atomisitet er ikke verifisert. Ingen skrivetillatelse, reparasjon, baselineendring eller generell tillatelse til nye datalesinger følger av dette. Test 242 samlet og senere deltester er ikke fullført eller startet. Tidligere delstatuser beholdes som historikk.

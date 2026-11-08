@@ -1,5 +1,19 @@
 # Endringslogg
 
+## Test 242.2 – fullført og brukergodkjent – 2026-11-08
+
+**242.2 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter én rad per innsendt underpost, alle fire undertyper, deterministisk struktur/tekst, bevarte råverdier og duplikater, korrekte blandede utfall/foreldretreff, konkrete STOPP-årsaker ved uavklart relasjonsgrunnlag og ubetinget skrivetillatelse false. T0001 gir ingen historisk slettings-/korrupsjonskonklusjon.
+
+Sluttgrunnlag: **15 rapporttester + 25 modelltester = 40 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg uten appkjøring, og bestått sikkerhets-/diffkontroll. Ny kompilering og sekvensiell syntetisk testkjøring bekreftet resultatene under samlet validering. Ingen nye testtilfeller eller kodeendringer ble gjort da eller ved godkjenningsoppdateringen.
+
+Godkjenningen gjelder bare den isolerte relasjonsrapporten på uendret 242.1-modell. Rapporten er ikke koblet til UI, CloudKit-leser, import eller restore. Kalleren må fortsatt levere faktisk kontekst/dekning; historisk baselinebinding, underpostens egen identitet/versjon og atomisitet er ikke verifisert. Ingen skrivetillatelse, reparasjon, baselineendring eller generell tillatelse til nye datalesinger følger av dette. Test 242 samlet og senere deltester er ikke fullført eller startet. Tidligere delstatuser beholdes som historikk.
+
+## Test 242.2 – isolert relasjonsrapport – 2026-11-08
+
+- ❗️ Ny ren verdirapport over uendret TextileRelationshipModel: én strukturert/tekstlig rad per observert underpost, råverdier/kontekst/metadata, alle foreldretreff, relasjonsutfall og konkrete begrunnelser. Hele foreldre-/dekningsgrunnlaget og duplikater beholdes. Diagnostisk STOPP uten importbeslutninger, historiske slutninger eller skrivetillatelse. Ingen IO, UI- eller CloudKit-kobling.
+- Begge appbygg bestått uten signering/appkjøring, **15 rapporttester + 25 eksisterende modelltester PASS, 0 FAIL** (40 totalt), med isolert nettverk/filskriving/brukermappelesing. Testene dekker eksakte radantall og blandede utfall, alle undertyper, duplikater, ugyldig/ufullstendig grunnlag, determinisme og T0001. Sikkerhets-/diffkontroll bestått.
+- Fem valideringspunkter er dokumentert som ❗️. 242.1-modell, importbeslutninger, repositories, baseline og signering er uendret; lokale Xcode-/scheme-endringer er bevart. Ingen app-/CloudKit-/dataoperasjoner, staging, commit, merge eller push. Bare 242.2-rapporten er lagt til, ingen senere deltest.
+
 ## Test 242.1 – fullført og brukergodkjent – 2026-11-08
 
 **242.1 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Sluttgrunnlag: **25 syntetiske tester PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg, og samlet kontroll av isolasjon, komplette rapporter, alle fem utfall, kontekst, råverdier/duplikater, T0001 og determinisme. Ny kompilering og kjøring av eksisterende testprogram bekreftet 25 PASS/0 FAIL ved samlet validering; ingen nye testtilfeller ble lagt til.

@@ -10,6 +10,8 @@
 
 **Tillegg 2026-11-08 – test 242.1 ✅ fullført og brukergodkjent:** Isolert relasjonsmodell er implementert med fem utfall for alle fire undertyper, bevart rågrunnlag/kontekst og ingen historisk slettingskonklusjon. Begge appbygg og 25 syntetiske tester bestått uten app-/CloudKit-kjøring. Alle fem valideringspunkter er brukergodkjent. Bare 242.1 er implementert; test 242 samlet og senere deltester er ikke fullført eller startet. Ingen endring av importbeslutninger, repositories eller baseline. B.3 er publisert i f11881f og beholdes ✅.
 
+**Tillegg 2026-11-08 – test 242.2 ✅ fullført og brukergodkjent:** Isolert deterministisk relasjonsrapport er implementert på uendret 242.1-modell, med alle underpostrader, rågrunnlag/kontekst/foreldretreff og konkrete STOPP-begrunnelser uten skrivetillatelse. Begge appbygg og 15 rapporttester + 25 modelltester bestått uten app-/CloudKit-kjøring. Alle fem valideringspunkter er brukergodkjent. Bare den isolerte rapporten er godkjent; test 242 samlet og senere deltester er ikke fullført eller startet. 242.1 beholdes ✅ og er publisert i 1c9ab60. Ingen integrasjon, importbeslutninger, repository- eller baselineendring.
+
 ## Overordnet mål for Tekstilig 1.0
 
 Tekstilig 1.0 skal være en stabil, forståelig og visuelt helhetlig app for registrering, administrasjon og gjenfinning av tekstiler.
