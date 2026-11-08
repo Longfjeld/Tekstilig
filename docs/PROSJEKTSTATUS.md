@@ -1,12 +1,12 @@
 # Gjeldende prosjektstatus – Tekstilig
 
-**Oppdatert:** 2026-11-07. Status og testbekreftelser nedenfor er oppgitt av prosjekteieren; commit er kontrollert i lokal Git-historikk. Dette er inngangen til gjeldende progresjon, ikke en ny funksjonsvalidering.
+**Oppdatert:** 2026-11-08. Status og testbekreftelser nedenfor er oppgitt av prosjekteieren; commit er kontrollert i lokal Git-historikk. Dette er inngangen til gjeldende progresjon, ikke en ny funksjonsvalidering.
 
 ## Gjeldende status
 
 - Autoritativ kilde for kode og versjonert dokumentasjon: Git-repositoriet, jf. [AGENTS.md](../AGENTS.md).
 - Siste bekreftede komplette snapshot: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
-- Publisert Git-grunnlag før test 241 fase B.3: `6b35055eb623ac516bc59d41527742dba8573302` på synkronisert `main`/`origin/main`. Test 239, 240 og 241 fase A/B.1/B.2 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
+- Publisert Git-grunnlag før test 242.1: `f11881f3a2f3c26003e958c129a298bf68cb9231` på synkronisert `main`/`origin/main`. Test 239, 240 og 241 fase A/B.1/B.2/B.3 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
 - Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). B-050 gjelder arkitektur og testomfang. Særskilt godkjenning 2026-11-07 omfatter ren modell og isolert testprogram; importskriving er fortsatt sperret.
 - Aktiv klient: native SwiftUI for iOS, iPadOS og macOS. Miljø: Xcode 27.2 og OS 27.2; CloudKit Development.
 - Roadmap-punkt 1–5 er dokumentert fullført. Eksport/backup, test 198–204, er validert på iPhone, iPad og macOS. Roadmap-punkt 7, import/restore, pågår som diagnostikk og sikkerhetsavklaring; faktisk restore er ikke klar.
@@ -98,6 +98,18 @@ Den kjente `TextileImage`-posten med eier `T0001` dokumenteres som observasjon. 
 Brukerens validering er grunnlaget for de praktiske resultatene; Codex har ikke startet appen eller utført CloudKit-oppslag ved denne oppdateringen. Tidligere tekniske resultater (**113 PASS, 0 FAIL**, begge appbygg) beholdes. Ingen nye kjøringer er utført. Like passeringer gir fortsatt ingen atomisitetsgaranti, historisk baselinebinding eller skrivetillatelse. Ingen generell tillatelse til flere CloudKit-leserunder følger av denne statusoppdateringen.
 
 **Ny status etter brukervalidering og etterkontroll 2026-11-08:** Punkt 1 og 5 er nå uttrykkelig godkjent; praktisk punkt 1–5 er ✅. Signert macOS/Debug-bygg, eksakt Development-entitlement, gyldig signatur og aktiv B.3-parameter er kontrollert. Praktisk avbrudd/parallellsperre er brukervalidert uten at dette hevder øyeblikkelig SDK-/serveravbrudd. Etterkontrollen fant ingen konkrete avvik i filutvalg, kallkjede, tidligere test-/byggresultater eller dokumentasjon. 113 PASS/0 FAIL og begge plattformbygg gjenbrukes på uendrede kilder; ingen ny kjøring. Ingen CloudKit-skriving/-sletting, import/restore eller baselineoppdatering er innført; ingen faktisk datakontakt er utført i etterkontrollen. **Punkt 6 og B.3 samlet forblir ❗️ til brukeren godkjenner etterkontrollen.** Klar for endelig godkjenning innen dokumentert leseomfang; sikkerhetsbegrensningene består, og ingen ny lesing er autorisert.
+
+## Siste validering – test 242.1 ✅
+
+**242.1 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Sluttgrunnlag: **25 syntetiske tester PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg, og samlet kontroll av isolasjon, komplette rapporter, alle fem utfall, kontekst, råverdier/duplikater, T0001 og determinisme. Ny kompilering og kjøring av eksisterende testprogram bekreftet 25 PASS/0 FAIL ved samlet validering; ingen nye testtilfeller ble lagt til.
+
+Godkjenningen gjelder bare den isolerte verdimodellen for relasjoner. Kalleren må fortsatt levere faktisk deknings-/kontekstbevis; modellen beviser ikke CloudKit-dekning, historisk sletting, datakorrupsjon, historisk baselinebinding eller gyldigheten av underpostens egen identitet/versjon. Ingen UI-/leserintegrasjon, importbeslutning, reparasjon eller skrivetillatelse følger av godkjenningen. Eksisterende importmodeller, repositories og baseline er uendret. Test 242 samlet og senere deltester er ikke fullført eller startet. Ingen appkjøring eller CloudKit-operasjon er utført ved denne godkjenningsoppdateringen. Tidligere delstatuser beholdes som historikk.
+
+Følgende oppføring bevarer implementeringsstatus før brukergodkjenningen.
+
+Bare den isolerte relasjonsmodellen er implementert på egen arbeidsgren fra publisert f11881f. Fem utfall for alle fire undertyper skiller entydig observert forelder, ikke observert ved komplett scoped dekning, ufullstendig dekning, tvetydig forelder og ugyldig eier. Råverdier/kontekst, duplikater og T0001-scenario bevares uten slettingskonklusjon. Modellen har ingen IO-/CloudKit-avhengigheter og er ikke koblet til import, repositorier eller UI. Dekning/kontekstbevis må leveres av kalleren; modellen verifiserer ikke server eller historisk baseline.
+
+Teknisk kontroll: macOS- og iOS/iPadOS-bygg bestått uten signering/appkjøring, deretter **25/25 nye syntetiske tester PASS, 0 FAIL** i isolasjon uten nettverk/filskriving/brukermappelesing. Statisk sikkerhets-/diffkontroll bestått. Fem valideringspunkter i implementeringsloggen står ❗️ frem til brukergodkjenning. Ingen senere deltest i 242 er implementert; importbeslutninger, eksisterende repositories og baseline er uendret. Test 241 B.3 er fortsatt ✅ og publisert.
 
 ## Åpne problemer og uavklarte tester
 

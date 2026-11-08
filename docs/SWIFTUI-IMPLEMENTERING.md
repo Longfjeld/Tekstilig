@@ -4924,3 +4924,62 @@ Denne prosedyren bevares som historikk fra før brukergodkjenning av punkt 5. Pu
 Sluttgrunnlag: **113 PASS, 0 FAIL** (11 B.3-, 38 modell-, 23 adapter- og 41 leser-/miljøtester), vellykkede macOS-/iOS-/iPadOS-bygg og signert macOS/Debug-kontroll. Resultatene er gjenbrukt på uendrede kilder; ingen nye tester, appkjøring eller CloudKit-oppslag er utført ved godkjenningsoppdateringen. Praktiske leseresultater og avbruddsvalidering er bekreftet av brukeren.
 
 Godkjenningen gjelder bare den isolerte, skrivebeskyttede Development-diagnostikken. Ingen import, restore, CloudKit-skriving/-sletting, baselineoppdatering eller produksjonsgodkjenning av kandidatidentiteter. T0001-bildeposten forblir kun observert og urørt. Standardzone-dekning, uverifisert iOS/iPadOS-miljø, historisk baselinebinding, full foreldre-/eierverifikasjon, manglende atomisitetsgaranti og kooperativ SDK-avbrytelse består som begrensninger. Ingen generell tillatelse til nye CloudKit-lesinger eller neste fase følger av godkjenningen. Tidligere delstatuser beholdes som historikk.
+
+
+## 242.1 – isolert relasjonsmodell med syntetiske data
+
+**242.1 ✅ – fullført og uttrykkelig brukergodkjent 2026-11-08, alle fem valideringspunkter ✅.** Bare denne deltesten er implementert. Test 242 samlet og senere integrasjon/baselineavklaring er ikke fullført. Grunnlag: publisert `f11881f` på main; arbeidsgren `codex/test-242-1-relationship-model`. Tidligere test 239–241-resultater beholdes.
+
+### Kontrakt og avgrensning
+
+`TextileRelationshipModel` er en `nonisolated` verdimodell uten imports, IO, CloudKit-API-er eller avhengighet til importbeslutningsmodellen. Den oppretter ingen filer, oppdager ingen konto/kontekst og kalles ikke av appens UI, repositories eller diagnostikkleser. Inndata er typed Textile-foreldre, underposter av Piece/TextileMaterial/TextileColor/TextileImage og eksplisitt dekningsbevis for Textile-lesing i en bestemt kontekst.
+
+Modellen bevarer rå ID-/eierfelt som manglende, streng eller feil datatype med beskrivelse. Container, miljø, konto, database, zone og zoneOwner bevares som egne rå felt; recordnavn og valgfrie changeTags beholdes. Ingen trimming, bokstavkonvertering eller ID-/recordnavn-generering. Alle innsendte underposter får én rad, også ved duplikater; alle foreldre og dekningsoppføringer beholdes. Utdata sorteres deterministisk, og feiltekst sorteres uten å fjerne verdier/duplikater.
+
+Fem relasjonsutfall:
+
+| Utfall | Betydning |
+|---|---|
+| `uniqueObservedParent` | Nøyaktig én matchende, gyldig observert Textile i samme kontekst og komplett grunnlag. |
+| `parentNotObservedWithCompleteCoverage` | Ingen slik forelder observert i det eksplisitt komplette leseområdet; ikke bevis for historisk sletting eller datakorrupsjon. |
+| `incompleteCoverage` | Kontekst/dekning mangler, er tvetydig, uverifisert eller ufullstendig, har lesefeil eller inneholder uavklarte foreldreobservasjoner. Ingen fraværskonklusjon. |
+| `ambiguousParent` | Flere matchende foreldreobservasjoner i samme kontekst ved ellers komplett grunnlag; også identiske duplikater bevares. |
+| `invalidOwner` | Eier mangler, har feil datatype eller bryter modellens eksplisitte tokenregel. Råverdien beholdes. |
+
+Rekkefølge: ugyldig eier diagnostiseres først, deretter manglende/ugyldig underpostkontekst og øvrige dekningsproblemer. Ufullstendig grunnlag overstyrer både entydighet og tvetydighet; observerte treff beholdes i raden. Deretter avgjør antall foreldretreff 0/1/flere. Tokenregelen er samme konservative diagnostiske regel som identitetsmodellen: ikke-tom streng av ASCII 33–126; T0001 er gyldig, whitespace/ikke-ASCII normaliseres ikke. Foreldre-recordnavn kontrolleres som ikke-tomt, inntil 255 UTF-8-byte og ASCII 32–126. Dette fastsetter ikke et nytt produksjonsformat.
+
+Dekningsbevis er oppgitt av kalleren, ikke verifisert av modellen. Det må være nøyaktig én oppføring for underpostens komplette kontekst, med `contextVerified` og `textileReadComplete` sanne og uten lesefeil. Ugyldig foreldre-ID/recordnavn i samme kontekst gir ufullstendig grunnlag. En forelder med ukjent/ugyldig kontekst kan ikke utelukkes og gir konservativt ufullstendig grunnlag. Gyldig annen kontekst blandes ikke inn. Dette hevder ikke komplett lesing av underposter, andre zones eller hele CloudKit-databasen.
+
+Modellen validerer relasjonen fra innsendt eier, ikke at underpostens egen ID, innhold eller changeTag er gyldig eller at historisk baseline er bundet. `permitsCloudKitWriting` er alltid false. Ingen importbeslutning, kandidatidentitet, reparasjon, slettingskonklusjon eller autorisasjon er introdusert. T0001-scenarioet er syntetisk: samme bilde-ID/recordnavn som kjent observasjon brukes som referanse, uten oppslag eller endring av den faktiske posten.
+
+### Sekvensiell brukervalidering av 242.1 – alle fem punkter godkjent ✅
+
+1. **✅ Bygg og isolasjon.** Gjennomgå ny modell og testprogram; bygg macOS og generisk iOS/iPadOS uten appkjøring. Forvent inkludering i begge bygg og ingen IO-/CloudKit-avhengigheter eller nye appkall. **STOPP** ved byggefeil eller integrasjon utenfor 242.1.
+2. **✅ Kompiler og kjør syntetiske tester.** Bruk oppsettet nedenfor (Codex/Terminal; Xcode GUI brukes til bygg/kildegjennomgang). Forvent **25 PASS, 0 FAIL**, komplette forventede rapporter og alle fire undertyper. **STOPP** ved kompilatorfeil, FAIL, tom/manglende/ekstra beslutningsrad eller skrive-/nettverksbivirkning.
+3. **✅ Gjennomgå fem utfall og kontekst.** Test 02–20 dekker entydig, ikke observert, ufullstendig, tvetydig og ugyldig eier; alle seks kontekstfelter, manglende/duplisert dekningsbevis, lesefeil og ugyldige foreldre. Forvent at ukjent grunnlag aldri gir sikkert fravær, og at treff ikke blandes mellom kontekster. **STOPP** ved feilplassert utfall, filtrerte råverdier eller antatt kontekst.
+4. **✅ T0001, determinisme og grenser.** Test 21–25 viser T0001 med komplett/ufullstendig dekning og eksisterende forelder, eksakt bokstavsamsvar, diagnostisk prioritet, bevarte ugyldige underpost-ID-er og stabile fullrapporter ved omordnet input. Forvent ingen slettings-/korrupsjonspåstand, ingen endring av input og ingen skrivetillatelse. **STOPP** ved normalisering, tap av observasjoner eller importbeslutning.
+5. **✅ Etterkontroll og stopp.** Kontroller filutvalg, diff og uendrede eksisterende modeller, repositories, signering og dataformater. Forvent kun ny modell/test og relevant dokumentasjon, separat fra kjente lokale Xcode-/scheme-endringer. **STOPP etter rapporten** og avvent brukergodkjenning. Ingen appstart, CloudKit, baselineendring eller neste deltest følger av resultatet.
+
+Isolert oppsett fra prosjektroten (bruk aktuell brukermappesti i isolasjonsprofilen):
+
+```sh
+mkdir -p /private/tmp/tekstilig-test242-1
+xcrun swiftc -module-cache-path /private/tmp/tekstilig-test241-b1/module-cache Tekstilig/Diagnostics/TextileRelationshipModel.swift Tests/TextileRelationshipModelTests.swift -o /private/tmp/tekstilig-test242-1/relationship-tests
+/usr/bin/sandbox-exec -p '(version 1) (allow default) (deny network*) (deny file-write*) (deny file-read* (subpath "/Users/persteinar"))' /private/tmp/tekstilig-test242-1/relationship-tests
+```
+
+### Faktiske tekniske resultater – 2026-11-08
+
+Oppføringen nedenfor bevarer teknisk status før brukergodkjenningen; sluttstatus følger nederst.
+
+- Først macOS/Debug-bygg, deretter generisk iOS/iPadOS/Debug-bygg med Xcode 27.2 og `CODE_SIGNING_ALLOWED=NO`: **BUILD SUCCEEDED** for begge. Ny modell bekreftet i begge SwiftFileList. Bare kjent AppIntents-metadataadvarsel; ingen signert app eller appkjøring kontrollert i 242.1.
+- Deretter isolert kompilering av bare modellen og testprogrammet og kjøring med nettverk, filskriving og lesing av brukermappen blokkert: **25 PASS, 0 FAIL**, exitkode 0. Ingen rettingsforsøk nødvendig. Test-orakelet sammenligner komplette rader, råverdier, antall, foreldretreff, utfallsvariant, årsaker og rapportgrunnlag; tomme eller manglende rader kan ikke oppfylle positive forventninger.
+- Ingen nye regresjonskjøringer av uendrede 239–241-programmer; deres tidligere validerte resultater beholdes. Modellen kompileres uten disse kildene, og ingen eksisterende kallere er endret.
+- Statisk sikkerhetskontroll og diffkontroll bestått. Ingen kodeendringer i eksisterende importbeslutninger, adapter, leser, repositories, UI, baseline-/journal-/backupformat eller signering. Ingen faktisk CloudKit, app, ZIP, journal eller baseline er åpnet eller endret i oppgaven. Lokale Xcode-/scheme-endringer er bevart, og ingen filer er staged. **242.1 forblir ❗️** frem til brukervalidering; ingen senere deltest er implementert.
+
+
+### Sluttresultat og brukergodkjenning – 242.1 – 2026-11-08
+
+**242.1 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Sluttgrunnlag: **25 syntetiske tester PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg, og samlet kontroll av isolasjon, komplette rapporter, alle fem utfall, kontekst, råverdier/duplikater, T0001 og determinisme. Ny kompilering og kjøring av eksisterende testprogram bekreftet 25 PASS/0 FAIL ved samlet validering; ingen nye testtilfeller ble lagt til.
+
+Godkjenningen gjelder bare den isolerte verdimodellen for relasjoner. Kalleren må fortsatt levere faktisk deknings-/kontekstbevis; modellen beviser ikke CloudKit-dekning, historisk sletting, datakorrupsjon, historisk baselinebinding eller gyldigheten av underpostens egen identitet/versjon. Ingen UI-/leserintegrasjon, importbeslutning, reparasjon eller skrivetillatelse følger av godkjenningen. Eksisterende importmodeller, repositories og baseline er uendret. Test 242 samlet og senere deltester er ikke fullført eller startet. Ingen appkjøring eller CloudKit-operasjon er utført ved denne godkjenningsoppdateringen. Tidligere delstatuser beholdes som historikk.

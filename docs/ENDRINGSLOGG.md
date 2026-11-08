@@ -1,5 +1,17 @@
 # Endringslogg
 
+## Test 242.1 – fullført og brukergodkjent – 2026-11-08
+
+**242.1 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Sluttgrunnlag: **25 syntetiske tester PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg, og samlet kontroll av isolasjon, komplette rapporter, alle fem utfall, kontekst, råverdier/duplikater, T0001 og determinisme. Ny kompilering og kjøring av eksisterende testprogram bekreftet 25 PASS/0 FAIL ved samlet validering; ingen nye testtilfeller ble lagt til.
+
+Godkjenningen gjelder bare den isolerte verdimodellen for relasjoner. Kalleren må fortsatt levere faktisk deknings-/kontekstbevis; modellen beviser ikke CloudKit-dekning, historisk sletting, datakorrupsjon, historisk baselinebinding eller gyldigheten av underpostens egen identitet/versjon. Ingen UI-/leserintegrasjon, importbeslutning, reparasjon eller skrivetillatelse følger av godkjenningen. Eksisterende importmodeller, repositories og baseline er uendret. Test 242 samlet og senere deltester er ikke fullført eller startet. Ingen appkjøring eller CloudKit-operasjon er utført ved denne godkjenningsoppdateringen. Tidligere delstatuser beholdes som historikk.
+
+## Test 242.1 – isolert relasjonsmodell – 2026-11-08
+
+- ❗️ Ny `TextileRelationshipModel` med fem diagnostiske relasjonsutfall for Piece, TextileMaterial, TextileColor og TextileImage. Råfelt og full CloudKit-kontekst beholdes, uten trimming eller historiske slettingskonklusjoner. Komplett foreldredekning må være eksplisitt og gjelde samme kontekst; uavklart grunnlag forblir ufullstendig. Ingen IO, CloudKit-API, importbeslutning eller UI-kobling.
+- Nytt isolert testprogram: **25 PASS, 0 FAIL**, inkludert alle utfall, kontekstfelter, duplikater/ufullstendig grunnlag, ugyldige råverdier, determinisme og syntetisk T0001. Først begge appbygg bestått uten signering/appkjøring, deretter isolerte tester med nettverk/filskriving/brukermappelesing blokkert. Sikkerhets-/diffkontroll bestått. Ingen rettingsforsøk nødvendig.
+- Bare 242.1 er implementert; fem valideringspunkter står ❗️. Eksisterende importmodell, repositories, baseline, dataformater og lokale Xcode-/scheme-endringer er bevart. Ingen CloudKit-/dataoperasjoner, commit, merge eller push. Test 241 B.3 beholdes ✅ og er publisert i f11881f.
+
 ## Test 241 B.3 – fullført og endelig brukergodkjent – 2026-11-08
 
 **Test 241 B.3 ✅ fullført og endelig brukergodkjent 2026-11-08. Alle seks praktiske punkter, inkludert avsluttende etterkontroll, er godkjent.** Brukeren har validert isolert macOS/Debug-oppstart, eksplisitt Development-lesing med to samsvarende passeringer og 43 poster i hver fordelt på alle fem posttyper, samt avbrudd/parallellsperre. Signert macOS/Debug-bygg, eksakt Development-entitlement, gyldig signatur og B.3-parameter er kontrollert. Etterkontrollen fant ingen konkrete avvik innen testomfanget.

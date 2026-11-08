@@ -8,6 +8,8 @@
 
 **Tillegg 2026-11-08 – test 241 B.3 ✅ fullført og endelig brukergodkjent:** Isolert Development-lesing er implementert med eksplisitt start, lokal miljøport før transportopprettelse, to metadata-/identitetspasseringer og minnerapport. Begge appbygg og 113 syntetiske tester bestått. Etterfølgende brukervalidering bekrefter isolert oppstart og to samsvarende Development-passeringer med 43 poster i hver og alle fem posttyper: alle seks praktiske punkter og B.3 samlet er ✅ etter også godkjent bygg/signering, avbrudd/parallellsperre og avsluttende etterkontroll uten konkrete avvik. Den kjente TextileImage-posten med eier T0001 er bare observert, uten reparasjon. Ingen import-/restore- eller skrivetillatelse. B.2 beholdes ✅.
 
+**Tillegg 2026-11-08 – test 242.1 ✅ fullført og brukergodkjent:** Isolert relasjonsmodell er implementert med fem utfall for alle fire undertyper, bevart rågrunnlag/kontekst og ingen historisk slettingskonklusjon. Begge appbygg og 25 syntetiske tester bestått uten app-/CloudKit-kjøring. Alle fem valideringspunkter er brukergodkjent. Bare 242.1 er implementert; test 242 samlet og senere deltester er ikke fullført eller startet. Ingen endring av importbeslutninger, repositories eller baseline. B.3 er publisert i f11881f og beholdes ✅.
+
 ## Overordnet mål for Tekstilig 1.0
 
 Tekstilig 1.0 skal være en stabil, forståelig og visuelt helhetlig app for registrering, administrasjon og gjenfinning av tekstiler.
