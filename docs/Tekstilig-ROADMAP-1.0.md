@@ -1,5 +1,9 @@
 # Tekstilig – roadmap frem mot versjon 1.0
 
+**Tillegg 2026-11-08 – 242.3 ✅ fullført og samlet brukergodkjent, alle fem punkter ✅.** 63 syntetiske tester PASS, begge plattformbygg og etterkontroll bestått. Godkjenningen gjelder bare isolert baselinebevismodell; faktisk historisk kontekst forblir uavklart og import-/skrivetillatelse false. Ingen integrasjon eller fullføring av test 242 samlet følger av dette.
+
+**Historisk implementeringsstatus før brukergodkjenningen – 242.3 ❗️:** Isolert baselinebevismodell er implementert med separate vurderinger av ZIP-/journalbinding, rå recordName/changeTag og eksplisitt historisk kontekst. Dagens CloudKit-kontekst brukes aldri til å fylle historiske hull; eksisterende v1-baseline forblir historisk uavklart. 23 nye tester og 40 relasjonsregresjonstester PASS, begge plattformbygg bestått; fem valideringspunkter avventer brukergodkjenning. Ingen faktisk datalesing, baselineendring, UI-/importintegrasjon eller skrivetillatelse. 242.1–242.2 er ✅ og publisert; test 242 samlet er ikke fullført.
+
 **Utgangspunkt:** Tekstilig-SwiftUIActualApp0024  
 **Mål:** Ferdigstille, kvalitetssikre og publisere Tekstilig 1.0.  
 **Arbeidsprinsipp:** Vi arbeider sekvensielt fra punkt 1 til punkt 12. Et hovedpunkt avsluttes og valideres før vi går videre til neste.

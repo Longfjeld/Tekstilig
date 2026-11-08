@@ -6,7 +6,7 @@
 
 - Autoritativ kilde for kode og versjonert dokumentasjon: Git-repositoriet, jf. [AGENTS.md](../AGENTS.md).
 - Siste bekreftede komplette snapshot: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
-- Publisert Git-grunnlag før test 242.2: `1c9ab6089388e294d88365da947935b63ca7fe28` på synkronisert `main`/`origin/main`. Test 239, 240, 241 fase A/B.1/B.2/B.3 og 242.1 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
+- Publisert Git-grunnlag før test 242.3: `b5d259876d106f6fec1e3b02c58cab8c5ade9ee5` på synkronisert `main`/`origin/main`. Test 239, 240, 241 fase A/B.1/B.2/B.3 og 242.1–242.2 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
 - Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). B-050 gjelder arkitektur og testomfang. Særskilt godkjenning 2026-11-07 omfatter ren modell og isolert testprogram; importskriving er fortsatt sperret.
 - Aktiv klient: native SwiftUI for iOS, iPadOS og macOS. Miljø: Xcode 27.2 og OS 27.2; CloudKit Development.
 - Roadmap-punkt 1–5 er dokumentert fullført. Eksport/backup, test 198–204, er validert på iPhone, iPad og macOS. Roadmap-punkt 7, import/restore, pågår som diagnostikk og sikkerhetsavklaring; faktisk restore er ikke klar.
@@ -124,6 +124,20 @@ Følgende oppføring bevarer implementeringsstatus før samlet godkjenning.
 Isolert `TextileRelationshipReport` bygger direkte på uendret 242.1-modell, med én rad per underpost, rå identitet/eier, full kontekst, foreldreobservasjoner, uendret relasjonsutfall/årsaker og norsk begrunnelse. Duplikater og hele deknings-/foreldregrunnlaget beholdes. Diagnostisk STOPP ved ikke-entydig relasjon eller tomt underpostgrunnlag; ingen importbeslutning eller skrivetillatelse. Ingen UI-/leserkobling, IO eller CloudKit.
 
 Teknisk kontroll: begge appbygg bestått uten signering/appkjøring, **15/15 nye rapporttester + 25/25 modelltester PASS, 0 FAIL** i isolasjon (40 PASS totalt). Sikkerhets-/diffkontroll bestått. Fem dokumenterte punkter står ❗️ frem til brukergodkjenning. Modellen/kalleren må fortsatt levere faktisk kontekst/dekning; ingen historisk slettings-/baseline- eller atomisitetskonklusjon. 242.1 beholdes ✅ og er publisert i 1c9ab60; senere deltester er ikke implementert. Ingen CloudKit-/dataoperasjoner utført.
+
+## Siste validering – test 242.3 ✅
+
+**242.3 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter skillet mellom ZIP-/journalbinding, rå recordName/changeTag og historisk CloudKit-kontekst, eksplisitt STOPP ved manglende, motstridende eller tvetydig grunnlag, bevarte råverdier/duplikater og ubetinget import-/skrivetillatelse false. Dagens kontekst brukes aldri som historisk bevis.
+
+Sluttgrunnlag: **23 baselinetester + 25 relasjonsmodelltester + 15 rapporttester = 63 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg uten appkjøring og bestått sikkerhets-/diffkontroll. Ny kompilering og sekvensiell syntetisk kjøring bekreftet resultatene under samlet validering; eksisterende byggresultater ble gjenbrukt på uendrede kilder.
+
+Godkjenningen gjelder bare den isolerte baselinebevismodellen. Innsendte historiske kilder autentiseres ikke; faktisk historisk CloudKit-kontekst er fortsatt uavklart. Ingen faktisk baseline-/journal-/ZIP-endring, UI-/leserintegrasjon, import, restore, CloudKit-operasjon eller skrivetillatelse følger av godkjenningen. Test 242 samlet og senere deltester er ikke dermed fullført. Tidligere delstatuser beholdes som historikk.
+
+Følgende oppføring bevarer implementeringsstatus før samlet godkjenning.
+
+Isolert `BaselineEvidenceModel` er implementert i minnet på `codex/test-242-3-baseline-evidence`. Den skiller dokumentert ZIP-/journalbinding, rå posttype/recordName/changeTag-observasjoner og eksplisitte historiske kontekstpåstander med kilde. Eksisterende v1-baseline mangler historisk kontekst og forblir uavklart/STOPP selv om binding og postobservasjoner samsvarer. Dagens kontekst er kun bevart input, aldri historisk bevis. Ingen leser-/UI-/importintegrasjon eller endring av eksisterende dataformat.
+
+Teknisk resultat 2026-11-08: macOS- og iOS/iPadOS-bygg bestått uten signering/appkjøring; **23 nye baselinetester + 25 relasjonsmodelltester + 15 rapporttester = 63 PASS, 0 FAIL** i isolasjon. Råverdier, motstridende påstander og duplikater beholdes; import- og skrivetillatelse er alltid false. «Documented» betyr konsistente, innsendte påstander, ikke autentisert kilde, serverbevis eller atomisitet. Historisk kontekst er ikke etablert for faktiske data. Alle fem valideringspunkter og 242.3 samlet står ❗️ frem til brukergodkjenning; tidligere godkjenninger beholdes. Ingen CloudKit-/app-/dataoperasjoner utført.
 
 ## Åpne problemer og uavklarte tester
 

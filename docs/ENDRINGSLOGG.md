@@ -1,5 +1,19 @@
 # Endringslogg
 
+## Test 242.3 – fullført og brukergodkjent – 2026-11-08
+
+**242.3 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter skillet mellom ZIP-/journalbinding, rå recordName/changeTag og historisk CloudKit-kontekst, eksplisitt STOPP ved manglende, motstridende eller tvetydig grunnlag, bevarte råverdier/duplikater og ubetinget import-/skrivetillatelse false. Dagens kontekst brukes aldri som historisk bevis.
+
+Sluttgrunnlag: **23 baselinetester + 25 relasjonsmodelltester + 15 rapporttester = 63 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg uten appkjøring og bestått sikkerhets-/diffkontroll. Ny kompilering og sekvensiell syntetisk kjøring bekreftet resultatene under samlet validering; eksisterende byggresultater ble gjenbrukt på uendrede kilder.
+
+Godkjenningen gjelder bare den isolerte baselinebevismodellen. Innsendte historiske kilder autentiseres ikke; faktisk historisk CloudKit-kontekst er fortsatt uavklart. Ingen faktisk baseline-/journal-/ZIP-endring, UI-/leserintegrasjon, import, restore, CloudKit-operasjon eller skrivetillatelse følger av godkjenningen. Test 242 samlet og senere deltester er ikke dermed fullført. Tidligere delstatuser beholdes som historikk.
+
+## Test 242.3 – isolert baselinebevismodell – 2026-11-08
+
+- ❗️ Ny IO-fri `BaselineEvidenceModel.evaluate(_:)` skiller ZIP-/journalbinding, innsendte recordName/changeTag-observasjoner og eksplisitt dokumentert historisk CloudKit-kontekst. Manglende historisk kontekst forblir uavklart/STOPP; dagens kontekst brukes aldri som historisk bevis. Komplett, manglende, motstridende og tvetydig grunnlag klassifiseres separat uten valg mellom tvetydige kandidater. Råverdier og duplikater beholdes; import-/skrivetillatelse er ubetinget false.
+- macOS- og iOS/iPadOS-bygg bestått uten signering/appkjøring. **23 nye syntetiske tester + 25 modelltester + 15 rapporttester = 63 PASS, 0 FAIL**, kjørt sekvensielt med nettverk, filskriving og brukermappelesing blokkert. Ingen bygge-/testfeil; bare kjent AppIntents-metadataadvarsel.
+- Ingen eksisterende importbeslutninger, repositories, baseline-/journal-/ZIP-format, UI eller leser er endret. Ingen faktiske data er åpnet. Modellen autentiserer ikke innsendte beviskilder og gir ingen historisk tilbakebinding eller atomisitetsgaranti. Fem valideringspunkter står ❗️; 242.1–242.2 beholdes ✅. Lokale Xcode-/scheme-endringer er bevart uten staging. Ingen commit, merge eller push.
+
 ## Test 242.2 – fullført og brukergodkjent – 2026-11-08
 
 **242.2 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter én rad per innsendt underpost, alle fire undertyper, deterministisk struktur/tekst, bevarte råverdier og duplikater, korrekte blandede utfall/foreldretreff, konkrete STOPP-årsaker ved uavklart relasjonsgrunnlag og ubetinget skrivetillatelse false. T0001 gir ingen historisk slettings-/korrupsjonskonklusjon.

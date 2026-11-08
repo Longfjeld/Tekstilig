@@ -5034,3 +5034,54 @@ Oppføringen nedenfor bevarer teknisk status før samlet brukergodkjenning; slut
 Sluttgrunnlag: **15 rapporttester + 25 modelltester = 40 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg uten appkjøring, og bestått sikkerhets-/diffkontroll. Ny kompilering og sekvensiell syntetisk testkjøring bekreftet resultatene under samlet validering. Ingen nye testtilfeller eller kodeendringer ble gjort da eller ved godkjenningsoppdateringen.
 
 Godkjenningen gjelder bare den isolerte relasjonsrapporten på uendret 242.1-modell. Rapporten er ikke koblet til UI, CloudKit-leser, import eller restore. Kalleren må fortsatt levere faktisk kontekst/dekning; historisk baselinebinding, underpostens egen identitet/versjon og atomisitet er ikke verifisert. Ingen skrivetillatelse, reparasjon, baselineendring eller generell tillatelse til nye datalesinger følger av dette. Test 242 samlet og senere deltester er ikke fullført eller startet. Tidligere delstatuser beholdes som historikk.
+
+## 242.3 – isolert baselinebevis i minnet
+
+**242.3 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08; alle fem valideringspunkter ✅.** Utgangspunkt: publisert `b5d2598`; arbeidsgren `codex/test-242-3-baseline-evidence`. 242.1–242.2 beholdes ✅. Tidligere omtale av ikke-startede senere deltester er historikk; kun denne deltesten er nå implementert.
+
+### Kontrakt og bevisgrenser
+
+`BaselineEvidenceModel.evaluate(_:)` er en separat `nonisolated` verdimodell uten imports eller avhengigheter til eksisterende modeller, filer, UI, repositories eller CloudKit. Input er allerede strukturerte, innsendte påstander: valgt ZIP-hash, journal-/baselinekandidater, baselinens rå posttype/recordName/changeTag, historiske kontekstpåstander med kilde, og separat dagens kontekst. Modellen leser ingen faktiske kilder, beregner ikke ZIP-hash og dekoder ikke eksisterende formater.
+
+Tre vurderinger holdes adskilt: `binding`, `observations` og `historicalContext`, hver med `documented`, `unresolved`, `conflicting` eller `ambiguous`. «Documented» betyr kun strukturmessig gyldig og konsistent innsendt grunnlag, ikke autentisert kilde eller komplett CloudKit-snapshot. Én entydig baseline og journal må samsvare eksakt om journal-ID og ZIP-hash, inkludert valgt ZIP-hash. UUID-/hashsyntaks kontrolleres uten trimming eller normalisering. Manglende kandidater stopper; flere kandidater beholdes uten å velge én. Alle konkrete avvik beholdes som sorterte årsakskoder.
+
+Råfelt skiller manglende, streng og feil datatype. Alle fem posttyper støttes; ugyldige verdier og duplikater fjernes ikke. Rå recordName/changeTag er observerte baselinepåstander, ikke bekreftede nåværende serververdier. Gjentatt posttype/recordName i samme baseline gir tvetydighet; ulike tags i slike oppføringer gir motstrid. Dette er diagnostikk av baselinegrunnlaget, ikke bevis for dupliserte faktiske CloudKit-records. Historisk zone mangler i v1, så global recordadresse eller kollisjonsfrihet kan ikke utledes.
+
+Historisk kontekst må leveres eksplisitt som en påstand knyttet til baselinen med ikke-tom kilde og alle seks råfelt: container, miljø, konto, database, zone og zoneOwner. Manglende/ugyldig påstand forblir uavklart; flere, også identiske, er tvetydige; ulike kontekster er motstridende. Kildens historiske ekthet eller tilknytning autentiseres ikke av modellen. `currentContexts` bevares bare i input og leses aldri i vurderingslogikken. Dagens kontekst kan derfor verken etablere, erstatte eller avkrefte historisk bevis.
+
+Eksisterende `CloudKitVersionBaseline` v1 har bare schemaVersion, journalID, zipSHA256 og entries med posttype/recordName/changeTag. Den har ingen historisk kontekst. Et syntetisk v1-formet grunnlag med korrekt binding og observasjoner får derfor disse to vurderingene dokumentert, men historisk kontekst **uavklart/STOPP**, også når dagens kontekst er tilgjengelig. Ingen historisk tilbakebinding, migrering eller baselineendring er implementert.
+
+Resultatet bevarer hele opprinnelige input med rekkefølge og duplikater, samt separat deterministisk sorterte poster innen hver baseline og unike, sorterte årsakskoder. Omordnet postinput gir samme vurderinger/sorterte observasjoner; originalinput gjenspeiler fortsatt innsendt rekkefølge. Tomt eller uavklart grunnlag gir `hasStop`. Selv komplett syntetisk grunnlag gir alltid `permitsImport == false` og `permitsCloudKitWriting == false`. Ingen garanti om eierskap, historisk sletting, atomisitet, idempotens eller trygg import.
+
+### Sekvensiell validering – alle fem punkter ✅
+
+1. **✅ Bygg og isolasjon.** Gjennomgå de to nye Swift-filene i Xcode GUI; bygg macOS/Debug, deretter iOS/iPadOS/Debug uten appstart. Codex kan utføre byggene. Forvent begge bygg bestått, modellen inkludert i begge mål og ingen IO-/CloudKit-kobling. **STOPP** ved byggefeil, endring av eksisterende modell/repository eller automatisk datatilgang.
+2. **✅ Syntetisk kjøring.** Kompiler/kjør programmet nedenfor via Codex/Terminal etter bygg; bruk ingen faktiske ZIP-/journal-/baselinefiler. Forvent **23 PASS, 0 FAIL**, deretter eksisterende 242.1-/242.2-programmer **25 + 15 PASS, 0 FAIL** under samme isolasjon. **STOPP** ved første feil eller skrive-/nettverksbivirkning.
+3. **✅ Binding og observerte poster.** Gjennomgå test 01, 04–15 og 20–23: eksakte vurderinger, årsakskoder, rå input og komplette postgrupper kontrolleres. Forvent alle fem typer, uavhengige journal-ID-/hashavvik, manglende/flere kandidater, ugyldige felt, duplikater og motstridende tags uten tap av data eller falsk godkjenning. **STOPP** ved normalisering, utelatte avvik eller vilkårlig valg.
+4. **✅ Historisk kontekst.** Gjennomgå test 02–03 og 16–19: v1-formet grunnlag forblir historisk uavklart, hvert av seks kontekstfelter og kilde kreves separat, identiske påstander er tvetydige og forskjellige motstridende. Forvent ingen historisk slutning fra dagens kontekst, heller ikke ved samsvar. **STOPP** hvis dagens konto/miljø/zone brukes som historisk bevis eller innsendt kilde omtales som autentisert.
+5. **✅ Etterkontroll og stopp.** Kontroller determinisme, uendret input, ubetinget import-/skrivetillatelse false, nye filers hele kallkjede og Git-diff. Forvent kun isolert modell/test og fire dokumenter, separat fra lokale Xcode-/scheme-endringer; eksisterende baseline, journal, ZIP, importbeslutninger og repositories urørt. **STOPP etter rapporten**, avvent brukergodkjenning. Ingen app, CloudKit, integrasjon eller neste deltest.
+
+Isolert oppsett fra prosjektroten (tilpass brukermappestien i profilen):
+
+```sh
+mkdir -p /private/tmp/tekstilig-test242-3
+xcrun swiftc -module-cache-path /private/tmp/tekstilig-test241-b1/module-cache Tekstilig/Diagnostics/BaselineEvidenceModel.swift Tests/BaselineEvidenceModelTests.swift -o /private/tmp/tekstilig-test242-3/baseline-tests
+/usr/bin/sandbox-exec -p '(version 1) (allow default) (deny network*) (deny file-write*) (deny file-read* (subpath "/Users/persteinar"))' /private/tmp/tekstilig-test242-3/baseline-tests
+```
+
+### Faktiske tekniske resultater – 2026-11-08
+
+Oppføringen nedenfor bevarer teknisk status før brukergodkjenningen; sluttstatus følger nederst.
+
+- Først macOS/Debug, så generisk iOS/iPadOS/Debug med Xcode 27.2 og `CODE_SIGNING_ALLOWED=NO`: **BUILD SUCCEEDED**. Ny modell bekreftet i begge SwiftFileList. Kun kjent AppIntents-metadataadvarsel; ingen signert appkontroll eller appkjøring.
+- Deretter isolert kompilering/kjøring: **23/23 baselinetester PASS**, etterfulgt av ny kompilering og sekvensiell kjøring av uendrede **25/25 relasjonsmodelltester og 15/15 rapporttester PASS**. Totalt **63 PASS, 0 FAIL**, exitkode 0. Nettverk, filskriving og lesing av brukermappen blokkert under kjøring. Ingen bygge-/testfeil eller rettingsforsøk.
+- Sikkerhets-/diffkontroll bestått. Modellen bruker bare verdier og Swift-standardbibliotekets samlings-/strengoperasjoner; ingen URL-/kataloghjelpere eller eksterne kall. Ingen eksisterende importbeslutninger, repositories, UI, transport eller dataformater er endret. Ingen faktiske ZIP-er, journaler, baseline eller CloudKit-data er lest eller endret. Lokale Xcode-/scheme-endringer er bevart uten staging. **Alle fem punkter og 242.3 samlet forblir ❗️** frem til brukergodkjenning. Ingen commit, merge eller push.
+
+
+### Sluttresultat og brukergodkjenning – 242.3 – 2026-11-08
+
+**242.3 ✅ fullført og uttrykkelig brukergodkjent 2026-11-08, inkludert alle fem valideringspunkter.** Samlet validering bekrefter skillet mellom ZIP-/journalbinding, rå recordName/changeTag og historisk CloudKit-kontekst, eksplisitt STOPP ved manglende, motstridende eller tvetydig grunnlag, bevarte råverdier/duplikater og ubetinget import-/skrivetillatelse false. Dagens kontekst brukes aldri som historisk bevis.
+
+Sluttgrunnlag: **23 baselinetester + 25 relasjonsmodelltester + 15 rapporttester = 63 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg uten appkjøring og bestått sikkerhets-/diffkontroll. Ny kompilering og sekvensiell syntetisk kjøring bekreftet resultatene under samlet validering; eksisterende byggresultater ble gjenbrukt på uendrede kilder.
+
+Godkjenningen gjelder bare den isolerte baselinebevismodellen. Innsendte historiske kilder autentiseres ikke; faktisk historisk CloudKit-kontekst er fortsatt uavklart. Ingen faktisk baseline-/journal-/ZIP-endring, UI-/leserintegrasjon, import, restore, CloudKit-operasjon eller skrivetillatelse følger av godkjenningen. Test 242 samlet og senere deltester er ikke dermed fullført. Tidligere delstatuser beholdes som historikk.
