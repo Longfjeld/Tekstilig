@@ -1,5 +1,37 @@
 # Endringslogg
 
+## Test 241 B.3 – fullført og endelig brukergodkjent – 2026-11-08
+
+**Test 241 B.3 ✅ fullført og endelig brukergodkjent 2026-11-08. Alle seks praktiske punkter, inkludert avsluttende etterkontroll, er godkjent.** Brukeren har validert isolert macOS/Debug-oppstart, eksplisitt Development-lesing med to samsvarende passeringer og 43 poster i hver fordelt på alle fem posttyper, samt avbrudd/parallellsperre. Signert macOS/Debug-bygg, eksakt Development-entitlement, gyldig signatur og B.3-parameter er kontrollert. Etterkontrollen fant ingen konkrete avvik innen testomfanget.
+
+Sluttgrunnlag: **113 PASS, 0 FAIL** (11 B.3-, 38 modell-, 23 adapter- og 41 leser-/miljøtester), vellykkede macOS-/iOS-/iPadOS-bygg og signert macOS/Debug-kontroll. Resultatene er gjenbrukt på uendrede kilder; ingen nye tester, appkjøring eller CloudKit-oppslag er utført ved godkjenningsoppdateringen. Praktiske leseresultater og avbruddsvalidering er bekreftet av brukeren.
+
+Godkjenningen gjelder bare den isolerte, skrivebeskyttede Development-diagnostikken. Ingen import, restore, CloudKit-skriving/-sletting, baselineoppdatering eller produksjonsgodkjenning av kandidatidentiteter. T0001-bildeposten forblir kun observert og urørt. Standardzone-dekning, uverifisert iOS/iPadOS-miljø, historisk baselinebinding, full foreldre-/eierverifikasjon, manglende atomisitetsgaranti og kooperativ SDK-avbrytelse består som begrensninger. Ingen generell tillatelse til nye CloudKit-lesinger eller neste fase følger av godkjenningen. Tidligere delstatuser beholdes som historikk.
+
+## Test 241 B.3 – punkt 1/5 godkjent, etterkontroll utført – 2026-11-08
+
+- Praktisk punkt 1 og 5 er uttrykkelig brukervalidert; punkt 1–5 er nå ✅. Punkt 6 og B.3 samlet beholdes ❗️ til etterkontrollen er brukergodkjent. Tidligere delstatuser nedenfor er historikk.
+- Signert macOS/Debug-bygg, gyldig signatur, eksakt Development i `.xcent`/app og B.3-parameter er bekreftet; avbrudd/parallellsperre er godkjent av brukeren. Tidligere 43+43 samsvarende observasjoner og alle fem typer beholdes. T0001-bildeposten er kun observert og ikke reparert.
+- Avsluttende statisk sikkerhets-/Git-/dokumentkontroll bestått uten konkrete avvik. 113 PASS/0 FAIL og vellykkede bygg gjenbrukes på uendrede kilder; ingen nye test-/app-/CloudKit-kjøringer. Ingen skriveruter, import/restore, baselineoppdatering, repository- eller formatendringer innført. Åtte B.3-filer og to bevarte lokale Xcode-/scheme-filer; ingen staging. Kun dokumentasjon endret i denne oppgaven.
+- B.3 er klar for endelig godkjenning, uten å hevde atomisitet, øyeblikkelig SDK-avbrudd eller komplett historisk eier-/baselineverifikasjon. Ingen videre lesing, commit, merge eller push er utført eller startet.
+
+## Test 241 B.3 – delvis praktisk brukervalidering – 2026-11-08
+
+Brukervalidert 2026-11-08: isolert macOS/DEBUG-oppstart og vellykket eksplisitt CloudKit Development-lesing. Rapporten viste **to samsvarende passeringer med 43 poster i hver**, med **alle fem posttyper**. Dette lukker praktisk punkt 2–4 innen det bekreftede positive testforløpet, ikke uprøvde feilsituasjoner. Punkt 1 (særskilt praktisk bygg-/signeringskontroll) er ikke uttrykkelig bekreftet i denne meldingen; punkt 5 (SDK-avbrudd/parallellsperre i praksis) og punkt 6 (avsluttende etterkontroll) gjenstår. **B.3 samlet forblir ❗️.**
+
+Den kjente `TextileImage`-posten med eier `T0001` dokumenteres som observasjon. Tidligere identifisert referanse: logisk ID `IMG-204AB741-6904-42E7-85C9-5A0AD15F44DC`, recordName `74B85BA7-9EBF-48FD-A04A-828329F9B237`. Den er fortsatt en sannsynlig historisk rest; denne lesingen beviser ikke historisk eierskap eller at posten er foreldreløs. Ingen reparasjon, sletting eller migrering er utført eller godkjent.
+
+Brukerens validering er grunnlaget for de praktiske resultatene; Codex har ikke startet appen eller utført CloudKit-oppslag ved denne oppdateringen. Tidligere tekniske resultater (**113 PASS, 0 FAIL**, begge appbygg) beholdes. Ingen nye kjøringer er utført. Like passeringer gir fortsatt ingen atomisitetsgaranti, historisk baselinebinding eller skrivetillatelse. Ingen generell tillatelse til flere CloudKit-leserunder følger av denne statusoppdateringen.
+
+Avgrenset forslag til én separat godkjent SDK-avbruddsrunde er dokumentert i implementeringsloggen. Ingen test er kjørt i denne oppgaven; tidligere implementeringsoppføring nedenfor bevarer historikken.
+
+## Test 241 B.3 – isolert Development-lesing – 2026-11-08
+
+- ❗️ Ny macOS/DEBUG-rute `--diagnostic-cloudkit-development-read`, separat visning og testbar øktstyring. Ingen oppstartslesing. Eksplisitt knapp starter lokal Development-verifikasjon før utsatt transportfabrikk; eksisterende miljø-/recordport og leser gjenbrukes uendret. Privat database/standardzone, alle fem typer og PoC-observasjoner; bare identitetsfelt/metadata, ikke bildeinnhold.
+- Separat deterministisk minnerapport viser kontekst, begge passeringer, antall/fullføring per type, råverdier, recordnavn/zone/zoneOwner/changeTag og STOPP/delresultater. Ingen backup-, journal- eller baselinegrunnlag. Parallellsperre og kooperativt avbrudd uten automatisk gjentakelse.
+- Begge appbygg bestått. Isolert testprogram fikk først actor-feil i to testhjelpere; særskilt godkjent rettelse la bare til eksplisitt MainActor på Fixture og lokal report-funksjon. Ny kompilering/kjøring: 11/11 B.3-tester PASS, deretter 38+23+41 regresjonstester PASS, samlet **113 PASS, 0 FAIL**. Nettverk/skriving/brukermappelesing blokkert under testkjøring. Ingen faktisk transport eller systembeviskilde kjørt. Sikkerhets-/diffkontroll bestått.
+- Seks praktiske punkter er dokumentert som ❗️ og krever særskilt godkjenning av appkjøring/CloudKit-lesing. B.2 forblir ✅. Ingen repository-, signerings-, modell-/adapter-, import-/restore- eller datagrunnlagsendring. Lokale Xcode-/scheme-filer er bevart uten staging. Ingen commit, merge eller push.
+
 ## Test 241 B.2 – fullført og brukervalidert
 
 **Test 241 B.2 ✅ fullført og uttrykkelig brukervalidert.** Brukeren har bekreftet forventede resultater etter macOS/Debug-signeringsrettelsen: Development gir verifisert lokalt miljø og samsvar; Production som forventning gir korrekt STOPP ved avvik mot observert Development. Alle seks praktiske punkter er godkjent. Dette validerer lokal signatur-/entitlement-kontroll i macOS-appen, ikke en app signert for Production eller kontakt med CloudKit-serveren.
