@@ -5141,3 +5141,120 @@ Statisk kallkjedekontroll viser kun minneoperasjoner: `adapt` → `valid`/råfel
 Sluttgrunnlag: **21 adaptertester + 41 leser-/miljøtester + 25 relasjonsmodelltester + 15 rapporttester = 102 PASS, 0 FAIL**, vellykkede macOS- og iOS/iPadOS-bygg og bestått sikkerhets-/diffkontroll. Ny kompilering og kjøring bekreftet de 21 adaptertestene under samlet validering; tidligere regresjons- og byggresultater ble gjenbrukt på uendrede kilder.
 
 Godkjenningen gjelder bare den isolerte adapteren fra allerede innsendte observasjoner. Ingen UI-/leserintegrasjon, ny CloudKit-lesing, importbeslutning, import/restore, baselineendring eller skrivetillatelse følger av godkjenningen. Faktisk CloudKit-dekning, atomisitet og historisk kontekst er ikke bevist. Test 242 samlet og senere deltester er ikke dermed fullført. Tidligere delstatuser beholdes som historikk.
+
+
+## 242.5 – isolert macOS/DEBUG-relasjonsdiagnostikk
+
+**242.5 ✅ samlet brukergodkjent på avgrenset grunnlag 2026-11-08; punkt 1–6 ✅ innen angitt omfang.** Utgangspunkt: publisert `f0d95b7`; gren `codex/test-242-5-relationship-diagnostic`. Tidligere 242.1–242.4 beholdes ✅.
+
+### Implementering og sikkerhetsgrenser
+
+Ny oppstartsparameter `--diagnostic-textile-relationships` velger eksisterende isolerte B.3-visning med relasjonsmodus før `ContentView` opprettes. Bare macOS/DEBUG; iOS/iPadOS og Release har ingen slik inngang. Parameteren prioriteres foran eldre B.3-/B.2-parametre hvis flere er aktivert. Ingen lokale scheme-innstillinger endres av implementeringen.
+
+Visningen gjenbruker uendret `DevelopmentIdentityReadSession`, eksisterende «Les CloudKit Development-identiteter (kun lesing)» og «Avbryt lesing». Ingen `.task`, `onAppear`, automatisk start eller gjentakelse. Session-/view-opprettelse utfører ingen bevis- eller transportkall. Startknappen kjører eksisterende lokale Development-port før transportopprettelse; transporten verifiserer miljøet på nytt før konto-/recordoppslag. Parallellstart sperres og avbrudd er kooperativt, uten garanti for øyeblikkelig SDK-/serveravbrudd. `onDisappear` ber bare om avbrudd.
+
+Ny `DevelopmentTextileRelationshipDiagnostic.make(...)` er en ren minnepresentasjon fra sessionens allerede tilgjengelige `ReadResult`, miljøutfall, feil og kjøre-/avbruddsstatus. Den bevarer originalresultatet separat og sender en kopi med eventuelle ekstra øktfeil til uendret 242.4-adapter. Også innsendt lesekontekst må eksplisitt være Development. Pågående lesing, avbruddsforespørsel, miljøfeil eller øktfeil hindrer komplett dekning, selv om et lagret resultat ellers ser komplett ut.
+
+Rapporten viser **«Lesing: KOMPLETT i oppgitt leseområde»** eller **«Lesing: IKKE KOMPLETT / STOPP»**, separat fra **«Relasjonsvurdering: OBSERVERT/STOPP»**. Komplett lesing kan gi relasjons-STOPP ved ikke observert forelder, eksempelvis T0001. Det er ingen historisk slettings-/korrupsjonskonklusjon. Ved intet resultat vises ingen vurderte relasjoner og ikke-komplett grunnlag.
+
+Begge passeringer vises separat med råobservasjoner, typedekning, underpostantall og full 242.2-relasjonsrapport: alle fire undertyper, PoC og T0001 dersom observert, rå identiteter/eier, metadata/kontekst, foreldretreff, utfall og begrunnelse. Ukjente typer, duplikater og feiltekster beholdes. Undertittel «Test 242.2» i de gjenbrukte delrapportene angir rapportkomponenten, ikke en ny testkjøring. Skrivetillatelse er alltid false. Ingen eksport, filhjelpere, baselinebinding eller importbeslutning.
+
+### Sekvensiell validering – punkt 1–6 ✅ på dokumentert, avgrenset grunnlag
+
+Godkjenningens konkrete bevisgrunnlag og gjenstående observasjonsbegrensninger er spesifisert i sluttstatusen nederst. Opprinnelige kriterier nedenfor beholdes; ✅ innebærer ikke at udokumenterte kriterier nå er selvstendig verifisert.
+
+**Historisk forutsetning ved implementering:** Praktisk kjøring krevde særskilt godkjenning og signert macOS/Debug-app med verifisert Development-entitlement etter etablert B.2/B.3-metode. Oppstarts-/signeringskontroll og brukerens senere Development-lesing er dokumentert nedenfor. Dette gir ingen generell tillatelse til nye lesinger.
+
+1. **✅ Teknisk bygg og syntetisk kontroll.** Bygg macOS/Debug og deretter iOS/iPadOS/Debug uten appstart. Kompiler/kjør de nye testene og relevante regresjoner sekvensielt under isolasjon. Forvent 16 nye og 113 regresjonstester PASS (129 totalt), begge bygg bestått og kallkjeden skrivefri. STOPP ved første feil eller uventet aktivitet.
+2. **✅ Forbered og kontroller isolert oppstart etter særskilt godkjenning.** I Xcode GUI: velg macOS/Debug, kontroller signert Development-app, åpne Product → Scheme → Edit Scheme → Run → Arguments og aktiver kun `--diagnostic-textile-relationships` for testen. Start via Xcode uten å trykke leseknappen. Forvent «Test 242.5 – isolert relasjonsdiagnostikk», ingen bibliotekvisning, ingen observerte poster og ikke-komplett grunnlag. STOPP hvis feil visning åpnes eller lesing starter automatisk. Bevar øvrige lokale scheme-innstillinger.
+3. **✅ Eksplisitt Development-lesing.** Trykk kun «Les CloudKit Development-identiteter (kun lesing)». Forvent lokal Development-kontroll før transport, sperret parallellstart og to metadata-/identitetspasseringer. Ved feil skal STOPP og tilgjengelige deldata vises, aldri komplett lesing. STOPP ved uverifisert/annet miljø, uventet aktivitet eller feil; ingen automatisk gjentakelse. Ingen fast postantallsforutsetning; tidligere 43-poster er historisk observasjon.
+4. **✅ Relasjoner og lesegrunnlag.** Etter fullført godkjent lesing kontrolleres begge passeringers rågrunnlag og én rad per kjent underpost. Forvent alle observerte undertyper og PoC-poster beholdt, full kontekst/metadata og tydelig forskjell mellom lese- og relasjonsstatus. Hvis T0001-bildet observeres uten forelder ved komplett dekning, forvent «parentNotObservedWithCompleteCoverage» og eksplisitt forbehold om historikk. STOPP ved tapt rad, falsk komplett dekning, foreldregjetting, historisk slettingspåstand eller skrivetillatelse.
+5. **✅ Avbrudd.** Først etter godkjent foregående punkt: start en ny eksplisitt lesing og trykk «Avbryt lesing» mens den pågår. Forvent sperret parallellstart, synlig avbruddsforespørsel og deretter STOPP/ikke-komplett grunnlag med eventuelle delobservasjoner. Ingen automatisk ny lesing. Hvis lesingen allerede er fullført før avbrudd, er forsøket uavklart; ikke marker det bestått. STOPP ved ny feil eller feilaktig komplettstatus; kooperativt avbrudd er ingen atomisitetsgaranti.
+6. **✅ Etterkontroll og stopp.** Kontroller rapport, Git-diff og at ingen filer, baseline, journal, ZIP eller CloudKit-poster er skrevet/endret. Forvent kun åtte oppgavefiler og kjente lokale Xcode-/scheme-endringer, ingen importbeslutning. STOPP etter rapport, avvent samlet brukergodkjenning; ingen commit/merge/push eller neste fase.
+
+### Faktiske tekniske resultater – 2026-11-08
+
+Oppføringen nedenfor bevarer teknisk status før etterfølgende oppstarts-/signeringskontroll og praktisk delvalidering.
+
+- Endelig kildeversjon: macOS/Debug og generisk iOS/iPadOS/Debug **BUILD SUCCEEDED**, `CODE_SIGNING_ALLOWED=NO`. Ingen appstart eller signaturverifikasjon; bare kjent AppIntents-metadataadvarsel.
+- **16/16 nye syntetiske tester PASS** med falsk beviskilde/transport og uendret B.3-session. Dekker inaktiv oppstart/presentasjon, Development-lås, nøyaktige passeringer/relasjonsnøkler, alle undertyper, PoC/T0001, feil/deldata, avbrudd, parallellsperre, råfelt/duplikater, determinisme og øktfeil etter ellers komplett resultat. Ingen bygge-/testfeil.
+- Deretter **11 B.3-økttester + 21 adaptertester + 41 leser-/miljøtester + 25 modelltester + 15 rapporttester PASS**. Totalt **129 PASS, 0 FAIL**, exitkode 0. Nye tester og økttester er nykompilert; øvrige eksisterende binærer er gjenbrukt med uendrede kildefiler. Alle kjøringer blokkerte nettverk, filskriving og lesing av brukermappen. Ingen faktisk Security-beviskilde, konto-/recordoppslag eller appkjøring.
+- Sikkerhets-/diffkontroll bestått. B.3-session, leser, transport, adapter, relasjonsmodell/-rapport, importbeslutninger og repositories er uendret. Nye kall er bare presentasjon av minnedata etter eksplisitt handling. Faktisk ZIP/journal/baseline er urørt. Alle seks punkter og 242.5 samlet forblir ❗️ frem til brukergodkjenning; ingen praktisk kjøring, commit, merge eller push.
+
+Isolert testkompilering fra prosjektroten:
+
+```sh
+xcrun swiftc -DDEBUG -module-cache-path /private/tmp/tekstilig-test241-b1/module-cache -framework Security -framework Combine Tekstilig/Diagnostics/ImportIdentityDecisionModel.swift Tekstilig/Diagnostics/ImportIdentityDiagnosticAdapter.swift Tekstilig/Diagnostics/CloudKitEnvironmentVerification.swift Tekstilig/Diagnostics/ImportIdentityReadDiagnostic.swift Tekstilig/Diagnostics/DevelopmentIdentityReadSession.swift Tekstilig/Diagnostics/TextileRelationshipModel.swift Tekstilig/Diagnostics/TextileRelationshipReport.swift Tekstilig/Diagnostics/TextileRelationshipReadAdapter.swift Tekstilig/Diagnostics/DevelopmentTextileRelationshipDiagnostic.swift Tests/DevelopmentTextileRelationshipDiagnosticTests.swift -o /private/tmp/tekstilig-test242-5/diagnostic-tests
+/usr/bin/sandbox-exec -p '(version 1) (allow default) (deny network*) (deny file-write*) (deny file-read* (subpath "/Users/persteinar"))' /private/tmp/tekstilig-test242-5/diagnostic-tests
+```
+
+
+### Etterfølgende signerings-/oppstartskontroll – 2026-11-08
+
+Etter særskilt godkjenning ble macOS/Debug bygget med signering. Bygg og `codesign --verify --strict` bestod; eksakt `com.apple.developer.icloud-container-environment = Development` ble kontrollert i både generert `.xcent` og signert app. Codex startet appen med eksplisitt `--diagnostic-textile-relationships`, bekreftet i prosesskommandoen, uten å trykke leseknappen. Den lagrede schemen hadde fortsatt B.3-parameteren aktiv og ble bevart; oppstarten skjedde separat fra Xcode med argumentet eksplisitt angitt.
+
+Praktisk avlesning av vindu/knapper ble blokkert av macOS: Apple Events til System Events var ikke autorisert (`-1743`). Ingen åpne nettverksforbindelser ble observert ved kontrolltidspunktet, men dette beviser ikke fravær av alle tidligere oppslag. Automatisk-lesefri oppstart, fravær av ordinær tekstilliste og leseknappens tilgjengelighet kunne derfor ikke praktisk bekreftes av Codex. Brukerens senere positive lesetest nedenfor lukker ikke automatisk alle disse startkriteriene. Ingen testpunkter ble lukket på grunnlag av denne tekniske kontrollen.
+
+### Brukervalidert Development-lesing og relasjonsvisning – 2026-11-08
+
+**Delvalidering 2026-11-08 – praktisk Development-lesing og relasjonsvisning ✅:** Brukeren har validert begge passeringer med **43 råobservasjoner hver: 15 Textile og 28 underposter**. Normale relasjoner og PoC ble identifisert korrekt. Ett historisk TextileImage med eier `T0001` hadde ingen observert forelder og ga forventet relasjons-STOPP. Dette er en uavklart observasjon i det leste området, ikke bekreftet foreldreløshet, historisk sletting eller datakorrupsjon. Ingen skriving ble utført.
+
+Dette validerer punkt **3 og 4 ✅** innen det bekreftede positive testforløpet. Punkt **1, 2, 5 og 6 forblir ❗️**: tekniske resultater er dokumentert, men ikke uttrykkelig samlet brukergodkjent; automatisk-lesefri oppstart og knappetilgjengelighet er ikke praktisk bekreftet av denne meldingen; avbrudd og avsluttende samlet etterkontroll er heller ikke bekreftet. **242.5 samlet forblir ❗️**, ikke ferdig godkjent. Ingen nye tester eller CloudKit-operasjoner er utført ved dokumentasjonsoppdateringen. Ingen import/restore, skrivetillatelse, baselineendring eller ny generell lesetillatelse følger av delvalideringen.
+
+Tidligere identifisert T0001-referanse: logisk bilde-ID `IMG-204AB741-6904-42E7-85C9-5A0AD15F44DC`, recordName `74B85BA7-9EBF-48FD-A04A-828329F9B237`. Brukerens delvalidering bekrefter eieren T0001 og manglende observert forelder; identifikatorene er historiske referanser, ikke nye data hentet i denne dokumentasjonsoppgaven. Posten forblir urørt. Komplett lesing og forventet relasjons-STOPP er forenlige; observasjonen dokumenterer ikke historisk eierskap, bildeinnhold, atomisitet eller trygg import.
+
+
+### Brukerens avbruddsresultat – 242.5.5 – 2026-11-08
+
+Følgende resultat- og etterkontrollnotater bevarer status før den utfyllende brukerbekreftelsen. Gjeldende status og dekning er presisert nederst.
+
+Brukeren har gjennomført praktisk avbruddstest. Bekreftet rapportresultat: verifisert Development-miljø, **`Operation Cancelled (20)`**, **0 råobservasjoner**, **ufullstendig typedekning i begge passeringer** og korrekt **STOPP**. Avbruddet fremstilles dermed ikke som komplett lesing. Det foreligger ingen delobservasjoner som skulle vært beholdt i akkurat dette forløpet. Dette beviser ikke øyeblikkelig SDK-/serveravbrudd eller atomisitet. Ingen ny lesing er autorisert.
+
+**Punkt 5 forblir ❗️ med bekreftet avbruddsutfall.** Sperret parallellstart/leseknapp, synlig avbruddsforespørsel og fravær av automatisk ny runde er ikke uttrykkelig dokumentert i brukerens resultatmelding. Disse er tidligere syntetisk testet, og B.3-mekanismen er tidligere praktisk validert, men er ikke dermed praktisk bekreftet for denne 242.5-kjøringen. Ingen ytterligere praktisk testing er utført eller startet i etterkontrollen.
+
+### Etterkontroll – 242.5.6 – 2026-11-08
+
+**Punkt 6 ❗️: teknisk etterkontroll gjennomført med eksplisitte begrensninger; avventer brukergodkjenning.** Gren `codex/test-242-5-relationship-diagnostic`, HEAD `f0d95b7`. Ingen filer staged. Filutvalg og diff er kontrollert: nøyaktig åtte oppgavefiler, i tillegg til kjente lokale Xcode-/scheme-endringer:
+
+- `Tekstilig/Diagnostics/DevelopmentTextileRelationshipDiagnostic.swift` (ny).
+- `Tests/DevelopmentTextileRelationshipDiagnosticTests.swift` (ny).
+- `Tekstilig/Diagnostics/DevelopmentIdentityReadDiagnosticView.swift`.
+- `Tekstilig/TekstiligApp.swift`.
+- `docs/SWIFTUI-IMPLEMENTERING.md`, `docs/PROSJEKTSTATUS.md`, `docs/ENDRINGSLOGG.md` og `docs/Tekstilig-ROADMAP-1.0.md`.
+
+Scheme-diffen viser nå `--diagnostic-textile-relationships` aktiv og de to eldre diagnostikkparametrene inaktive. Dette er en lokal brukerendring som bevares utenfor oppgaven; tidligere dokumentasjon av B.3 som aktiv gjaldt oppstartskontrollens daværende tilstand. Xcode-brukerfilen bevares også. Ingen andre prosjektendringer er identifisert. Diffkontroll, inkludert nye filer, består.
+
+Skrivebeskyttelsen er kontrollert fra approt og knapp gjennom uendret B.3-session, miljøverifikasjon og diagnostisk leser/transport til adapter og minnerapport. Transporten bruker konto-/metadataoppslag og `database.records`, ingen `save`/`delete`/modify-operasjoner. Presentasjonen/adapteren kaller ingen URL-/kataloghjelpere, journal-/baselinefunksjoner, eksport eller importbeslutninger; skrivetillatelse er alltid false. Avbrudd/feil gir ufullstendig grunnlag. Repositories, transport, importbeslutninger og eksisterende modeller er uendret i diffen. Tidligere 129 PASS/0 FAIL og byggresultater gjenbrukes; ingen nye tester, appstart eller CloudKit-operasjoner i etterkontrollen.
+
+Lokale datakontroller er avgrenset og skrivebeskyttet:
+
+- Prosjektgjennomgangen fant ingen ZIP-er eller JSON-datafiler med backup-/journal-/baseline-/read-only-navn i den undersøkte arbeidsmappen, heller ikke blant ignorerte filer i søkeområdet. Git viser ingen slike sporingsendringer. Dette er ikke et fullstendig bevis for alle lokale data utenfor området.
+- `Downloads/Tekstilig-backup.zip`: 13 292 379 byte, SHA-256 `004ced842dd8da950c7d3552d149bb1ca9af02e72d2491219e2ad376374bf963`.
+- `Downloads/Tekstilig-backup2.zip`: 13 291 104 byte, SHA-256 `f34f8804d9ce1789e28eb71d5d476653add318a7ca30a13eebeb98249bd860b9`.
+- Begge ZIP-hashene samsvarer med tidligere dokumentert grunnlag fra test 230. Filene er bare lest, ikke pakket ut eller endret.
+- Appens Application Support og `TekstiligImportDiagnostics` kunne **ikke listes på grunn av macOS-tilgangsnekt** (`Operation not permitted`). En innledende rekursiv opplisting uten treff ga ikke et pålitelig tomhetsbevis; direkte katalogoppslag avklarte tilgangsfeilen. Ikke tolk dette som manglende eller slettede journal-/baselinefiler. Ikke-sandboxet Application Support-katalog for diagnostikken ble ikke funnet.
+- **Journal, baseline og øvrige beskyttede appdata er ikke kontrollert mot førtilstand.** Ingen tilgjengelig før-/etter-sjekksum gir grunnlag for å bekrefte dem uendret. Eventuelle OS-/SDK-cacheendringer er heller ikke kartlagt. Ingen slike data er endret av etterkontrollen.
+
+Git og statisk kallkjedekontroll underbygger at oppgaven ikke introduserer skriving. De beviser ikke uendrede faktiske CloudKit-data. Ingen serverkontroll er gjort, og ingen ny lesing er autorisert. Tidligere brukerbekreftelse om ingen skriving beholdes; T0001 forblir uavklart og urørt. Ingen nye sikkerhetsavvik er identifisert i koden, men de oppgitte observasjons-/datatilgangsbegrensningene hindrer en ubetinget bekreftelse på hele punkt 6. Punkt 1, 2, 5, 6 og 242.5 samlet forblir ❗️; punkt 3–4 er fortsatt ✅. Stopp etter rapport og avvent godkjenning; ingen commit, merge eller push.
+
+
+### Utfyllende brukergodkjenning av 242.5.5 – 2026-11-08
+
+**Brukerbekreftelse 2026-11-08 – 242.5.5 ✅:** Brukeren har uttrykkelig bekreftet at Avbryt-knappen var tilgjengelig under lesing, at avbruddsforespørselen var synlig, og at ingen ny lesing startet automatisk. Sammen med rapportert verifisert Development, `Operation Cancelled (20)`, 0 råobservasjoner, ufullstendig typedekning i begge passeringer og korrekt STOPP godkjenner dette avbruddspunktet.
+
+**Parallellsperren er ikke praktisk gjentatt i dette forløpet.** Den er tidligere praktisk validert i B.3 og syntetisk testet i 242.5; dette er det dokumenterte gjenbruksgrunnlaget. Ikke fremstill Avbryt-knappens tilgjengelighet som en ny praktisk kontroll av parallellsperren. Ingen garanti for øyeblikkelig SDK-/serveravbrudd eller atomisitet følger av godkjenningen.
+
+**242.5.6 og samlet 242.5 forblir ❗️.** Etterkontrollen er gjennomført med begrensninger: kildekode/diff og filutvalg er kontrollert, og begge kjente ZIP-hasher samsvarer med tidligere dokumentert grunnlag. Journal, baseline og øvrige beskyttede appdata kunne ikke kontrolleres på grunn av macOS-tilgangsnekt; de er ikke uavhengig verifisert uendret. CloudKit-data er heller ikke uavhengig kontrollert, og Git alene gir ikke slikt bevis. Punkt 1 og 2 beholdes ❗️, punkt 3–4 beholdes ✅. Ingen ny appkjøring, CloudKit-operasjon eller testkjøring er utført ved denne dokumentasjonsoppdateringen; ingen ny lesing er autorisert.
+
+
+### Sluttstatus – samlet avgrenset brukergodkjenning av 242.5 – 2026-11-08
+
+**242.5 ✅ samlet brukergodkjent på avgrenset grunnlag 2026-11-08, inkludert etterkontroll 242.5.6 ✅.** De seks punktene er ført konsekvent som ✅ innen det dokumenterte og aksepterte omfanget. Godkjenningen tilfører ikke nye observasjoner eller bevis og utvider ikke skrivetillatelsen.
+
+- **Punkt 1 ✅:** dokumenterte 129 syntetiske tester PASS, 0 FAIL, begge plattformbygg og sikkerhets-/diffkontroll gjenbrukes.
+- **Punkt 2 ✅ på avgrenset grunnlag:** signert macOS/Debug-app, eksakt Development-entitlement og faktisk oppstartsparameter er kontrollert. Den første oppstarten skjedde med eksplisitt argument uten scheme-endring. Selvstendig GUI-avlesning ble blokkert (`-1743`); fravær av automatisk lesing og ordinær tekstilliste ved oppstart er ikke dermed uavhengig praktisk verifisert av Codex. Denne observasjonsbegrensningen er akseptert i samlet godkjenning, ikke erstattet av en ny testpåstand.
+- **Punkt 3–4 ✅:** brukervalidert Development-lesing med 43 råobservasjoner per passering, 15 Textile og 28 underposter; normale og PoC-relasjoner korrekt identifisert. T0001-bildet mangler observert forelder og gir forventet relasjons-STOPP. Observasjonen er fortsatt uavklart, ikke bekreftet foreldreløshet, sletting eller datakorrupsjon.
+- **Punkt 5 ✅:** brukervalidert tilgjengelig Avbryt-knapp, synlig avbruddsforespørsel, ingen automatisk ny lesing, verifisert Development, `Operation Cancelled (20)`, 0 råobservasjoner, ufullstendig typedekning og korrekt STOPP. Parallellsperren er tidligere praktisk validert i B.3 og syntetisk testet i 242.5, ikke praktisk gjentatt her.
+- **Punkt 6 ✅ på avgrenset grunnlag:** åtte oppgavefiler og kjente lokale Xcode-/scheme-endringer er kontrollert, sammen med skrivefri kallkjede og de to kjente ZIP-hashene. Application Support-data, inkludert journal/baseline og øvrige beskyttede appdata, kunne ikke kontrolleres grunnet tilgangsnekt. De er ikke uavhengig verifisert uendret. Faktiske CloudKit-data er heller ikke uavhengig verifisert uendret; Git alene beviser ikke dette.
+
+Ingen ny appkjøring, tester eller CloudKit-operasjoner er utført ved godkjenningsoppdateringen. Ingen import/restore, baselineendring, reparasjon, produksjonsgodkjenning, atomisitetsgaranti eller CloudKit-skriving/-sletting er godkjent. Test 242 samlet er ikke dermed avsluttet; ingen neste fase startes. Tidligere delstatuser beholdes som historikk; denne oppføringen angir gjeldende sluttstatus.

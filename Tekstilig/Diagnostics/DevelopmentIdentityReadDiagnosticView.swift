@@ -4,6 +4,7 @@ import SwiftUI
 
 @MainActor
 struct DevelopmentIdentityReadDiagnosticView: View {
+    var showsRelationships = false
     // No CKContainer or transport is created by view/session initialization.
     @StateObject private var session = DevelopmentIdentityReadSession(
         makeSource: { SystemCloudKitEnvironmentEvidenceSource() },
@@ -15,7 +16,7 @@ struct DevelopmentIdentityReadDiagnosticView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Test 241 B.3 – isolert Development-lesing").font(.headline)
+            Text(showsRelationships ? "Test 242.5 – isolert relasjonsdiagnostikk" : "Test 241 B.3 – isolert Development-lesing").font(.headline)
             Text("Eksplisitt lesing av privat database i iCloud.com.longfjeld.tekstilig, standardzone. Forventet miljø er låst til Development. Ingen bildeinnhold, eksport eller lagring.")
             HStack {
                 Button("Les CloudKit Development-identiteter (kun lesing)") { session.start() }
@@ -27,7 +28,10 @@ struct DevelopmentIdentityReadDiagnosticView: View {
                 Text(session.cancellationRequested ? "Avbrudd bedt om – venter på at lesingen avsluttes …" : "Leser identiteter og metadata i to passeringer …")
             }
             ScrollView {
-                Text(session.report).font(.system(.callout, design: .monospaced))
+                Text(showsRelationships ? DevelopmentTextileRelationshipDiagnostic.make(
+                    result: session.result, environment: session.environment, issues: session.issues,
+                    isRunning: session.isRunning, cancellationRequested: session.cancellationRequested).text : session.report)
+                    .font(.system(.callout, design: .monospaced))
                     .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
             }
         }

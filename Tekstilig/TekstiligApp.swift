@@ -6,7 +6,9 @@ struct TekstiligApp: App {
     var body: some Scene {
         WindowGroup {
             #if os(macOS) && DEBUG
-            if ProcessInfo.processInfo.arguments.contains("--diagnostic-cloudkit-development-read") {
+            if ProcessInfo.processInfo.arguments.contains("--diagnostic-textile-relationships") {
+                DevelopmentIdentityReadDiagnosticView(showsRelationships: true)
+            } else if ProcessInfo.processInfo.arguments.contains("--diagnostic-cloudkit-development-read") {
                 DevelopmentIdentityReadDiagnosticView()
             } else if ProcessInfo.processInfo.arguments.contains("--diagnostic-local-cloudkit-environment") {
                 LocalCloudKitEnvironmentDiagnosticView()
