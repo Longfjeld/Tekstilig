@@ -6,7 +6,7 @@
 
 - Autoritativ kilde for kode og versjonert dokumentasjon: Git-repositoriet, jf. [AGENTS.md](../AGENTS.md).
 - Siste bekreftede komplette snapshot: `SwiftUIActualApp0086`, commit `d3a0a62` (commitmelding kontrollert).
-- Publisert Git-grunnlag før test 242.5: `f0d95b79ae756ba51a9cf692d5e6440f675371da` på synkronisert `main`/`origin/main`. Test 239, 240, 241 fase A/B.1/B.2/B.3 og 242.1–242.4 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
+- Publisert Git-grunnlag før test 242.6: `7861d822446159426b98d1126689d89ebd37e954` på synkronisert `main`/`origin/main`. Test 239, 240, 241 fase A/B.1/B.2/B.3 og 242.1–242.5 er integrert og publisert. Test 230 og 238 er fullført, brukervalidert og publisert på GitHub.
 - Identitetsstrategien er godkjent i [B-050](BESLUTNINGSLOGG.md#b-050--identitetsbeslutninger-før-import-og-restore). B-050 gjelder arkitektur og testomfang. Særskilt godkjenning 2026-11-07 omfatter ren modell og isolert testprogram; importskriving er fortsatt sperret.
 - Aktiv klient: native SwiftUI for iOS, iPadOS og macOS. Miljø: Xcode 27.2 og OS 27.2; CloudKit Development.
 - Roadmap-punkt 1–5 er dokumentert fullført. Eksport/backup, test 198–204, er validert på iPhone, iPad og macOS. Roadmap-punkt 7, import/restore, pågår som diagnostikk og sikkerhetsavklaring; faktisk restore er ikke klar.
@@ -199,6 +199,20 @@ Isolert macOS/DEBUG-relasjonsdiagnostikk er implementert bak `--diagnostic-texti
 
 Teknisk resultat: **16 nye + 113 regresjonstester = 129 PASS, 0 FAIL**, begge plattformbygg bestått uten signering/appkjøring, sikkerhets-/diffkontroll bestått. Ingen faktiske CloudKit-oppslag. Seks valideringspunkter er ❗️; praktisk oppstart, eksplisitt lesing, relasjonsvisning og avbrudd gjenstår og krever særskilt godkjenning før kjøring. Ingen fast 43-poster-forutsetning eller historisk slettingsslutning. 242.1–242.4 beholdes ✅. Lokale Xcode-/scheme-endringer bevares uten staging.
 
+## Sluttstatus – 242.6 ✅ avsluttende gjennomgang på avgrenset grunnlag
+
+**242.6.1–6 og samlet 242.6 ✅ er eksplisitt brukergodkjent 2026-11-09 på dokumentert, avgrenset grunnlag.** Bare punkt 6 er deretter sammenfattet på `codex/test-242-6-final-review`; [avsluttende gjennomgang og restliste](SWIFTUI-IMPLEMENTERING.md#24266--avsluttende-gjennomgang-og-beslutningsgrunnlag) skiller validerte modeller/diagnostikk fra dokumentert gjennomgang og manglende utførelsesbevis. Godkjenningen gjelder gjennomgang og beslutningsgrunnlag; trygg import/restore er fortsatt ikke validert. Dokumentasjonsendringene er lokale og avventer separat godkjenning av commit/merge/push.
+
+239–242.5 er ✅ innen dokumenterte, avgrensede omfang, ikke faktisk import/restore. Gjennomgangen har etablert bevismatrise, modellgrenser, historikk-/T0001-vurdering, utførelsesgap og konsistente statuspresiseringer; den har ikke innført nye server-/funksjonsbevis. Tidligere godkjenninger og historikk er bevart.
+
+Prioritert restliste: (1) avgrenset utvalg/rågrunnlag og proveniens, (2) produksjonsidentitet/unikhet, (3) samtidighet/betingelser, (4) utførelsesjournal/gjenopptaking, (5) innholdsbevaring/konflikter, (6) bildeinnhold/fil-/assetforløp, (7) plattform-/miljødekning og (8) til slutt samlet kontrakt/eksplisitt autorisasjon. Listen konkretiserer de sju gapene i 242.6.4 med kilde-/utvalgsgrunnlaget som egen forutsetning; ingen gap er lukket. Bilders/plattformers prioritet tillater ikke at nødvendig dekning utelates.
+
+Neste minste anbefalte steg er et avgrenset beslutningsnotat og testspesifikasjon for produksjonsidentitet/unikhetskrav og nye familier, med bevaring av eksisterende identiteter og eksplisitt grense mot servergarantier. Det krever egen bestilling; ingen algoritme, implementering, nytt testnummer eller skriveport godkjennes her.
+
+T0001 er uavklart og stopper avhengige operasjoner. Historisk CloudKit-kontekst er manglende bevis; ingen tilbakebinding fra dagens kontekst. Ikke-atomisitet, uverifisert iOS/iPadOS-miljø og kontraktsforskjeller fra 242.6.2 består. Fire journaloperasjoner er planlagt/null fullført. Application Support-data og faktiske CloudKit-data er ikke uavhengig verifisert uendret. Skriving/-sletting under import/restore er fortsatt sperret.
+
+Dokumentasjons-/diffkontroll er gjennomført. **Stopp etter punkt 6; neste fase er ikke startet.** Ingen Swift-endringer, tester, appkjøring, CloudKit-operasjoner, commit, merge eller push.
+
 ## Åpne problemer og uavklarte tester
 
 - Test 239 avstemmer nå inventar og identiteter begge veier. Uforklarte poster og PoC-filtertreff uten identitetsobservasjon gir eksplisitt grunnlagsstopp; filtrering betyr ikke ledig navn eller verifisert identitet. Test 240 tilpasser bare allerede innleste strukturerte diagnostikkverdier; uverifisert kontekst/råverdier og manglende PoC-identiteter gir fortsatt stopp.
@@ -214,6 +228,8 @@ Teknisk resultat: **16 nye + 113 regresjonstester = 129 PASS, 0 FAIL**, begge pl
 - Ingen automatisk overskriving eller sletting av eksisterende bibliotek som restore-strategi.
 
 ## Neste planlagte arbeid
+
+242.6 er avsluttet og brukergodkjent på avgrenset grunnlag, med stopp etter punkt 6. Neste anbefaling er et beslutningsnotat/testspesifikasjon, som krever egen bestilling. Avsnittet nedenfor bevarer tidligere planstatus etter 241 B.2; senere godkjenninger og dagens gjennomgang står ovenfor. Det autoriserer ingen ny lesing, implementering eller skriving.
 
 Test 240 er avsluttet etter samlet brukergodkjenning, inkludert praktisk UI-test etter én særskilt godkjent, skrivebeskyttet test 238-kjøring. Forventet STOPP ved uverifisert CloudKit-kontekst og manglende recordkontekst ble bekreftet. Grunnlagsmanglene er ikke reparert eller omgått. Test 241 fase A ✅ er fullført og samlet brukergodkjent innen isolert omfang. Strukturert leseresultat kobles til eksisterende adapter/rapport uten UI-start av faktisk transport. B.1 er samlet brukergodkjent ✅ for syntetisk miljøverifikasjon. B.2 ✅ er fullført og brukervalidert for isolert lokal miljødiagnostikk etter macOS/Debug-signeringsrettelsen. Senere kontekst-/serverlesing krever særskilt bestilling/godkjenning; B.2 åpner ikke for CloudKit-oppslag. iOS/iPadOS gir STOPP før CloudKit-kall fordi miljøbevis ikke er etablert; legacy-baseline får ikke tilordnet dagens kontekst. Ingen modellkobling til import eller restore er implementert. Første fremtidige importomfang er nye tekstiler med underposter; komplettering av eksisterende tekstiler, utførelsesjournal, gjenopptaking, bilderestore og samtidighetskontroll krever egne beslutninger og tester. Test 230-restpunktet er avsluttet. Ingen skrivesperrer åpnes.
 

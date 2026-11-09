@@ -1,5 +1,26 @@
 # Endringslogg
 
+## Test 242.6 – samlet avgrenset brukergodkjenning – 2026-11-09
+
+**242.6.6 og samlet 242.6 ✅ er eksplisitt brukergodkjent på dokumentert, avgrenset grunnlag; alle seks punkter er ✅.** Godkjenningen avslutter bevis-/gapgjennomgangen og beslutningsgrunnlaget, ikke utførelsesgapene. Tidligere resultater i 239–242.5 og de historiske deloppføringene nedenfor beholdes. De fem dokumentasjonsfilene er konsistenskontrollert; statusen er lokal og ikke committet/publisert ved denne oppdateringen.
+
+T0001 forblir uavklart, historisk CloudKit-kontekst mangler, og trygg faktisk import/restore er ikke validert. Ikke-atomisitet, plattform-/innholds-/gjenopptakingsgap og etterkontrollens dataadgangsbegrensninger består. Ingen skriveautorisasjon, automatisk reparasjon eller ny fase. Ingen Swift-endringer, tester, appkjøring eller CloudKit-operasjoner; ingen commit, merge eller push. Se [sluttgrunnlaget](SWIFTUI-IMPLEMENTERING.md#24266--avsluttende-gjennomgang-og-beslutningsgrunnlag).
+
+
+## Test 242.6.6 – avsluttende gjennomgang og beslutningsgrunnlag – 2026-11-09
+
+242.6.5 er ✅ etter brukerens gjennomgang på avgrenset grunnlag. 242.6.1–5 er dermed ✅; punkt 6 og samlet 242.6 forblir ❗️ til eksplisitt brukergodkjenning. [Sluttsammenstillingen](SWIFTUI-IMPLEMENTERING.md#24266--avsluttende-gjennomgang-og-beslutningsgrunnlag) skiller ferdig validert 239–242.5 fra dokumentert gjennomgang og manglende utførelsesbevis. Prioritert restliste angir nødvendig beslutning, senere særskilt bestilt implementering, test/bevis og STOPP for grunnlag/utvalg, produksjonsidentitet, samtidighet, utførelsesjournal, innholdsbevaring, bilder, plattformer og til slutt samlet autorisasjonskontrakt.
+
+Neste minste anbefalte steg er et beslutningsnotat med testspesifikasjon for produksjonsidentitet/unikhetskrav for nye familier. Det startes ikke her og godkjenner ingen algoritme eller utførelse. T0001, historisk CloudKit-kontekst, ikke-atomisitet og øvrige bevisbegrensninger består. Ingen skriveport eller import-/restore-autorisasjon. Tidligere resultater/oppføringer bevares; ingen Swift-endringer, tester, appkjøring, CloudKit-operasjoner, commit, merge eller push. Stopp etter punkt 6.
+
+
+## Test 242.6.5 – sikkerhet og dokumentkonsistens – 2026-11-09
+
+242.6.4 er ✅ etter brukerens gjennomgang på avgrenset grunnlag; de sju utførelsesgapene er fortsatt åpne. 242.6.5 er gjennomgått statisk og står ❗️ til brukervalidering. B-050, implementeringslogg, prosjektstatus, denne endringsloggen og roadmap er sammenholdt; statusetterslep er rettet med daterte lesemerknader og oppdatert løpende roadmaprad. Ingen tidligere godkjente resultater eller seks arkitekturbeslutninger er omskrevet. Daterte åpne «pågående»-oppføringer nedenfor er historikk; senere uttrykkelig sluttgodkjenning gjelder per deltest, jf. [gjeldende prosjektstatus](PROSJEKTSTATUS.md).
+
+Test 239–240, 241 A/B.1/B.2/B.3 og 242.1–242.5 er ✅ innen dokumenterte modell-/diagnostikkomfang, ikke faktisk import/restore eller skriveautorisasjon. T0001 forblir uavklart; tidligere validert ZIP-/journal-/baselinebinding må skilles fra manglende historisk CloudKit-kontekst. Ikke-atomisitet, uverifisert iOS/iPadOS-miljø og alle sju gap i 242.6.4 består. Application Support-data og faktiske CloudKit-data er ikke uavhengig verifisert uendret. Ingen nye tester, Swift-endringer, appkjøring eller CloudKit-operasjoner; ingen commit, merge eller push. [Kontrollfunn og STOPP](SWIFTUI-IMPLEMENTERING.md#24265--sikkerhet-og-dokumentkonsistens) er dokumentert; stopp etter punkt 5, punkt 6 er ikke startet.
+
+
 ## Test 242.5 – samlet avgrenset brukergodkjenning – 2026-11-08
 
 **242.5 ✅ samlet brukergodkjent på avgrenset grunnlag 2026-11-08, inkludert etterkontroll 242.5.6 ✅.** De seks punktene er ført konsekvent som ✅ innen det dokumenterte og aksepterte omfanget. Godkjenningen tilfører ikke nye observasjoner eller bevis og utvider ikke skrivetillatelsen.

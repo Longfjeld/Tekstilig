@@ -936,6 +936,10 @@ Test 104–122 viste at funksjonene er korrekte, men avdekket tre gjentakende UX
 **Dato:** 2026-11-06
 **Status:** Besluttet – arkitektur og testomfang godkjent; Swift-implementering er ikke godkjent
 
+**Lesemerknad 2026-11-09 (242.6.5):** Statusen og planformuleringene nedenfor gjelder beslutningstidspunktet 2026-11-06. Senere særskilte godkjenninger har fullført test 239–240, 241 A/B.1/B.2/B.3 og 242.1–242.5 innen isolert modell-/diagnostikkomfang, jf. [prosjektstatus](PROSJEKTSTATUS.md) og [konsistenskontroll 242.6.5](SWIFTUI-IMPLEMENTERING.md#24265--sikkerhet-og-dokumentkonsistens). Dette endrer ikke de seks reglene eller sperren mot faktisk import/restore og CloudKit-skriving/-sletting. T0001 forblir uavklart. Tidligere validert ZIP-/journal-/baselinebinding etablerer ikke historisk CloudKit-kontekst; dagens kontekst må ikke tilbakebindes. Ikke-atomisitet og de sju utførelsesgapene i 242.6.4 består.
+
+**Sluttpresisering 2026-11-09 (242.6 ✅):** Alle seks gjennomgangspunkter og 242.6 samlet er eksplisitt brukergodkjent på dokumentert, avgrenset grunnlag. Dette godkjenner bevis-/gapoversikten og beslutningsgrunnlaget, ikke nye løsninger eller trygg faktisk import/restore. T0001 forblir uavklart, historisk CloudKit-kontekst mangler, og alle utførelsesgap og import-/restore-skrivesperrer består. Ingen av de seks beslutningene nedenfor endres. Se [sluttgrunnlaget](SWIFTUI-IMPLEMENTERING.md#24266--avsluttende-gjennomgang-og-beslutningsgrunnlag).
+
 ### Beslutning
 
 1. Eksisterende CloudKit `recordName` skal bevares og gjenbrukes ved entydig samsvar mellom posttype, permanent logisk ID og tekstileier. Logisk nøkkel er posttype + logisk ID; eier kontrolleres separat. En underposts forelder må være entydig. Eksisterende recordidentitet og systemmetadata skal bevares.
